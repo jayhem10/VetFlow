@@ -1,0 +1,384 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+name: "Composants React - Atomic Design"
+type: "auto-attached"
+patterns: ["**/*.tsx", "**/components/**/*"]
+description: "Règles spécifiques pour la création de composants React avec Atomic Design"
+---
+
+# Règles Composants React - Atomic Design
+
+## 🏗️ Hiérarchie Atomic Design
+
+### Atoms (src/components/atoms/)
+**Rôle**: Éléments de base réutilisables sans logique métier
+
+```typescript
+// ✅ Exemple Button atom
+interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'destructive'
+  size?: 'sm' | 'md' | 'lg'
+  children: React.ReactNode
+  disabled?: boolean
+  loading?: boolean
+  onClick?: () => void
+}
+
+export function Button({ 
+  variant = 'primary', 
+  size = 'md', 
+  children, 
+  disabled, 
+  loading,
+  onClick,
+  ...props 
+}: ButtonProps) {
+  return (
+    <button
+      className={cn(buttonVariants({ variant, size }))}
+      disabled={disabled || loading}
+      onClick={onClick}
+      {...props}
+    >
+      {loading ? <Spinner size="sm" /> : children}
+    </button>
+  )
+}
+```
+
+**Atoms typiques**: Button, Input, Badge, Avatar, Icon, Text, Spinner
+
+### Molecules (src/components/molecules/)
+**Rôle**: Combinaisons d'atoms avec fonction spécifique
+
+```typescript
+// ✅ Exemple SearchBar molecule
+interface SearchBarProps {
+  placeholder?: string
+  value: string
+  onChange: (value: string) => void
+  onClear?: () => void
+}
+
+export function SearchBar({ placeholder, value, onChange, onClear }: SearchBarProps) {
+  return (
+    <div className="relative">
+      <Input
+        type="search"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="pr-10"
+      />
+      {value && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClear}
+          className="absolute right-2 top-1/2 -translate-y-1/2"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
+  )
+}
+```
+
+**Molecules typiques**: SearchBar, DatePicker, PatientCard, AppointmentSlot, StatusBadge
+
+### Organisms (src/components/organisms/)
+**Rôle**: Sections complètes avec logique métier
+
+```typescript
+// ✅ Exemple PatientList organism
+interface PatientListProps {
+  patients: TPatient[]
+  onEdit: (patient: TPatient) => void
+  onDelete: (id: string) => void
+  loading?: boolean
+}
+
+export function PatientList({ patients, onEdit, onDelete, loading }: PatientListProps) {
+  const [search, setSearch] = useState('')
+  
+  const filteredPatients = useMemo(() => 
+    patients.filter(p => p.name.toLowerCase().includes(search.toLowerCase())),
+    [patients, search]
+  )
+
+  if (loading) return <PatientListSkeleton />
+
+  return (
+    <div className="space-y-4">
+      <SearchBar 
+        value={search} 
+        onChange={setSearch}
+        placeholder="Rechercher un patient..."
+      />
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {filteredPatients.map(patient => (
+          <PatientCard
+            key={patient.id}
+            patient={patient}
+            onEdit={() => onEdit(patient)}
+            onDelete={() => onDelete(patient.id)}
+          />
+        ))}
+      </div>
+      
+      {filteredPatients.length === 0 && (
+        <EmptyState message="Aucun patient trouvé" />
+      )}
+    </div>
+  )
+}
+```
+
+### Templates (src/components/templates/)
+**Rôle**: Structure de page sans contenu spécifique
+
+```typescript
+// ✅ Exemple DashboardLayout template
+interface DashboardLayoutProps {
+  children: React.ReactNode
+  title: string
+  actions?: React.ReactNode
+}
+
+export function DashboardLayout({ children, title, actions }: DashboardLayoutProps) {
+  return (
+    <div className="flex h-screen">
+      <Navigation />
+      
+      <main className="flex-1 overflow-auto">
+        <header className="border-b bg-white px-6 py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-semibold">{title}</h1>
+            {actions}
+          </div>
+        </header>
+        
+        <div className="p-6">
+          {children}
+        </div>
+      </main>
+    </div>
+  )
+}
+```
+
+## 🎯 Règles par Type de Composant
+
+### Pour TOUS les Composants
+- Function declaration ou arrow function (PAS React.FC)
+- Props interface obligatoire avec nommage `ComponentNameProps`
+- Utilisation de `cn()` pour className dynamique
+- Spread props `{...props}` en fin
+- Documentation JSDoc si logique complexe
+
+### Atoms - Règles Spécifiques
+- Aucune logique métier
+- Props simples et génériques
+- Variantes avec `class-variance-authority`
+- Ref forwarding si nécessaire
+- Tests unitaires obligatoires
+
+```typescript
+// ✅ Structure atom avec variants
+const buttonVariants = cva(
+  "inline-flex items-center justify-center rounded-md font-medium transition-colors",
+  {
+    variants: {
+      variant: {
+        primary: "bg-primary text-primary-foreground hover:bg-primary/90",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      },
+      size: {
+        sm: "h-8 px-3 text-sm",
+        md: "h-10 px-4",
+        lg: "h-12 px-8 text-lg",
+      },
+    },
+    defaultVariants: {
+      variant: "primary",
+      size: "md",
+    },
+  }
+)
+```
+
+### Molecules - Règles Spécifiques
+- Composition de 2-5 atoms maximum
+- Logique d'interaction simple
+- État local limité (useState basique)
+- Props callback pour communication parent
+
+### Organisms - Règles Spécifiques
+- Logique métier autorisée
+- Hooks personnalisés encouragés
+- Gestion état complexe avec useReducer si nécessaire
+- Intégration TanStack Query
+- Loading et error states obligatoires
+
+## 🔧 Patterns Obligatoires
+
+### Conditional Rendering
+```typescript
+// ✅ Pattern conditionnel recommandé
+export function PatientCard({ patient }: PatientCardProps) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{patient.name}</CardTitle>
+        {patient.breed && <CardDescription>{patient.breed}</CardDescription>}
+      </CardHeader>
+      
+      <CardContent>
+        {patient.photos.length > 0 ? (
+          <PatientPhotos photos={patient.photos} />
+        ) : (
+          <EmptyPhoto />
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+```
+
+### Event Handlers
+```typescript
+// ✅ Handlers avec useCallback si nécessaire
+export function AppointmentForm({ onSubmit }: AppointmentFormProps) {
+  const handleSubmit = useCallback((data: AppointmentFormData) => {
+    onSubmit?.(data)
+  }, [onSubmit])
+
+  const handleDateChange = useCallback((date: Date) => {
+    // Logique de validation
+    setSelectedDate(date)
+  }, [])
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Form content */}
+    </form>
+  )
+}
+```
+
+### Error Boundaries
+```typescript
+// ✅ Error boundary pour organisms critiques
+export function PatientListWithErrorBoundary(props: PatientListProps) {
+  return (
+    <ErrorBoundary fallback={<PatientListError />}>
+      <PatientList {...props} />
+    </ErrorBoundary>
+  )
+}
+```
+
+## 📱 Responsive et Accessibilité
+
+### Responsive Design
+```typescript
+// ✅ Classes responsive Tailwind
+<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+  {items.map(item => <ItemCard key={item.id} item={item} />)}
+</div>
+```
+
+### Accessibilité
+```typescript
+// ✅ ARIA labels et keyboard navigation
+export function SearchBar({ onSearch }: SearchBarProps) {
+  return (
+    <div role="search">
+      <Input
+        type="search"
+        aria-label="Rechercher un patient"
+        placeholder="Nom du patient..."
+        onKeyDown={(e) => e.key === 'Enter' && onSearch()}
+      />
+      <Button
+        aria-label="Lancer la recherche"
+        onClick={onSearch}
+      >
+        <Search className="h-4 w-4" />
+      </Button>
+    </div>
+  )
+}
+```
+
+## 🎨 Styling et Theming
+
+### Classes Tailwind Obligatoires
+```typescript
+// ✅ Structure styling recommandée
+export function PatientCard({ patient, className }: PatientCardProps) {
+  return (
+    <Card className={cn(
+      "transition-all hover:shadow-md",
+      "border-l-4 border-l-primary", // Accent coloré
+      className
+    )}>
+      {/* Content */}
+    </Card>
+  )
+}
+```
+
+### Variables CSS (shadcn/ui)
+- Utilise les variables CSS theme (--primary, --secondary, etc.)
+- Mode sombre automatique avec `dark:` variants
+- Animations avec `transition-*` classes
+
+## 🧪 Tests Composants
+
+### Tests Atoms
+```typescript
+// ✅ Test unitaire atom
+describe('Button', () => {
+  it('renders with correct variant classes', () => {
+    render(<Button variant="secondary">Test</Button>)
+    expect(screen.getByRole('button')).toHaveClass('bg-secondary')
+  })
+
+  it('handles click events', () => {
+    const handleClick = jest.fn()
+    render(<Button onClick={handleClick}>Test</Button>)
+    fireEvent.click(screen.getByRole('button'))
+    expect(handleClick).toHaveBeenCalled()
+  })
+})
+```
+
+### Tests Organisms
+```typescript
+// ✅ Test intégration organism
+describe('PatientList', () => {
+  it('filters patients based on search', async () => {
+    const patients = [
+      { id: '1', name: 'Rex', species: 'dog' },
+      { id: '2', name: 'Mimi', species: 'cat' }
+    ]
+    
+    render(<PatientList patients={patients} onEdit={jest.fn()} onDelete={jest.fn()} />)
+    
+    const searchInput = screen.getByPlaceholderText('Rechercher un patient...')
+    fireEvent.change(searchInput, { target: { value: 'Rex' } })
+    
+    expect(screen.getByText('Rex')).toBeInTheDocument()
+    expect(screen.queryByText('Mimi')).not.toBeInTheDocument()
+  })
+})
+```
+
+RESPECTE STRICTEMENT cette hiérarchie Atomic Design. Chaque composant doit être dans le bon dossier selon sa complexité et son rôle.

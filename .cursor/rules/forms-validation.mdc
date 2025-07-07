@@ -1,0 +1,538 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+name: "Formulaires et Validation"
+type: "auto-attached"
+patterns: ["**/forms/**/*", "**/schemas/**/*", "**/components/**/form*"]
+description: "Règles pour React Hook Form + Zod validation dans le contexte vétérinaire"
+---
+
+# Formulaires et Validation - React Hook Form + Zod
+
+## 📋 Schema Zod Obligatoires
+
+### Schemas Métier Vétérinaire
+```typescript
+// schemas/patient.schema.ts
+export const patientSchema = z.object({
+  name: z.string()
+    .min(1, 'Le nom est requis')
+    .max(50, 'Maximum 50 caractères'),
+  
+  species: z.enum(['dog', 'cat', 'bird', 'rabbit', 'other'], {
+    required_error: 'Espèce requise'
+  }),
+  
+  breed: z.string()
+    .max(50, 'Maximum 50 caractères')
+    .optional(),
+  
+  birthDate: z.date()
+    .max(new Date(), 'Date de naissance ne peut pas être future')
+    .optional(),
+  
+  weight: z.number()
+    .positive('Le poids doit être positif')
+    .max(1000, 'Poids maximum 1000kg')
+    .optional(),
+  
+  ownerId: z.string()
+    .uuid('ID propriétaire invalide'),
+  
+  photos: z.array(z.string().url('URL photo invalide'))
+    .max(5, 'Maximum 5 photos')
+    .default([]),
+  
+  microchipId: z.string()
+    .regex(/^\d{15}$/, 'Puce électronique: 15 chiffres')
+    .optional(),
+})
+
+export type PatientFormData = z.infer<typeof patientSchema>
+
+// schemas/appointment.schema.ts
+export const appointmentSchema = z.object({
+  animalId: z.string().uuid('Animal requis'),
+  
+  scheduledAt: z.date()
+    .min(new Date(), 'Date ne peut pas être passée'),
+  
+  duration: z.number()
+    .min(15, 'Durée minimum 15 minutes')
+    .max(480, 'Durée maximum 8 heures')
+    .multipleOf(15, 'Durée par tranches de 15 min'),
+  
+  type: z.enum(['consultation', 'surgery', 'vaccination', 'emergency']),
+  
+  vetId: z.string().uuid('Vétérinaire requis'),
+  
+  notes: z.string()
+    .max(500, 'Maximum 500 caractères')
+    .optional(),
+  
+  isUrgent: z.boolean().default(false),
+  
+  reminderEmail: z.boolean().default(true),
+  reminderSms: z.boolean().default(false),
+})
+
+export type AppointmentFormData = z.infer<typeof appointmentSchema>
+
+// schemas/medical-record.schema.ts
+export const medicalRecordSchema = z.object({
+  animalId: z.string().uuid(),
+  appointmentId: z.string().uuid(),
+  
+  temperature: z.number()
+    .min(35, 'Température trop basse')
+    .max(45, 'Température trop élevée')
+    .optional(),
+  
+  weight: z.number()
+    .positive('Poids doit être positif')
+    .optional(),
+  
+  symptoms: z.array(z.string())
+    .min(1, 'Au moins un symptôme requis'),
+  
+  diagnosis: z.string()
+    .min(10, 'Diagnostic trop court')
+    .max(1000, 'Maximum 1000 caractères'),
+  
+  treatment: z.string()
+    .min(10, 'Traitement trop court')
+    .max(1000, 'Maximum 1000 caractères'),
+  
+  prescriptions: z.array(z.object({
+    medication: z.string().min(1, 'Médicament requis'),
+    dosage: z.string().min(1, 'Posologie requise'),
+    duration: z.number().positive('Durée positive'),
+    instructions: z.string().optional(),
+  })),
+  
+  nextAppointment: z.date().optional(),
+  
+  attachments: z.array(z.string().url())
+    .max(10, 'Maximum 10 fichiers'),
+})
+```
+
+## 🎨 Composants Form Réutilisables
+
+### FormField Wrapper
+```typescript
+// components/atoms/form-field.tsx
+interface FormFieldProps {
+  name: string
+  label: string
+  description?: string
+  required?: boolean
+  children: React.ReactNode
+}
+
+export function FormField({ name, label, description, required, children }: FormFieldProps) {
+  const { formState: { errors } } = useFormContext()
+  const error = errors[name]
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={name} className={cn(required && "after:content-['*'] after:text-red-500")}>
+        {label}
+      </Label>
+      
+      {children}
+      
+      {description && (
+        <p className="text-sm text-muted-foreground">{description}</p>
+      )}
+      
+      {error && (
+        <p className="text-sm text-red-500">{error.message as string}</p>
+      )}
+    </div>
+  )
+}
+
+// components/molecules/species-select.tsx
+interface SpeciesSelectProps {
+  value: string
+  onChange: (value: string) => void
+  error?: string
+}
+
+export function SpeciesSelect({ value, onChange, error }: SpeciesSelectProps) {
+  const species = [
+    { value: 'dog', label: 'Chien', icon: '🐕' },
+    { value: 'cat', label: 'Chat', icon: '🐱' },
+    { value: 'bird', label: 'Oiseau', icon: '🐦' },
+    { value: 'rabbit', label: 'Lapin', icon: '🐰' },
+    { value: 'other', label: 'Autre', icon: '🐾' },
+  ]
+
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className={cn(error && "border-red-500")}>
+        <SelectValue placeholder="Sélectionnez l'espèce" />
+      </SelectTrigger>
+      
+      <SelectContent>
+        {species.map((item) => (
+          <SelectItem key={item.value} value={item.value}>
+            <div className="flex items-center gap-2">
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+```
+
+### Formulaires Complexes
+```typescript
+// components/organisms/patient-form.tsx
+interface PatientFormProps {
+  initialData?: Partial<PatientFormData>
+  onSubmit: (data: PatientFormData) => Promise<void>
+  loading?: boolean
+}
+
+export function PatientForm({ initialData, onSubmit, loading }: PatientFormProps) {
+  const form = useForm<PatientFormData>({
+    resolver: zodResolver(patientSchema),
+    defaultValues: {
+      name: '',
+      species: 'dog',
+      photos: [],
+      ...initialData,
+    },
+  })
+
+  const { handleSubmit, control, formState: { isSubmitting } } = form
+
+  const handleFormSubmit = async (data: PatientFormData) => {
+    try {
+      await onSubmit(data)
+      toast.success('Patient sauvegardé avec succès')
+    } catch (error) {
+      toast.error('Erreur lors de la sauvegarde')
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+        
+        {/* Informations de base */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Informations générales</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            
+            <FormField name="name" label="Nom de l'animal" required>
+              <Controller
+                name="name"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    placeholder="Rex, Mimi, etc."
+                    maxLength={50}
+                  />
+                )}
+              />
+            </FormField>
+
+            <FormField name="species" label="Espèce" required>
+              <Controller
+                name="species"
+                control={control}
+                render={({ field }) => (
+                  <SpeciesSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={form.formState.errors.species?.message}
+                  />
+                )}
+              />
+            </FormField>
+
+            <FormField name="breed" label="Race">
+              <Controller
+                name="breed"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    placeholder="Labrador, Persan, etc."
+                  />
+                )}
+              />
+            </FormField>
+
+          </CardContent>
+        </Card>
+
+        {/* Informations physiques */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Caractéristiques physiques</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            
+            <FormField name="birthDate" label="Date de naissance">
+              <Controller
+                name="birthDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    date={field.value}
+                    onDateChange={field.onChange}
+                    maxDate={new Date()}
+                    placeholder="Sélectionnez une date"
+                  />
+                )}
+              />
+            </FormField>
+
+            <FormField name="weight" label="Poids (kg)">
+              <Controller
+                name="weight"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="1000"
+                    placeholder="12.5"
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  />
+                )}
+              />
+            </FormField>
+
+          </CardContent>
+        </Card>
+
+        {/* Photos */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Photos</CardTitle>
+            <CardDescription>Maximum 5 photos (JPG, PNG, WebP)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Controller
+              name="photos"
+              control={control}
+              render={({ field }) => (
+                <PhotoUpload
+                  photos={field.value}
+                  onPhotosChange={field.onChange}
+                  maxPhotos={5}
+                />
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-4">
+          <Button type="button" variant="outline">
+            Annuler
+          </Button>
+          <Button 
+            type="submit" 
+            disabled={isSubmitting || loading}
+            loading={isSubmitting || loading}
+          >
+            {initialData ? 'Mettre à jour' : 'Créer le patient'}
+          </Button>
+        </div>
+
+      </form>
+    </Form>
+  )
+}
+```
+
+## 🔄 Patterns Validation Avancée
+
+### Validation Conditionnelle
+```typescript
+// Validation selon l'espèce
+const conditionalPatientSchema = z.object({
+  species: z.enum(['dog', 'cat', 'bird', 'rabbit', 'other']),
+  breed: z.string().optional(),
+  weight: z.number().optional(),
+}).refine((data) => {
+  // Chiens et chats: poids obligatoire
+  if (['dog', 'cat'].includes(data.species) && !data.weight) {
+    return false
+  }
+  return true
+}, {
+  message: "Le poids est obligatoire pour les chiens et chats",
+  path: ["weight"]
+})
+
+// Validation selon le type de RDV
+const appointmentWithValidation = appointmentSchema.refine((data) => {
+  // Chirurgie: minimum 2h
+  if (data.type === 'surgery' && data.duration < 120) {
+    return false
+  }
+  return true
+}, {
+  message: "Les chirurgies nécessitent minimum 2 heures",
+  path: ["duration"]
+})
+```
+
+### Validation Asynchrone
+```typescript
+// Vérification disponibilité RDV
+export function useAppointmentForm() {
+  const checkAvailability = async (vetId: string, datetime: Date, duration: number) => {
+    const isAvailable = await appointmentsService.checkAvailability(vetId, datetime, duration)
+    return isAvailable
+  }
+
+  const form = useForm<AppointmentFormData>({
+    resolver: zodResolver(appointmentSchema),
+    mode: 'onChange', // Validation temps réel
+  })
+
+  // Validation custom asynchrone
+  const validateTimeSlot = useCallback(async (vetId: string, datetime: Date, duration: number) => {
+    try {
+      const isAvailable = await checkAvailability(vetId, datetime, duration)
+      if (!isAvailable) {
+        form.setError('scheduledAt', {
+          type: 'manual',
+          message: 'Ce créneau n\'est pas disponible'
+        })
+        return false
+      }
+      return true
+    } catch (error) {
+      form.setError('scheduledAt', {
+        type: 'manual',
+        message: 'Erreur vérification disponibilité'
+      })
+      return false
+    }
+  }, [form])
+
+  return { form, validateTimeSlot }
+}
+```
+
+## 📤 Upload de Fichiers
+
+### Upload avec Validation
+```typescript
+// components/molecules/photo-upload.tsx
+interface PhotoUploadProps {
+  photos: string[]
+  onPhotosChange: (photos: string[]) => void
+  maxPhotos?: number
+}
+
+export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 5 }: PhotoUploadProps) {
+  const [uploading, setUploading] = useState(false)
+
+  const validateFile = (file: File): string | null => {
+    // Validation taille (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      return 'Fichier trop volumineux (max 5MB)'
+    }
+    
+    // Validation type
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      return 'Format non supporté (JPG, PNG, WebP uniquement)'
+    }
+    
+    return null
+  }
+
+  const handleFileUpload = async (files: FileList) => {
+    if (photos.length + files.length > maxPhotos) {
+      toast.error(`Maximum ${maxPhotos} photos autorisées`)
+      return
+    }
+
+    setUploading(true)
+    const newPhotos: string[] = []
+
+    try {
+      for (const file of Array.from(files)) {
+        const error = validateFile(file)
+        if (error) {
+          toast.error(error)
+          continue
+        }
+
+        // Upload vers Supabase Storage
+        const url = await storageService.uploadAnimalPhoto('temp', file)
+        newPhotos.push(url)
+      }
+
+      onPhotosChange([...photos, ...newPhotos])
+      toast.success(`${newPhotos.length} photo(s) ajoutée(s)`)
+    } catch (error) {
+      toast.error('Erreur upload photos')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      
+      {/* Zone drop */}
+      <div
+        className={cn(
+          "border-2 border-dashed rounded-lg p-8 text-center",
+          "hover:border-primary transition-colors",
+          uploading && "opacity-50 pointer-events-none"
+        )}
+        onDrop={(e) => {
+          e.preventDefault()
+          handleFileUpload(e.dataTransfer.files)
+        }}
+        onDragOver={(e) => e.preventDefault()}
+      >
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          className="hidden"
+          id="photo-upload"
+          onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
+        />
+        
+        <Label htmlFor="photo-upload" className="cursor-pointer">
+          <Camera className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <p className="text-lg font-medium">Glissez vos photos ici</p>
+          <p className="text-sm text-muted-foreground">ou cliquez pour sélectionner</p>
+          <p className="text-xs text-muted-foreground mt-2">
+            JPG, PNG, WebP - Max 5MB par fichier
+          </p>
+        </Label>
+      </div>
+
+      {/* Aperçu photos */}
+      {photos.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {photos.map((photo, index) => (
+            <div key={index} className="relative group">
+              <img
+                src={photo}

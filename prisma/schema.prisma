@@ -1,0 +1,95 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Modèles nécessaires pour NextAuth + profil clinique
+model User {
+  id            String    @id @default(uuid())
+  name          String?   @db.VarChar(100)
+  email         String    @unique @db.VarChar(255)
+  emailVerified DateTime?
+  password      String
+  image         String?   @db.VarChar(255)
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  profile       Profile?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                 String   @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?   @db.Text
+  access_token       String?   @db.Text
+  expires_at         Int?
+  token_type         String?   @db.VarChar(50)
+  scope              String?   @db.VarChar(255)
+  id_token           String?   @db.Text
+  session_state      String?   @db.VarChar(255)
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @db.VarChar(255)
+  userId       String
+  expires      DateTime
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String   @db.VarChar(255)
+  token      String   @unique @db.VarChar(255)
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Profil utilisateur (informations personnelles)
+model Profile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  firstName String   @db.VarChar(100)
+  lastName  String   @db.VarChar(100)
+  phone     String?  @db.VarChar(30)
+  address   String?  @db.VarChar(255)
+  city      String?  @db.VarChar(100)
+  postal    String?  @db.VarChar(20)
+  country   String?  @db.VarChar(100)
+  clinicId  String?  // relation optionnelle
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic Clinic @relation(fields: [clinicId], references: [id])
+}
+
+// Clinique vétérinaire
+model Clinic {
+  id          String    @id @default(uuid())
+  name        String    @db.VarChar(150)
+  email       String?   @db.VarChar(150)
+  phone       String?   @db.VarChar(30)
+  address     String?   @db.VarChar(255)
+  city        String?   @db.VarChar(100)
+  postalCode  String?   @db.VarChar(20)
+  country     String?   @db.VarChar(100)
+  subscriptionPlan   String   @default("starter")
+  subscriptionStatus String   @default("trial")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  // Relations
+  profiles Profile[]
+} 

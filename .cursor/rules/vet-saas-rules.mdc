@@ -1,0 +1,324 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+name: "SaaS Vétérinaire - Règles Principales"
+type: "always"
+description: "Règles de développement pour le SaaS de gestion vétérinaire avec Next.js 14, TypeScript, Supabase et Atomic Design"
+---
+
+# SaaS Vétérinaire - Règles de Développement
+
+## 🎯 Contexte du Projet
+
+Tu développes un SaaS moderne de gestion pour cabinets vétérinaires avec l'objectif d'atteindre 1M€ de CA en 3 ans. 
+
+**Mission**: Remplacer les logiciels obsolètes (années 90/2000) par une interface moderne, mobile-first, à prix accessible.
+
+## 🏗️ Stack Technique Obligatoire
+
+### Frontend (Obligatoire)
+- **Framework**: Next.js 14 avec App Router uniquement
+- **Langage**: TypeScript en mode strict obligatoire  
+- **Styling**: Tailwind CSS + shadcn/ui uniquement
+- **State**: Zustand (global) + TanStack Query (serveur) + React Hook Form (formulaires)
+- **Validation**: Zod obligatoire pour tous les schemas
+- **Architecture**: Atomic Design strict
+
+### Backend
+- **Simple**: Supabase (Auth, Database, Realtime, Storage)
+- **Complexe**: Symfony 7 + API Platform (logique métier avancée)
+
+### Services Externes
+- **Paiements**: Stripe uniquement
+- **Emails**: Resend
+- **SMS**: Twilio  
+- **PDF**: Gotenberg
+
+## 📁 Structure Atomic Design (OBLIGATOIRE)
+
+```
+src/
+├── components/
+│   ├── atoms/           # Boutons, inputs, badges, icons
+│   ├── molecules/       # SearchBar, DatePicker, Cards
+│   ├── organisms/       # Navigation, Tables, Forms complexes
+│   └── templates/       # Layouts de pages
+├── app/                # Pages Next.js 14 (App Router)
+├── lib/                # Utilitaires et config
+├── hooks/              # Custom hooks React
+├── stores/             # Zustand stores  
+├── schemas/            # Schémas Zod
+└── types/              # Types TypeScript
+```
+
+## 🎨 Conventions de Code (NON-NÉGOCIABLES)
+
+### Composants React
+**INTERDIT**: `React.FC<Props>` (déprécié)
+
+**OBLIGATOIRE**: Function declaration ou arrow function avec typage direct
+
+```typescript
+// ✅ MÉTHODE PRÉFÉRÉE - Function Declaration
+export function Button({ variant = 'primary', children, ...props }: ButtonProps) {
+  return <button className={cn(buttonVariants({ variant }))} {...props}>{children}</button>
+}
+
+// ✅ ALTERNATIVE - Arrow Function  
+export const Button = ({ variant = 'primary', children, ...props }: ButtonProps) => {
+  return <button className={cn(buttonVariants({ variant }))} {...props}>{children}</button>
+}
+```
+
+### Nommage Strict
+- **Composants**: PascalCase (`PatientCard`, `AppointmentForm`)
+- **Fichiers**: kebab-case (`patient-card.tsx`, `appointment-form.tsx`)
+- **Variables/Functions**: camelCase (`getCurrentPatient`, `isLoading`)
+- **Constantes**: SCREAMING_SNAKE_CASE (`MAX_FILE_SIZE`)
+- **Types/Interfaces**: PascalCase avec préfixe (`TPatient`, `IClinic`)
+
+### TypeScript Obligatoire
+- Mode strict activé
+- Types explicites pour tous les props
+- Interfaces pour objets complexes, types pour unions
+- Pas de `any` - utilise `unknown` si nécessaire
+
+```typescript
+// ✅ Structure type obligatoire
+interface PatientCardProps {
+  patient: TPatient
+  onEdit?: (id: string) => void
+  showActions?: boolean
+}
+
+type TPatient = {
+  id: string
+  name: string
+  species: 'dog' | 'cat' | 'bird' | 'rabbit' | 'other'
+  breed?: string
+  birthDate?: Date
+  weight?: number
+  photos: string[]
+}
+```
+
+## 🏥 Domaine Métier Vétérinaire
+
+### Entités Core (Types Obligatoires)
+```typescript
+interface TClinic {
+  id: string
+  name: string
+  subscription: 'starter' | 'professional' | 'clinic'
+  address: string
+  phone: string
+  email: string
+}
+
+interface TAnimal {
+  id: string
+  name: string
+  species: 'dog' | 'cat' | 'bird' | 'rabbit' | 'other'
+  breed?: string
+  birthDate?: Date
+  weight?: number
+  photos: string[]
+  ownerId: string
+  clinicId: string
+}
+
+interface TAppointment {
+  id: string
+  animalId: string
+  vetId: string
+  scheduledAt: Date
+  duration: number // minutes
+  type: 'consultation' | 'surgery' | 'vaccination' | 'emergency'
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled'
+  notes?: string
+}
+
+interface TOwner {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  address: string
+  animals: string[] // animal IDs
+}
+```
+
+### Fonctionnalités Prioritaires
+1. **Gestion Patients**: CRUD complet avec photos et historique
+2. **Planning**: Calendrier intelligent avec récurrence  
+3. **Facturation**: Génération automatique + relances
+4. **Portail Client**: Prise RDV en ligne
+5. **Communications**: Email/SMS automatiques
+6. **Dossiers Médicaux**: Consultations + prescriptions
+
+## 🎨 UI/UX Guidelines
+
+### Design System
+- **Mobile-First**: Responsive obligatoire (tablettes = usage principal)
+- **Couleurs**: Utilise les variables CSS de shadcn/ui
+- **Composants**: Exclusivement shadcn/ui + personnalisation Tailwind
+- **Accessibilité**: ARIA labels obligatoires, contraste WCAG AA
+
+### Composants Métier Spécifiques
+```typescript
+// Exemples de composants à créer
+<PatientCard patient={patient} onEdit={handleEdit} />
+<AppointmentSlot appointment={appointment} onReschedule={handleReschedule} />  
+<VaccinationReminder animal={animal} vaccines={dueVaccines} />
+<MedicalTimeline records={medicalRecords} />
+<InvoicePreview invoice={invoice} onSend={handleSend} />
+```
+
+## 🔧 Gestion d'État
+
+### Zustand (État Global)
+```typescript
+interface AppStore {
+  currentClinic: TClinic | null
+  user: TUser | null
+  setCurrentClinic: (clinic: TClinic) => void
+  logout: () => void
+}
+
+export const useAppStore = create<AppStore>((set) => ({
+  currentClinic: null,
+  user: null,
+  setCurrentClinic: (clinic) => set({ currentClinic: clinic }),
+  logout: () => set({ currentClinic: null, user: null }),
+}))
+```
+
+### TanStack Query (Données Serveur)
+```typescript
+// ✅ Structure service obligatoire
+export const usePatients = (clinicId: string) => {
+  return useQuery({
+    queryKey: ['patients', clinicId],
+    queryFn: () => patientsService.getAll(clinicId),
+    enabled: !!clinicId,
+  })
+}
+```
+
+### React Hook Form + Zod (Formulaires)
+```typescript
+const patientSchema = z.object({
+  name: z.string().min(1, 'Nom requis'),
+  species: z.enum(['dog', 'cat', 'bird', 'rabbit', 'other']),
+  weight: z.number().positive().optional(),
+})
+
+type PatientFormData = z.infer<typeof patientSchema>
+
+// Dans le composant
+const form = useForm<PatientFormData>({
+  resolver: zodResolver(patientSchema),
+})
+```
+
+## 🔒 Sécurité et Conformité
+
+### Supabase RLS (Row Level Security)
+- Isolation obligatoire par `clinic_id`
+- Policies strictes par rôle (vétérinaire, assistant, client)
+- Audit trail sur toutes les modifications sensibles
+
+### RGPD Vétérinaire
+- Consentement explicite propriétaires d'animaux
+- Chiffrement données médicales sensibles  
+- Droit à l'oubli implémenté
+- Logs d'accès aux dossiers médicaux
+
+## 📱 Performance et Qualité
+
+### Performance Obligatoire
+- Core Web Vitals optimisés
+- Images : Next.js Image avec lazy loading
+- Bundle < 500kb initial
+- API response < 200ms
+
+### Tests Requis
+- **Unit**: Vitest pour logique métier
+- **Components**: Testing Library  
+- **E2E**: Playwright pour parcours critiques
+- Coverage minimum 80% sur utils/services
+
+### Code Quality
+```bash
+# Configuration obligatoire
+- ESLint + Prettier
+- Husky pre-commit hooks  
+- TypeScript strict mode
+- Conventional Commits
+```
+
+## 🚀 Développement
+
+### Commandes Standard
+```bash
+npm run dev          # Développement local
+npm run build        # Build production  
+npm run test         # Tests unitaires
+npm run test:e2e     # Tests end-to-end
+npm run lint         # Linting
+npm run type-check   # Vérification types
+```
+
+### Structure de Fichier Composant
+```typescript
+// patient-card.tsx
+import { cn } from '@/lib/utils'
+
+interface PatientCardProps {
+  patient: TPatient
+  onEdit?: (id: string) => void
+  className?: string
+}
+
+export function PatientCard({ patient, onEdit, className }: PatientCardProps) {
+  return (
+    <div className={cn('border rounded-lg p-4', className)}>
+      {/* Contenu */}
+    </div>
+  )
+}
+```
+
+## ⚡ Optimisations Spécifiques
+
+### Images d'Animaux
+- Compression automatique WebP + fallback JPEG
+- Lazy loading obligatoire
+- Tailles responsives multiples
+
+### Données Temps Réel
+- Supabase Realtime pour notifications RDV
+- Optimistic updates avec TanStack Query
+- Offline support basique
+
+## 🎯 Erreurs à Éviter
+
+❌ **JAMAIS FAIRE**:
+- Utiliser `React.FC<Props>`
+- Ignorer TypeScript errors
+- CSS modules ou styled-components (Tailwind only)
+- État local pour données serveur (TanStack Query only)
+- Requêtes directes Supabase dans composants (services only)
+
+✅ **TOUJOURS FAIRE**:
+- Function declarations pour composants
+- Types stricts partout
+- Validation Zod sur tous les formulaires
+- Services abstraits pour API calls
+- Error boundaries pour composants critiques
+
+RESPECTE STRICTEMENT CES RÈGLES. Qualité et cohérence sont prioritaires sur la vitesse.
