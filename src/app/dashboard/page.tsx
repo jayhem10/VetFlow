@@ -36,17 +36,38 @@ export default function Dashboard() {
     }
   }, [clinic?.id, fetchOwners, fetchAnimals, fetchAppointments, fetchCollaborators])
 
-  // Calculer les statistiques
+  // Récupérer les compteurs globaux via API count
+  const [counts, setCounts] = useState<{owners?: number; animals?: number; appointments?: number; collaborators?: number}>({})
+  useEffect(() => {
+    let aborted = false
+    async function loadCounts() {
+      try {
+        const [co, ca, capp, ccol] = await Promise.all([
+          fetch('/api/owners/count').then(r => r.json()),
+          fetch('/api/animals/count').then(r => r.json()),
+          fetch('/api/appointments/count').then(r => r.json()),
+          fetch('/api/collaborators/count').then(r => r.json()),
+        ])
+        if (!aborted) setCounts({ owners: co.count, animals: ca.count, appointments: capp.count, collaborators: ccol.count })
+      } catch (e) {
+        // silencieux, on retombe sur les longueurs locales
+      }
+    }
+    if (clinic?.id) loadCounts()
+    return () => { aborted = true }
+  }, [clinic?.id])
+
+  // Calculer les statistiques (fallback aux longueurs locales)
   const stats = {
-    owners: owners.length,
-    animals: animals.length,
+    owners: counts.owners ?? owners.length,
+    animals: counts.animals ?? animals.length,
     appointmentsThisMonth: appointments.filter(apt => {
       const now = new Date()
       const aptDate = new Date(apt.appointment_date)
       return aptDate.getMonth() === now.getMonth() && 
              aptDate.getFullYear() === now.getFullYear()
     }).length,
-    collaborators: collaborators.length
+    collaborators: counts.collaborators ?? collaborators.length
   }
 
   

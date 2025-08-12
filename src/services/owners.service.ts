@@ -2,9 +2,9 @@ import type { Owner, CreateOwner, UpdateOwner, OwnerSearchFilters } from '@/type
 
 export class OwnersService {
   
-  static async getAll(): Promise<Owner[]> {
+  static async getAll(page = 1, pageSize = 25): Promise<{ owners: Owner[]; total: number; page: number; pageSize: number }> {
     console.log('🔍 OwnersService.getAll() - Calling /api/owners')
-    const response = await fetch('/api/owners', {
+    const response = await fetch(`/api/owners?page=${page}&pageSize=${pageSize}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     })
@@ -16,7 +16,7 @@ export class OwnersService {
 
     const data = await response.json()
     console.log('🔍 OwnersService.getAll() - Received', data.owners?.length || 0, 'owners')
-    return data.owners
+    return { owners: data.owners, total: data.total, page: data.page, pageSize: data.pageSize }
   }
 
   static async getById(id: string): Promise<Owner> {

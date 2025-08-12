@@ -5,12 +5,15 @@ import type { Owner, CreateOwner, UpdateOwner, OwnerSearchFilters } from '@/type
 interface OwnerStore {
   // État
   owners: Owner[]
+  ownersTotal?: number
+  ownersPage?: number
+  ownersPageSize?: number
   selectedOwner: Owner | null
   loading: boolean
   error: string | null
 
   // Actions
-  fetchOwners: () => Promise<void>
+  fetchOwners: (page?: number, pageSize?: number) => Promise<void>
   fetchOwnerById: (id: string) => Promise<void>
   createOwner: (owner: Omit<CreateOwner, 'clinic_id'>) => Promise<Owner>
   updateOwner: (id: string, updates: UpdateOwner) => Promise<Owner>
@@ -24,16 +27,19 @@ interface OwnerStore {
 export const useOwnerStore = create<OwnerStore>((set, get) => ({
   // État initial
   owners: [],
+  ownersTotal: 0,
+  ownersPage: 1,
+  ownersPageSize: 25,
   selectedOwner: null,
   loading: false,
   error: null,
 
   // Actions
-  fetchOwners: async () => {
+  fetchOwners: async (page = 1, pageSize = 25) => {
     set({ loading: true, error: null })
     try {
-      const owners = await OwnersService.getAll()
-      set({ owners, loading: false })
+      const { owners, total, page: p, pageSize: ps } = await OwnersService.getAll(page, pageSize)
+      set({ owners, ownersTotal: total, ownersPage: p, ownersPageSize: ps, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
     }

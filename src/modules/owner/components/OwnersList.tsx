@@ -16,19 +16,20 @@ import type { Owner } from '@/types/owner.types';
 
 export function OwnersList() {
   const { clinic } = useClinic();
-  const { owners, loading, error, fetchOwners, deleteOwner, clearError, searchOwners } = useOwnerStore();
+  const { owners, loading, error, fetchOwners, deleteOwner, clearError, searchOwners, ownersTotal, ownersPageSize } = useOwnerStore();
   const { confirm, ConfirmDialog } = useConfirm();
   const [showForm, setShowForm] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
   const typingTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (clinic?.id) {
-      fetchOwners();
+      fetchOwners(page, 25);
     }
-  }, [clinic?.id, fetchOwners]);
+  }, [clinic?.id, fetchOwners, page]);
 
   // Recherche avec debounce
   useEffect(() => {
@@ -36,7 +37,7 @@ export function OwnersList() {
     if (typingTimer.current) clearTimeout(typingTimer.current)
     typingTimer.current = setTimeout(() => {
       if (!query) {
-        fetchOwners()
+        fetchOwners(page, 25)
       } else {
         searchOwners({ query })
       }
@@ -65,7 +66,7 @@ export function OwnersList() {
     setShowForm(false);
     setSelectedOwner(null);
     if (clinic?.id) {
-      fetchOwners();
+      fetchOwners(page, 25);
     }
   };
 
@@ -257,7 +258,7 @@ export function OwnersList() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-700 dark:text-green-400">
-                {owners.length}
+                {ownersTotal ?? owners.length}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 Total propriétaires
@@ -289,6 +290,19 @@ export function OwnersList() {
             </div>
           </div>
         </Card>
+      )}
+
+      {/* Pagination */}
+      {!isInitialLoading && !query && ownersTotal && ownersTotal > (ownersPageSize || 25) && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Page {page} / {Math.ceil((ownersTotal || 0) / (ownersPageSize || 25))}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" disabled={page <= 1} onClick={() => setPage((p) => Math.max(p - 1, 1))}>Précédent</Button>
+            <Button variant="outline" disabled={page >= Math.ceil((ownersTotal || 0) / (ownersPageSize || 25))} onClick={() => setPage((p) => p + 1)}>Suivant</Button>
+          </div>
+        </div>
       )}
 
       {/* Modal formulaire */}

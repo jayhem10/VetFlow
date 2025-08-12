@@ -35,8 +35,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Pagination
+    const { searchParams } = new URL(request.url)
+    const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1)
+    const pageSize = Math.max(parseInt(searchParams.get('pageSize') || '25', 10), 1)
+    const skip = (page - 1) * pageSize
+
     // Récupérer les animaux de la clinique de l'utilisateur
-    const animals = await prisma.animal.findMany({
+    const [animals, total] = await Promise.all([
+      prisma.animal.findMany({
       where: {
         clinic_id: profile.clinicId,
       },
@@ -50,8 +57,12 @@ export async function GET(request: NextRequest) {
       },
       orderBy: [
         { name: 'asc' }
-      ],
-    })
+        ],
+        skip,
+        take: pageSize,
+      }),
+      prisma.animal.count({ where: { clinic_id: profile.clinicId } })
+    ])
 
     console.log('🔍 API /api/animals - Found animals:', animals.length, 'for clinic:', profile.clinicId)
 
@@ -78,9 +89,7 @@ export async function GET(request: NextRequest) {
       owner_name: `${animal.owner.first_name} ${animal.owner.last_name}`,
     }))
 
-    return NextResponse.json({
-      animals: formattedAnimals
-    })
+    return NextResponse.json({ animals: formattedAnimals, total, page, pageSize })
 
   } catch (error) {
     console.error('Erreur récupération animaux:', error)

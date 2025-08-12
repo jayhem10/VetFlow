@@ -74,6 +74,7 @@ export function AnimalsListTable({
 
   const getOwnerName = (ownerId: string) => {
     const owner = owners.find(o => o.id === ownerId);
+    console.log(owner,ownerId);
     return owner ? `${owner.first_name} ${owner.last_name}` : 'Propriétaire inconnu';
   };
 
@@ -171,7 +172,7 @@ export function AnimalsListTable({
                       className="text-green-700 dark:text-green-400 hover:underline"
                       aria-label="Voir la fiche du propriétaire"
                     >
-                      {getOwnerName(animal.owner_id)}
+                      {animal.owner_name ?? getOwnerName(animal.owner_id)}
                     </a>
                   </div>
                 </td>

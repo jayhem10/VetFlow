@@ -35,8 +35,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Pagination
+    const { searchParams } = new URL(request.url)
+    const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1)
+    const pageSize = Math.max(parseInt(searchParams.get('pageSize') || '25', 10), 1)
+    const skip = (page - 1) * pageSize
+
     // Récupérer les propriétaires de la clinique de l'utilisateur
-    const owners = await prisma.owner.findMany({
+    const [owners, total] = await Promise.all([
+      prisma.owner.findMany({
       where: {
         clinic_id: profile.clinicId,
       },
@@ -50,8 +57,12 @@ export async function GET(request: NextRequest) {
       orderBy: [
         { last_name: 'asc' },
         { first_name: 'asc' }
-      ],
-    })
+        ],
+        skip,
+        take: pageSize,
+      }),
+      prisma.owner.count({ where: { clinic_id: profile.clinicId } })
+    ])
 
     console.log('🔍 API /api/owners - Found owners:', owners.length, 'for clinic:', profile.clinicId)
 
@@ -76,9 +87,7 @@ export async function GET(request: NextRequest) {
       animals: owner._count.animals,
     }))
 
-    return NextResponse.json({
-      owners: formattedOwners
-    })
+    return NextResponse.json({ owners: formattedOwners, total, page, pageSize })
 
   } catch (error) {
     console.error('Erreur récupération propriétaires:', error)

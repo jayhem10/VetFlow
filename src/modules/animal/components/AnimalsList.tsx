@@ -16,20 +16,32 @@ import type { Animal } from '@/types/animal.types';
 
 export function AnimalsList() {
   const { clinic } = useClinic();
-  const { animals, loading, error, fetchAnimals, deleteAnimal, clearError } = useAnimalStore();
-  const { owners, fetchOwners } = useOwnerStore();
+  const { animals, loading, error, fetchAnimals, deleteAnimal, clearError, animalsTotal, animalsPageSize } = useAnimalStore();
+  const { owners, fetchOwners, loading: ownersLoading } = useOwnerStore();
   const [showForm, setShowForm] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [query, setQuery] = useState('');
   const typingTimer = useRef<NodeJS.Timeout | null>(null);
+  const [page, setPage] = useState(1);
+  const [ownersInitialized, setOwnersInitialized] = useState(false);
+  const [animalsInitialized, setAnimalsInitialized] = useState(false);
 
   useEffect(() => {
-    if (clinic?.id) {
-      fetchAnimals();
-      fetchOwners();
-    }
-  }, [clinic?.id, fetchAnimals, fetchOwners]);
+    if (!clinic?.id) return
+    // Charger d'abord les owners, puis les animaux pour éviter le flash de l'avertissement
+    ;(async () => {
+      try {
+        setOwnersInitialized(false)
+        await fetchOwners()
+        setOwnersInitialized(true)
+      } finally {
+        setAnimalsInitialized(false)
+        await fetchAnimals(page, 25)
+        setAnimalsInitialized(true)
+      }
+    })()
+  }, [clinic?.id, fetchAnimals, fetchOwners, page]);
 
   // Recherche avec debounce
   useEffect(() => {
@@ -37,15 +49,18 @@ export function AnimalsList() {
     if (typingTimer.current) clearTimeout(typingTimer.current)
     typingTimer.current = setTimeout(() => {
       if (!query) {
-        fetchAnimals()
+        setAnimalsInitialized(false)
+        fetchAnimals(page, 25).finally(() => setAnimalsInitialized(true))
       } else {
-        useAnimalStore.getState().searchAnimals({ query })
+        setAnimalsInitialized(false)
+        Promise.resolve(useAnimalStore.getState().searchAnimals({ query }))
+          .finally(() => setAnimalsInitialized(true))
       }
     }, 300)
     return () => {
       if (typingTimer.current) clearTimeout(typingTimer.current)
     }
-  }, [query, clinic?.id, fetchAnimals])
+  }, [query, clinic?.id, fetchAnimals, page])
 
   const handleEdit = (animal: Animal) => {
     setSelectedAnimal(animal);
@@ -66,7 +81,7 @@ export function AnimalsList() {
     setShowForm(false);
     setSelectedAnimal(null);
     if (clinic?.id) {
-      fetchAnimals();
+      fetchAnimals(page, 25);
     }
   };
 
@@ -123,7 +138,8 @@ export function AnimalsList() {
     }
   };
 
-  const getOwnerName = (ownerId: string) => {
+  const getOwnerName = (ownerId: string, fallbackFromAnimal?: string) => {
+    if (fallbackFromAnimal) return fallbackFromAnimal
     const owner = owners.find(o => o.id === ownerId);
     return owner ? `${owner.first_name} ${owner.last_name}` : 'Propriétaire inconnu';
   };
@@ -160,8 +176,10 @@ export function AnimalsList() {
         <ListLoader rows={6} avatar className="mt-2" />
       )}
 
-      {/* Avertissement si pas de propriétaires */}
-      {owners.length === 0 && (
+      
+
+      {/* Avertissement si pas de propriétaires (attendre la fin du chargement pour éviter le flash) */}
+      {ownersInitialized && !ownersLoading && owners.length === 0 && (
         <Card className="p-6 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
           <div className="flex items-center gap-3">
             <span className="text-yellow-600 dark:text-yellow-400 text-lg">⚠️</span>
@@ -200,19 +218,23 @@ export function AnimalsList() {
 
       {/* Contenu selon le mode d'affichage */}
       {!isInitialLoading && (viewMode === 'list' ? (
-        <AnimalsListTable
-          animals={animals}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onAdd={handleAdd}
-          showForm={showForm}
-          selectedAnimal={selectedAnimal}
-          onCloseForm={handleCloseForm}
-          onFormSuccess={handleFormSuccess}
-        />
+        (animals.length === 0 && (!animalsInitialized || loading)) ? (
+          <ListLoader rows={6} avatar className="mt-2" />
+        ) : (
+          <AnimalsListTable
+            animals={animals}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onAdd={handleAdd}
+            showForm={showForm}
+            selectedAnimal={selectedAnimal}
+            onCloseForm={handleCloseForm}
+            onFormSuccess={handleFormSuccess}
+          />
+        )
       ) : (
         // Mode grille (affichage actuel)
-        animals.length === 0 ? (
+        (animals.length === 0 && animalsInitialized && !loading) ? (
           <Card className="p-8 text-center">
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">🐾</span>
@@ -254,10 +276,10 @@ export function AnimalsList() {
                       {animal.breed && ` - ${animal.breed}`}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      🏠 {getOwnerName(animal.owner_id)}
+                      🏠 {getOwnerName(animal.owner_id, animal.owner_name)}
                     </p>
                     <a
-                      href={`/owners/${animal.owner_id}`}
+                       href={`/owners/${animal.owner_id}`}
                       className="inline-block text-green-700 dark:text-green-400 text-sm hover:underline mt-1"
                       aria-label="Voir la fiche du propriétaire"
                     >
@@ -329,7 +351,7 @@ export function AnimalsList() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-700 dark:text-green-400">
-                {animals.length}
+                {animalsTotal ?? animals.length}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 Total animaux
@@ -361,6 +383,19 @@ export function AnimalsList() {
             </div>
           </div>
         </Card>
+      )}
+
+      {/* Pagination (bas de page) */}
+      {!isInitialLoading && !query && animalsTotal && animalsTotal > (animalsPageSize || 25) && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Page {page} / {Math.ceil((animalsTotal || 0) / (animalsPageSize || 25))}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" disabled={page <= 1} onClick={() => setPage((p) => Math.max(p - 1, 1))}>Précédent</Button>
+            <Button variant="outline" disabled={page >= Math.ceil((animalsTotal || 0) / (animalsPageSize || 25))} onClick={() => setPage((p) => p + 1)}>Suivant</Button>
+          </div>
+        </div>
       )}
 
       {/* Modal formulaire */}

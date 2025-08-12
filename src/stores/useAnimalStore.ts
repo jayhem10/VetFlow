@@ -5,12 +5,15 @@ import type { Animal, CreateAnimal, UpdateAnimal, AnimalSearchFilters } from '@/
 interface AnimalStore {
   // État
   animals: Animal[]
+  animalsTotal?: number
+  animalsPage?: number
+  animalsPageSize?: number
   selectedAnimal: Animal | null
   loading: boolean
   error: string | null
 
   // Actions
-  fetchAnimals: () => Promise<void>
+  fetchAnimals: (page?: number, pageSize?: number) => Promise<void>
   fetchAnimalById: (id: string) => Promise<void>
   createAnimal: (animal: Omit<CreateAnimal, 'clinic_id'>) => Promise<Animal>
   updateAnimal: (id: string, updates: UpdateAnimal) => Promise<Animal>
@@ -26,16 +29,19 @@ interface AnimalStore {
 export const useAnimalStore = create<AnimalStore>((set, get) => ({
   // État initial
   animals: [],
+  animalsTotal: 0,
+  animalsPage: 1,
+  animalsPageSize: 25,
   selectedAnimal: null,
   loading: false,
   error: null,
 
   // Actions
-  fetchAnimals: async () => {
+  fetchAnimals: async (page = 1, pageSize = 25) => {
     set({ loading: true, error: null })
     try {
-      const animals = await AnimalsService.getAll()
-      set({ animals, loading: false })
+      const { animals, total, page: p, pageSize: ps } = await AnimalsService.getAll(page, pageSize)
+      set({ animals, animalsTotal: total, animalsPage: p, animalsPageSize: ps, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
     }

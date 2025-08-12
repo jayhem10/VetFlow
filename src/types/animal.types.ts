@@ -2,6 +2,7 @@ export interface Animal {
   id: string
   clinic_id: string
   owner_id: string
+  owner_name?: string
   name: string
   species: string
   breed?: string
