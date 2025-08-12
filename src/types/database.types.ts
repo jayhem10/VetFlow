@@ -62,7 +62,7 @@ export interface TCreateClinicData {
   address: string
   city: string
   postal_code: string
-  country: string
+  country?: string
   subscription_plan: 'starter' | 'professional' | 'clinic'
   settings: {
     timezone: string

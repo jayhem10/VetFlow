@@ -108,7 +108,7 @@ export const useAppointmentStore = create<AppointmentStore>((set, get) => ({
   searchAppointments: async (clinicId: string, filters: AppointmentSearchFilters) => {
     set({ loading: true, error: null })
     try {
-      const appointments = await AppointmentsService.search(clinicId, filters)
+      const appointments = await AppointmentsService.search(filters)
       set({ appointments, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
@@ -138,7 +138,7 @@ export const useAppointmentStore = create<AppointmentStore>((set, get) => ({
   updateAppointmentStatus: async (id: string, status: Appointment['status']) => {
     set({ loading: true, error: null })
     try {
-      const updatedAppointment = await AppointmentsService.updateStatus(id, status)
+      const updatedAppointment = await AppointmentsService.updateStatus(id, status || 'scheduled')
       set((state) => ({
         appointments: state.appointments.map(appointment => 
           appointment.id === id ? updatedAppointment : appointment

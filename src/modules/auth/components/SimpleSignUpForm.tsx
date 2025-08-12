@@ -38,7 +38,7 @@ export function SimpleSignUpForm() {
     setIsSubmitting(true)
     
     try {
-      await authService.signUp(data.email, data.password)
+      await authService.signUpSimple(data.email, data.password)
       setIsSuccess(true)
       toast.success('🎉 Compte créé ! Vérifiez votre email pour confirmer votre compte.')
     } catch (error) {
@@ -53,7 +53,7 @@ export function SimpleSignUpForm() {
     return (
       <Card className="w-full max-w-md mx-auto">
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold text-green-600">
+          <h2 className="text-2xl font-bold text-green-700">
             🎉 Compte créé avec succès !
           </h2>
           <p className="text-gray-600">
@@ -118,9 +118,9 @@ export function SimpleSignUpForm() {
 
           <p className="text-xs text-gray-500 text-center">
             En créant votre compte, vous acceptez nos{' '}
-            <a href="#" className="text-blue-600 hover:underline">conditions d'utilisation</a>
+            <a href="#" className="text-green-700 hover:underline">conditions d'utilisation</a>
             {' '}et notre{' '}
-            <a href="#" className="text-blue-600 hover:underline">politique de confidentialité</a>.
+            <a href="#" className="text-green-700 hover:underline">politique de confidentialité</a>.
           </p>
         </form>
       </div>

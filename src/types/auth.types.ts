@@ -1,76 +1,71 @@
-import { User } from '@supabase/supabase-js'
+import { type User as NextAuthUser } from 'next-auth'
+import { type Session as NextAuthSession } from 'next-auth'
 
-export interface TUser extends User {
+export interface TUser extends NextAuthUser {
   id: string
   email: string
-  user_metadata: {
-    first_name?: string
-    last_name?: string
-    clinic_name?: string
-    phone?: string
-  }
 }
 
-export interface TUserProfile {
+export interface TSession extends NextAuthSession {
+  user: TUser
+}
+
+export interface TSignInData {
+  email: string
+  password: string
+}
+
+export interface TSignUpData {
+  firstName: string
+  lastName: string
+  email: string
+  password: string
+  clinicName: string
+  phone: string
+}
+
+export interface TProfile {
   id: string
   userId: string
   firstName: string
   lastName: string
-  email: string
-  phone: string
-  avatar?: string
-  createdAt: Date
-  updatedAt: Date
+  phone?: string
+  address?: string
+  city?: string
+  postal?: string
+  country?: string
+  clinicId?: string
 }
 
 export interface TClinic {
   id: string
   name: string
-  ownerId: string
-  subscription: 'starter' | 'professional' | 'clinic'
-  address?: string
-  phone?: string
   email?: string
-  website?: string
-  siret?: string
-  isActive: boolean
-  createdAt: Date
-  updatedAt: Date
+  phone?: string
+  address?: string
+  city?: string
+  postalCode?: string
+  country?: string
+  subscriptionPlan: string
+  subscriptionStatus: string
 }
 
-export interface AuthContextType {
-  user: TUser | null
-  loading: boolean
-  error: string | null
-  signUp: (userData: SignUpData) => Promise<AuthResult>
-  signIn: (credentials: SignInData) => Promise<AuthResult>
-  signOut: () => Promise<AuthResult>
-  resetPassword: (email: string) => Promise<AuthResult>
-  isAuthenticated: boolean
-}
-
-export interface SignUpData {
-  email: string
-  password: string
-  firstName: string
-  lastName: string
-  clinicName: string
-  phone: string
-}
-
-export interface SignInData {
-  email: string
-  password: string
-}
-
-export interface AuthResult {
+export interface TAuthResult {
   success: boolean
   error?: string
+  redirectTo?: string
   user?: TUser
 }
 
-export interface AuthError {
-  message: string
-  status?: number
-  code?: string
+export interface TCreateInitialProfileData {
+  id: string
+  first_name: string
+  last_name: string
+  email: string
+  phone?: string
+  role: 'owner' | 'vet' | 'assistant' | 'admin'
+  license_number?: string
+  specialties?: string[]
+  clinic_id?: string
+  registration_step: string
 } 

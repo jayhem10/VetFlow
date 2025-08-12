@@ -17,7 +17,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             <div className="flex items-center space-x-3">
               {/* Logo VetFlow */}
               <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-700 to-green-700 rounded-lg flex items-center justify-center shadow-lg">
                   <svg 
                     viewBox="0 0 24 24" 
                     className="w-6 h-6 text-white"
@@ -36,8 +36,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
               </div>
               
               <div className="flex flex-col">
-                <a href="/" className="text-xl font-bold text-gray-900 dark:text-white hover:text-blue-700 dark:hover:text-blue-400 transition-colors">
-                  Vet<span className="text-blue-700 dark:text-blue-400">Flow</span>
+                <a href="/" className="text-xl font-bold text-gray-900 dark:text-white hover:text-green-700 dark:hover:text-green-400 transition-colors">
+                  Vet<span className="text-green-700 dark:text-green-400">Flow</span>
                 </a>
                 <span className="text-xs text-gray-700 dark:text-gray-400 -mt-1">Gestion Vétérinaire</span>
               </div>
@@ -60,16 +60,16 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              © 2024 VetFlow. Tous droits réservés.
+              © 2025 VetFlow. Tous droits réservés.
             </p>
             <div className="flex space-x-6">
-              <a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
+              <a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-green-700 dark:hover:text-green-400">
                 Aide
               </a>
-              <a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
+              <a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-green-700 dark:hover:text-green-400">
                 Contact
               </a>
-              <a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
+              <a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-green-700 dark:hover:text-green-400">
                 Confidentialité
               </a>
             </div>

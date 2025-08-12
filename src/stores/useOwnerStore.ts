@@ -10,12 +10,12 @@ interface OwnerStore {
   error: string | null
 
   // Actions
-  fetchOwners: (clinicId: string) => Promise<void>
+  fetchOwners: () => Promise<void>
   fetchOwnerById: (id: string) => Promise<void>
-  createOwner: (owner: CreateOwner) => Promise<Owner>
+  createOwner: (owner: Omit<CreateOwner, 'clinic_id'>) => Promise<Owner>
   updateOwner: (id: string, updates: UpdateOwner) => Promise<Owner>
   deleteOwner: (id: string) => Promise<void>
-  searchOwners: (clinicId: string, filters: OwnerSearchFilters) => Promise<void>
+  searchOwners: (filters: OwnerSearchFilters) => Promise<void>
   setSelectedOwner: (owner: Owner | null) => void
   clearError: () => void
   reset: () => void
@@ -29,10 +29,10 @@ export const useOwnerStore = create<OwnerStore>((set, get) => ({
   error: null,
 
   // Actions
-  fetchOwners: async (clinicId: string) => {
+  fetchOwners: async () => {
     set({ loading: true, error: null })
     try {
-      const owners = await OwnersService.getAll(clinicId)
+      const owners = await OwnersService.getAll()
       set({ owners, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
@@ -49,7 +49,7 @@ export const useOwnerStore = create<OwnerStore>((set, get) => ({
     }
   },
 
-  createOwner: async (ownerData: CreateOwner) => {
+  createOwner: async (ownerData: Omit<CreateOwner, 'clinic_id'>) => {
     set({ loading: true, error: null })
     try {
       const newOwner = await OwnersService.create(ownerData)
@@ -97,10 +97,10 @@ export const useOwnerStore = create<OwnerStore>((set, get) => ({
     }
   },
 
-  searchOwners: async (clinicId: string, filters: OwnerSearchFilters) => {
+  searchOwners: async (filters: OwnerSearchFilters) => {
     set({ loading: true, error: null })
     try {
-      const owners = await OwnersService.search(clinicId, filters)
+      const owners = await OwnersService.search(filters)
       set({ owners, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })

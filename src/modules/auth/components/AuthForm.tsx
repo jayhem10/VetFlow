@@ -166,7 +166,7 @@ export default function AuthForm({ type }: AuthFormProps) {
                 // TODO: Implémenter la réinitialisation de mot de passe
                 toast.error('Fonctionnalité à venir')
               }}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              className="text-sm text-green-700 dark:text-green-400 hover:underline"
             >
               Mot de passe oublié ?
             </button>
@@ -289,18 +289,18 @@ export default function AuthForm({ type }: AuthFormProps) {
                     checked={value}
                     onChange={onChange}
                     className={cn(
-                      "mt-1 h-4 w-4 text-blue-600 border-stone-300 dark:border-gray-600 rounded focus:ring-blue-500",
+                      "mt-1 h-4 w-4 text-green-700 border-stone-300 dark:border-gray-600 rounded focus:ring-green-500",
                       error && "border-red-500"
                     )}
                   />
                   <div>
                     <label htmlFor="terms" className="text-sm text-gray-600 dark:text-gray-400">
                       J'accepte les{' '}
-                      <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">
+                      <a href="#" className="text-green-700 dark:text-green-400 hover:underline">
                         conditions d'utilisation
                       </a>
                       {' '}et la{' '}
-                      <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">
+                      <a href="#" className="text-green-700 dark:text-green-400 hover:underline">
                         politique de confidentialité
                       </a>
                     </label>
@@ -335,7 +335,7 @@ export default function AuthForm({ type }: AuthFormProps) {
         </BodyText>
         <a 
           href={isLogin ? "/register" : "/login"} 
-          className="text-blue-600 dark:text-blue-400 hover:underline font-medium ml-1"
+          className="text-green-700 dark:text-green-400 hover:underline font-medium ml-1"
         >
           {isLogin ? "Créer un compte" : "Se connecter"}
         </a>

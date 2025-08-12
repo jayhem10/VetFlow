@@ -1,24 +1,27 @@
-import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const publicRoutes = ['/', '/login', '/register']
+const authRoutes = ['/api/auth']
 
-export async function middleware(req: NextRequest) {
-  const session = await auth()
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
-
-  // Si route publique, laisser passer
+  
+  // Laisser passer les routes API auth
+  if (authRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.next()
+  }
+  
+  // Si route publique, laisser passer sans vérification
   if (publicRoutes.includes(pathname)) {
-    if (session) {
-      // Si user déjà connecté, rediriger vers dashboard
-      return NextResponse.redirect(new URL('/dashboard', req.url))
-    }
     return NextResponse.next()
   }
 
-  // Routes protégées
-  if (!session) {
+  // Pour les routes protégées, vérifier la présence d'un token de session
+  const sessionToken = req.cookies.get('next-auth.session-token') || 
+                      req.cookies.get('__Secure-next-auth.session-token')
+  
+  if (!sessionToken) {
     return NextResponse.redirect(new URL('/login', req.url))
   }
 

@@ -58,7 +58,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         required={required}
         disabled={disabled}
         autoComplete={autoComplete}
-        className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+        className={`w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors ${
           hasError 
             ? 'border-red-500 dark:border-red-500' 
             : 'border-stone-300 dark:border-gray-600'

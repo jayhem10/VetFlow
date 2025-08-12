@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from '@/providers/ToastProvider';
+import { SessionProvider } from '@/providers/SessionProvider';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -48,8 +49,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased bg-stone-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300`}>
-        {children}
-        <ToastProvider />
+        <SessionProvider>
+          {children}
+          <ToastProvider />
+        </SessionProvider>
       </body>
     </html>
   );

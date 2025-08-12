@@ -10,12 +10,12 @@ interface AnimalStore {
   error: string | null
 
   // Actions
-  fetchAnimals: (clinicId: string) => Promise<void>
+  fetchAnimals: () => Promise<void>
   fetchAnimalById: (id: string) => Promise<void>
-  createAnimal: (animal: CreateAnimal) => Promise<Animal>
+  createAnimal: (animal: Omit<CreateAnimal, 'clinic_id'>) => Promise<Animal>
   updateAnimal: (id: string, updates: UpdateAnimal) => Promise<Animal>
   deleteAnimal: (id: string) => Promise<void>
-  searchAnimals: (clinicId: string, filters: AnimalSearchFilters) => Promise<void>
+  searchAnimals: (filters: AnimalSearchFilters) => Promise<void>
   getAnimalsByOwner: (ownerId: string) => Promise<void>
   updateAnimalStatus: (id: string, status: 'active' | 'deceased' | 'inactive', deceasedDate?: string) => Promise<void>
   setSelectedAnimal: (animal: Animal | null) => void
@@ -31,10 +31,10 @@ export const useAnimalStore = create<AnimalStore>((set, get) => ({
   error: null,
 
   // Actions
-  fetchAnimals: async (clinicId: string) => {
+  fetchAnimals: async () => {
     set({ loading: true, error: null })
     try {
-      const animals = await AnimalsService.getAll(clinicId)
+      const animals = await AnimalsService.getAll()
       set({ animals, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
@@ -51,7 +51,7 @@ export const useAnimalStore = create<AnimalStore>((set, get) => ({
     }
   },
 
-  createAnimal: async (animalData: CreateAnimal) => {
+  createAnimal: async (animalData: Omit<CreateAnimal, 'clinic_id'>) => {
     set({ loading: true, error: null })
     try {
       const newAnimal = await AnimalsService.create(animalData)
@@ -99,10 +99,10 @@ export const useAnimalStore = create<AnimalStore>((set, get) => ({
     }
   },
 
-  searchAnimals: async (clinicId: string, filters: AnimalSearchFilters) => {
+  searchAnimals: async (filters: AnimalSearchFilters) => {
     set({ loading: true, error: null })
     try {
-      const animals = await AnimalsService.search(clinicId, filters)
+      const animals = await AnimalsService.search(filters)
       set({ animals, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })

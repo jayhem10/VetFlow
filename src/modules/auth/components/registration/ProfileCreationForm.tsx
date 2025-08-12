@@ -1,25 +1,16 @@
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { profileCreationSchema, type ProfileCreationData } from '@/schemas/auth.schema'
 import Input from '@/components/atoms/Input'
 import Button from '@/components/atoms/Button'
 
-import { useProfile } from '@/modules/profile/hooks/use-profile'
+import { useCompleteProfileStore, type ProfileData } from '@/stores/completeProfileStore'
 import { useAuth } from '@/modules/auth/hooks/use-auth'
 import { toast } from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 
 // Schéma strictement pour les champs de la table profiles uniquement
-const profileSchema = z.object({
-  first_name: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères'),
-  last_name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
-  phone: z.string().min(10, 'Numéro de téléphone invalide').optional(),
-  role: z.enum(['owner', 'vet', 'assistant', 'admin']).default('owner'),
-  license_number: z.string().optional(),
-  specialties: z.array(z.string()).optional(),
-})
-
-type ProfileFormData = z.infer<typeof profileSchema>
+type ProfileFormData = ProfileCreationData
 
 interface ProfileCreationFormProps {
   onSuccess?: () => void
@@ -27,17 +18,17 @@ interface ProfileCreationFormProps {
 
 export function ProfileCreationForm({ onSuccess }: ProfileCreationFormProps = {}) {
   const { user } = useAuth()
-  const { createInitialProfile, loading, error } = useProfile()
+  const { setProfileData, profileData } = useCompleteProfileStore()
   
   const form = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(profileCreationSchema),
     defaultValues: {
-      first_name: '',
-      last_name: '',
-      phone: '',
-      role: 'owner',
-      license_number: '',
-      specialties: [],
+      first_name: profileData?.first_name || '',
+      last_name: profileData?.last_name || '',
+      phone: profileData?.phone || '',
+      role: profileData?.role || 'vet',
+      license_number: profileData?.license_number || '',
+      specialties: profileData?.specialties || [],
     }
   })
 
@@ -48,23 +39,25 @@ export function ProfileCreationForm({ onSuccess }: ProfileCreationFormProps = {}
     }
 
     try {
-      // Créer SEULEMENT le profil avec les champs de la table profiles
-      await createInitialProfile({
-        id: user.id,
+      // Sauvegarder les données du profil dans le store (pas d'appel API)
+      const profileData: ProfileData = {
         first_name: data.first_name,
         last_name: data.last_name,
-        email: user.email!,
-        phone: data.phone || undefined,
+        phone: data.phone,
         role: data.role,
-        license_number: data.license_number || undefined,
-        specialties: data.specialties || undefined,
-        registration_step: 'profile'
-      })
-      toast.success('Profil créé avec succès !')
-      onSuccess?.() // Notifier le parent que le profil a été créé
+        license_number: data.license_number,
+        specialties: data.specialties || [],
+      }
+      
+      setProfileData(profileData)
+      toast.success('Informations de profil sauvegardées !')
+      
+      // Passer directement à l'étape suivante
+      onSuccess?.()
+      
     } catch (error) {
-      console.error('Erreur création profil:', error)
-      toast.error('Erreur lors de la création du profil')
+      console.error('Erreur sauvegarde profil:', error)
+      toast.error('Erreur lors de la sauvegarde')
     }
   }
 
@@ -164,7 +157,7 @@ export function ProfileCreationForm({ onSuccess }: ProfileCreationFormProps = {}
                 {...field}
                 className={cn(
                   "w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100",
-                  "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors",
+                  "focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors",
                   error ? "border-red-500" : "border-gray-300 dark:border-gray-600"
                 )}
                 required
@@ -219,7 +212,7 @@ export function ProfileCreationForm({ onSuccess }: ProfileCreationFormProps = {}
                           field.onChange(current.filter(s => s !== specialty))
                         }
                       }}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-300 text-green-700 focus:ring-green-500"
                     />
                     <span className="text-sm text-gray-700 dark:text-gray-300">
                       {specialty}
@@ -234,24 +227,15 @@ export function ProfileCreationForm({ onSuccess }: ProfileCreationFormProps = {}
           )}
         />
 
-        {/* Affichage des erreurs globales */}
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <p className="text-sm text-red-600 dark:text-red-400">
-              {error}
-            </p>
-          </div>
-        )}
-
         {/* Bouton de soumission */}
         <Button
           type="submit"
           variant="primary"
           size="lg"
           className="w-full"
-          disabled={loading}
+          disabled={form.formState.isSubmitting}
         >
-          {loading ? 'Création en cours...' : '✨ Créer mon profil'}
+          {form.formState.isSubmitting ? 'Sauvegarde en cours...' : '✨ Sauvegarder mon profil'}
         </Button>
       </form>
     </div>

@@ -1,1 +1,46 @@
 @import "tailwindcss";
+
+/* Configuration du dark mode pour Tailwind v4 */
+@variant dark (.dark &);
+
+/* Variables CSS pour les thèmes */
+@layer base {
+  :root {
+    --color-background: 255 255 255;
+    --color-foreground: 0 0 0;
+  }
+  
+  .dark {
+    --color-background: 0 0 0;
+    --color-foreground: 255 255 255;
+  }
+  
+  html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+    background-color: rgb(var(--color-background));
+    color: rgb(var(--color-foreground));
+  }
+}
+
+/* Debug CSS */
+.debug-dark {
+  background: red !important;
+  width: 12px;
+  height: 12px;
+}
+
+.dark .debug-dark {
+  background: green !important;
+}
+
+/* Forcer le style du body pour être sûr */
+body {
+  background-color: white;
+  color: black;
+  transition: all 0.3s ease;
+}
+
+.dark body {
+  background-color: rgb(17, 24, 39) !important; /* gray-900 */
+  color: white !important;
+}

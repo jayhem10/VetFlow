@@ -45,9 +45,9 @@ export function MultiStepForm({
                     className={cn(
                       "flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all",
                       currentStep === index
-                        ? "bg-blue-600 border-blue-600 text-white"
+                        ? "bg-green-700 border-green-700 text-white"
                         : currentStep > index
-                        ? "bg-green-600 border-green-600 text-white"
+                        ? "bg-green-700 border-green-700 text-white"
                         : "bg-gray-100 border-gray-300 text-gray-500"
                     )}
                   >
@@ -64,7 +64,7 @@ export function MultiStepForm({
                   <div className="mt-3 text-center">
                     <div className={cn(
                       "text-sm font-medium transition-colors",
-                      currentStep >= index ? "text-blue-600" : "text-gray-500"
+                      currentStep >= index ? "text-green-700" : "text-gray-500"
                     )}>
                       {step.title}
                     </div>
@@ -78,7 +78,7 @@ export function MultiStepForm({
                 {index < steps.length - 1 && (
                   <div className={cn(
                     "w-24 h-0.5 mx-6 mt-6 transition-colors",
-                    currentStep > index ? "bg-green-600" : "bg-gray-200"
+                    currentStep > index ? "bg-green-700" : "bg-gray-200"
                   )} />
                 )}
               </div>
@@ -95,12 +95,12 @@ export function MultiStepForm({
           </div>
           <div className="flex items-center justify-center">
             <div
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 border-blue-600 text-white"
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-green-700 border-green-700 text-white"
             >
               <span className="text-sm font-medium">{currentStep + 1}</span>
             </div>
             <div className="ml-3">
-              <div className="text-lg font-medium text-blue-600">
+              <div className="text-lg font-medium text-green-700">
                 {steps[currentStep].title}
               </div>
               <div className="text-sm text-gray-500">
@@ -112,7 +112,7 @@ export function MultiStepForm({
           {/* Progress Bar */}
           <div className="mt-4 bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-green-700 h-2 rounded-full transition-all duration-300"
               style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
             />
           </div>
@@ -178,7 +178,7 @@ export function MultiStepForm({
               "px-8 py-3 text-sm font-medium rounded-md transition-colors",
               !canContinue || isSubmitting
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl"
+                : "bg-green-700 text-white hover:bg-green-800 shadow-lg hover:shadow-xl"
             )}
           >
           {isSubmitting ? (

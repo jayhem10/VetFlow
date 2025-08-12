@@ -15,9 +15,10 @@ export interface Owner {
   notes?: string
   created_at: string
   updated_at: string
+  animals?: number // Nombre d'animaux associés
 }
 
-export type CreateOwner = Omit<Owner, 'id' | 'created_at' | 'updated_at'>
+export type CreateOwner = Omit<Owner, 'id' | 'created_at' | 'updated_at' | 'animals'>
 export type UpdateOwner = Partial<CreateOwner>
 
 export interface OwnerFormData {

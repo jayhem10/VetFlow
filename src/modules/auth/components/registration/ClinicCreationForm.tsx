@@ -4,28 +4,54 @@ import { clinicCreationSchema, type ClinicCreationData } from '@/schemas/auth.sc
 import Button from '@/components/atoms/Button'
 import Input from '@/components/atoms/Input'
 import Select from '@/components/atoms/Select'
+import { useCompleteProfileStore, type ClinicData } from '@/stores/completeProfileStore'
 import { toast } from 'react-hot-toast'
 
 interface ClinicCreationFormProps {
-  onSubmit: (data: ClinicCreationData) => Promise<void>
-  loading?: boolean
+  onSubmit?: () => Promise<void>
 }
 
-export function ClinicCreationForm({ onSubmit, loading }: ClinicCreationFormProps) {
+export function ClinicCreationForm({ onSubmit }: ClinicCreationFormProps) {
+  const { setClinicData, clinicData, loading } = useCompleteProfileStore()
+  
   const form = useForm<ClinicCreationData>({
     resolver: zodResolver(clinicCreationSchema),
     defaultValues: {
-      country: 'France',
-      subscription_plan: 'starter',
+      name: clinicData?.name || '',
+      email: clinicData?.email || '',
+      phone: clinicData?.phone || '',
+      address: clinicData?.address || '',
+      city: clinicData?.city || '',
+      postal_code: clinicData?.postal_code || '',
+      country: clinicData?.country || 'France',
+      subscription_plan: clinicData?.subscription_plan || 'starter',
     }
   })
 
   const handleSubmit = async (data: ClinicCreationData) => {
     try {
-      await onSubmit(data)
+      // Sauvegarder les données de la clinique dans le store
+      const clinicData: ClinicData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        city: data.city,
+        postal_code: data.postal_code,
+        country: data.country,
+        subscription_plan: data.subscription_plan,
+      }
+      
+      setClinicData(clinicData)
+      toast.success('Informations de clinique sauvegardées !')
+      
+      // Appeler la fonction de finalisation
+      if (onSubmit) {
+        await onSubmit()
+      }
     } catch (error) {
-      toast.error('Erreur lors de la création de la clinique')
-      console.error('Erreur création clinique:', error)
+      toast.error('Erreur lors de la sauvegarde')
+      console.error('Erreur sauvegarde clinique:', error)
     }
   }
 
@@ -78,22 +104,24 @@ export function ClinicCreationForm({ onSubmit, loading }: ClinicCreationFormProp
 
         <Select
           label="Forfait"
-          {...form.register('subscription_plan')}
+          value={form.watch('subscription_plan')}
+          onChange={(value) => form.setValue('subscription_plan', value as any)}
+          options={[
+            { value: 'starter', label: 'Starter - 49€/mois' },
+            { value: 'professional', label: 'Professional - 199€/mois' },
+            { value: 'clinic', label: 'Clinic - 199€/mois' }
+          ]}
           error={form.formState.errors.subscription_plan?.message}
-        >
-          <option value="starter">Starter</option>
-          <option value="professional">Professional</option>
-          <option value="clinic">Clinic</option>
-        </Select>
+        />
       </div>
 
       <Button
         type="submit"
         className="w-full"
         loading={loading}
-        disabled={loading}
+        disabled={loading || form.formState.isSubmitting}
       >
-        Créer ma clinique
+        {loading ? 'Finalisation en cours...' : '🚀 Finaliser la création'}
       </Button>
     </form>
   )

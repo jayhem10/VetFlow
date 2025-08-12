@@ -182,12 +182,12 @@ export type FullRegistrationData = z.infer<typeof fullRegistrationSchema>
 
 // Schéma pour la création du profil
 export const profileCreationSchema = z.object({
-  firstName: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères'),
-  lastName: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
-  phone: z.string().min(10, 'Numéro de téléphone invalide'),
-  role: z.enum(['veterinarian', 'assistant']).default('veterinarian'),
+  first_name: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères'),
+  last_name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
+  phone: z.string().optional(),
+  role: z.enum(['owner', 'vet', 'assistant', 'admin']).default('vet'),
   license_number: z.string().optional(),
-  specialties: z.array(z.string()).optional(),
+  specialties: z.array(z.string()).default([]),
 })
 
 export type ProfileCreationData = z.infer<typeof profileCreationSchema>
@@ -195,12 +195,12 @@ export type ProfileCreationData = z.infer<typeof profileCreationSchema>
 // Schéma pour la création de la clinique
 export const clinicCreationSchema = z.object({
   name: z.string().min(2, 'Le nom de la clinique doit contenir au moins 2 caractères'),
-  email: z.string().email('Email invalide'),
-  phone: z.string().min(10, 'Numéro de téléphone invalide'),
-  address: z.string().min(5, 'Adresse requise'),
-  city: z.string().min(2, 'Ville requise'),
-  postal_code: z.string().min(5, 'Code postal invalide'),
-  country: z.string().min(2, 'Pays requis').default('France'),
+  email: z.string().email('Email invalide').optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  postal_code: z.string().optional(),
+  country: z.string().default('France'),
   subscription_plan: z.enum(['starter', 'professional', 'clinic']).default('starter'),
 })
 
