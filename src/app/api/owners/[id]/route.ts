@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 
@@ -23,7 +24,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
     
     if (!session?.user) {
       return NextResponse.json(
@@ -89,7 +90,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
     
     if (!session?.user) {
       return NextResponse.json(
@@ -188,7 +189,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
     
     if (!session?.user) {
       return NextResponse.json(
@@ -220,20 +221,57 @@ export async function DELETE(
       )
     }
 
-    // Vérifier qu'il n'y a pas d'animaux associés
-    const animalsCount = await prisma.animal.count({
-      where: { owner_id: id }
+    // Récupérer tous les animaux du propriétaire
+    const animals = await prisma.animal.findMany({
+      where: { owner_id: id },
+      select: { id: true }
     })
 
-    if (animalsCount > 0) {
-      return NextResponse.json(
-        { error: 'Impossible de supprimer un propriétaire qui a des animaux associés' },
-        { status: 400 }
-      )
-    }
+    const animalIds = animals.map(animal => animal.id)
 
-    await prisma.owner.delete({
-      where: { id: id }
+    // Supprimer en cascade toutes les données associées
+    await prisma.$transaction(async (tx) => {
+      // Supprimer les rappels liés aux animaux
+      if (animalIds.length > 0) {
+        await tx.reminder.deleteMany({
+          where: { animal_id: { in: animalIds } }
+        })
+
+        // Supprimer les vaccinations liées aux animaux
+        await tx.vaccination.deleteMany({
+          where: { animal_id: { in: animalIds } }
+        })
+
+        // Supprimer les prescriptions liées aux animaux
+        await tx.prescription.deleteMany({
+          where: { animal_id: { in: animalIds } }
+        })
+
+        // Supprimer les dossiers médicaux liés aux animaux
+        await tx.medicalRecord.deleteMany({
+          where: { animal_id: { in: animalIds } }
+        })
+
+        // Supprimer les rendez-vous liés aux animaux
+        await tx.appointment.deleteMany({
+          where: { animal_id: { in: animalIds } }
+        })
+
+        // Supprimer les factures liées au propriétaire
+        await tx.invoice.deleteMany({
+          where: { owner_id: id }
+        })
+
+        // Supprimer les animaux
+        await tx.animal.deleteMany({
+          where: { owner_id: id }
+        })
+      }
+
+      // Supprimer le propriétaire
+      await tx.owner.delete({
+        where: { id: id }
+      })
     })
 
     return NextResponse.json({

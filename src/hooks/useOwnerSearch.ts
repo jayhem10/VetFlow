@@ -19,7 +19,7 @@ export function useOwnerSearch(options: UseOwnerSearchOptions = {}) {
   } = options
 
   const { clinic } = useClinic()
-  const { owners, fetchOwners, loading } = useOwnerStore()
+  const { owners, fetchAllOwners, loading } = useOwnerStore()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
@@ -39,9 +39,10 @@ export function useOwnerSearch(options: UseOwnerSearchOptions = {}) {
   // Charger les propriétaires si pas encore fait
   useEffect(() => {
     if (clinic?.id && owners.length === 0) {
-      fetchOwners()
+      // Charger tous les propriétaires pour la recherche (sans pagination)
+      fetchAllOwners()
     }
-  }, [clinic?.id, owners.length, fetchOwners])
+  }, [clinic?.id, owners.length, fetchAllOwners])
 
   // Filtrer les propriétaires selon la recherche
   const filteredOwners = useMemo(() => {

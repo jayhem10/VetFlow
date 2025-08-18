@@ -11,8 +11,10 @@ import type { Animal } from '@/types/animal.types'
 import { AnimalForm } from '@/modules/animal/components/AnimalForm'
 import { useAnimalStore } from '@/stores/useAnimalStore'
 import { OwnerForm } from '@/modules/owner/components/OwnerForm'
+import { OwnerAppointmentsHistory } from '@/components/molecules/OwnerAppointmentsHistory'
 import { toast } from 'react-hot-toast'
 import { useConfirm } from '@/hooks/useConfirm'
+import { EditButton } from '@/components/atoms/EditButton'
 
 export default function OwnerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -54,9 +56,9 @@ export default function OwnerDetailPage({ params }: { params: Promise<{ id: stri
   const handleDeleteAnimal = async (animalId: string) => {
     const confirmed = await confirm({
       title: "Supprimer l'animal",
-      description: "Êtes-vous sûr de vouloir supprimer définitivement cet animal ? Cette action est irréversible.",
-      confirmLabel: 'Supprimer',
-      cancelLabel: 'Annuler',
+      message: "Êtes-vous sûr de vouloir supprimer définitivement cet animal ? Cette action est irréversible.",
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
       variant: 'danger'
     })
     if (!confirmed) return
@@ -64,7 +66,8 @@ export default function OwnerDetailPage({ params }: { params: Promise<{ id: stri
     try {
       await deleteAnimal(animalId)
       toast.success('Animal supprimé avec succès')
-      if (owner) await loadData(owner.id)
+      // Mettre à jour l'état local des animaux
+      setAnimals(prev => prev.filter(animal => animal.id !== animalId))
     } catch (e) {
       toast.error("Erreur lors de la suppression de l'animal")
     }
@@ -72,15 +75,17 @@ export default function OwnerDetailPage({ params }: { params: Promise<{ id: stri
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-32">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div>
+        </div>
       </div>
     )
   }
 
   if (!owner) {
     return (
-      <div className="p-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card className="p-6">
           <div className="text-red-600">Propriétaire introuvable</div>
           <Button variant="outline" onClick={() => router.push('/owners')}>Retour</Button>
@@ -92,7 +97,7 @@ export default function OwnerDetailPage({ params }: { params: Promise<{ id: stri
   const animalsCount = animals.length
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Fiche propriétaire structurée en blocs */}
       <Card className="p-0 overflow-hidden">
         {/* En-tête moderne */}
@@ -126,7 +131,12 @@ export default function OwnerDetailPage({ params }: { params: Promise<{ id: stri
               <a href="/owners" className="md:order-3">
                 <Button variant="outline">↩ Retour</Button>
               </a>
-              <Button className="md:order-2" variant="outline" onClick={() => setShowOwnerForm(true)}>✏️ Modifier le profil</Button>
+              <EditButton 
+                className="md:order-2" 
+                showText={true}
+                text="Modifier le profil"
+                onClick={() => setShowOwnerForm(true)}
+              />
               <Button className="md:order-1" onClick={() => { setEditingAnimal(null); setShowAnimalForm(true) }}>➕ Ajouter un animal</Button>
             </div>
           </div>
@@ -220,13 +230,23 @@ export default function OwnerDetailPage({ params }: { params: Promise<{ id: stri
                   <div className="text-xs text-gray-500 mt-1">Statut: {animal.status}</div>
                 )}
                 <div className="flex gap-2 mt-3 justify-end">
-                  <Button variant="outline" size="sm" onClick={() => handleEditAnimal(animal)}>✏️ Modifier</Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleDeleteAnimal(animal.id)}>🗑️ Supprimer</Button>
+                  <EditButton
+                    showText={true}
+                    onClick={() => handleEditAnimal(animal)}
+                  />
+                  <Button variant="destructive" size="sm" onClick={() => handleDeleteAnimal(animal.id)}>
+                    🗑️
+                  </Button>
                 </div>
               </Card>
             ))}
           </div>
         )}
+      </Card>
+
+      {/* Historique des rendez-vous */}
+      <Card className="p-6">
+        <OwnerAppointmentsHistory ownerId={owner.id} />
       </Card>
 
       {/* Modal ajout/édition animal */}

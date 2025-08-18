@@ -4,12 +4,15 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/hash'
 import { authOptions } from '@/lib/auth'
+import { canInviteCollaborators } from '@/lib/auth-utils'
 
 const inviteSchema = z.object({
   email: z.string().email(),
   first_name: z.string().min(1),
   last_name: z.string().min(1),
   role: z.enum(['vet', 'assistant']),
+  is_admin: z.boolean().optional().default(false),
+  calendar_color: z.enum(['emerald','blue','purple','rose','amber','lime','cyan','fuchsia','indigo','teal']).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -26,14 +29,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = inviteSchema.parse(body)
 
-    // Déterminer la clinique depuis le profil du user courant
+    // Déterminer la clinique depuis le profil du user couracnt
     const currentProfile = await prisma.profile.findFirst({ where: { userId: session.user.id } })
     if (!currentProfile?.clinicId) {
       return NextResponse.json({ error: 'Aucune clinique associée' }, { status: 404 })
     }
 
     // Vérifier que l'utilisateur est autorisé (admin, owner ou vet)
-    if (!['admin', 'owner', 'vet'].includes(currentProfile.role)) {
+    if (!canInviteCollaborators(currentProfile.role)) {
       return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 })
     }
 
@@ -54,13 +57,17 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Construire le rôle final (rôle de base + admin si demandé)
+    const finalRole = validatedData.is_admin ? `${validatedData.role},admin` : validatedData.role
+
     const newProfile = await prisma.profile.create({
       data: {
         userId: user.id,
         firstName: validatedData.first_name,
         lastName: validatedData.last_name,
-        role: validatedData.role,
+        role: finalRole,
         clinicId: currentProfile.clinicId,
+        calendarColor: validatedData.calendar_color || null,
       }
     })
 
@@ -74,6 +81,7 @@ export async function POST(request: NextRequest) {
         first_name: newProfile.firstName,
         last_name: newProfile.lastName,
         role: newProfile.role,
+        calendar_color: newProfile.calendarColor || null,
         is_active: true,
         created_at: newProfile.createdAt.toISOString(),
       }

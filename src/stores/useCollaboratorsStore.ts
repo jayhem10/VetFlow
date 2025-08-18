@@ -7,6 +7,8 @@ export interface InviteCollaboratorData {
   firstName: string
   lastName: string
   role: 'vet' | 'assistant'
+  is_admin?: boolean
+  calendarColor?: string
 }
 
 interface CollaboratorsStore {
@@ -65,13 +67,29 @@ export const useCollaboratorsStore = create<CollaboratorsStore>((set, get) => ({
     }
   },
 
-  updateCollaboratorRole: async (profileId: string, role: 'vet' | 'assistant') => {
+  updateCollaboratorRole: async (profileId: string, role: string) => {
     set({ loading: true, error: null })
     try {
       await CollaboratorsService.updateRole(profileId, role)
       set((state) => ({
         collaborators: state.collaborators.map(collab => 
           collab.id === profileId ? { ...collab, role } : collab
+        ),
+        loading: false
+      }))
+    } catch (error) {
+      set({ error: (error as Error).message, loading: false })
+      throw error
+    }
+  },
+
+  updateCollaboratorColor: async (profileId: string, calendarColor: string) => {
+    set({ loading: true, error: null })
+    try {
+      await CollaboratorsService.updateColor(profileId, calendarColor)
+      set((state) => ({
+        collaborators: state.collaborators.map(collab => 
+          collab.id === profileId ? { ...collab, calendar_color: calendarColor } : collab
         ),
         loading: false
       }))

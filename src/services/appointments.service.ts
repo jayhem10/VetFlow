@@ -1,7 +1,7 @@
 import type { Appointment, CreateAppointment, UpdateAppointment, AppointmentSearchFilters } from '@/types/appointment.types'
 
 export class AppointmentsService {
-  static async getAll(): Promise<Appointment[]> {
+  static async getAll(_clinicId?: string): Promise<Appointment[]> {
     const response = await fetch(`/api/appointments`)
     if (!response.ok) {
       throw new Error('Erreur lors de la récupération des rendez-vous')
@@ -74,7 +74,7 @@ export class AppointmentsService {
     return data.appointments
   }
 
-  static async getToday(): Promise<Appointment[]> {
+  static async getToday(_clinicId?: string): Promise<Appointment[]> {
     const response = await fetch(`/api/appointments/today`)
     if (!response.ok) {
       throw new Error('Erreur lors de la récupération des rendez-vous du jour')
@@ -83,7 +83,7 @@ export class AppointmentsService {
     return data.appointments
   }
 
-  static async getUpcoming(days: number = 7): Promise<Appointment[]> {
+  static async getUpcoming(_clinicId?: string, days: number = 7): Promise<Appointment[]> {
     const response = await fetch(`/api/appointments/upcoming?days=${days}`)
     if (!response.ok) {
       throw new Error('Erreur lors de la récupération des rendez-vous à venir')
@@ -108,6 +108,7 @@ export class AppointmentsService {
   }
 
   static async checkAvailability(
+    clinicId: string,
     veterinarianId: string,
     appointmentDate: string,
     duration: number = 30,

@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import Button from '@/components/atoms/Button';
+import { EditButton } from '@/components/atoms/EditButton';
+import Card from '@/components/atoms/Card';
+import { Tooltip } from '@/components/atoms/Tooltip';
 import { useOwnerStore } from '@/stores/useOwnerStore';
 import { useClinic } from '@/modules/clinic/hooks/use-clinic';
 import { OwnerForm } from './OwnerForm';
-import { useConfirm } from '@/hooks/useConfirm';
 import type { Owner } from '@/types/owner.types';
 
 interface OwnersListTableProps {
@@ -30,26 +32,6 @@ export function OwnersListTable({
   onCloseForm,
   onFormSuccess
 }: OwnersListTableProps) {
-  const { confirm, ConfirmDialog } = useConfirm();
-
-  const handleDelete = async (owner: Owner) => {
-    const confirmed = await confirm({
-      title: 'Supprimer le propriétaire',
-      description: `Êtes-vous sûr de vouloir supprimer ${owner.first_name} ${owner.last_name} ? Cette action est irréversible et supprimera également tous les animaux associés.`,
-      confirmLabel: 'Supprimer',
-      cancelLabel: 'Annuler',
-      variant: 'danger'
-    });
-
-    if (!confirmed) return;
-
-    try {
-      await onDelete(owner);
-      toast.success('Propriétaire supprimé avec succès');
-    } catch (error) {
-      toast.error('Erreur lors de la suppression');
-    }
-  };
 
   if (owners.length === 0) {
     return (
@@ -176,23 +158,27 @@ export function OwnersListTable({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-2">
-                    <a href={`/owners/${owner.id}`}>
-                      <Button variant="outline" size="sm">🔎 Voir la fiche</Button>
-                    </a>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onEdit(owner)}
-                    >
-                      ✏️ Modifier
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(owner)}
-                    >
-                      🗑️ Supprimer
-                    </Button>
+                    <Tooltip content="Voir fiche">
+                      <a href={`/owners/${owner.id}`}>
+                        <Button variant="outline" size="sm">🔎</Button>
+                      </a>
+                    </Tooltip>
+                    
+                    <Tooltip content="Modifier">
+                      <EditButton onClick={() => onEdit(owner)} />
+                    </Tooltip>
+                    
+                    <Tooltip content="Supprimer">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => onDelete(owner)}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </Button>
+                    </Tooltip>
                   </div>
                 </td>
               </tr>
@@ -209,9 +195,6 @@ export function OwnersListTable({
           onSuccess={onFormSuccess}
         />
       )}
-
-      {/* Dialog de confirmation */}
-      <ConfirmDialog />
     </div>
   );
 }

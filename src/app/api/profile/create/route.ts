@@ -9,7 +9,12 @@ const createProfileSchema = z.object({
   first_name: z.string().min(1, 'Prénom requis'),
   last_name: z.string().min(1, 'Nom requis'),
   phone: z.string().optional(),
-  role: z.enum(['owner', 'vet', 'assistant', 'admin']).optional(),
+  role: z.string().refine((val) => {
+    if (!val) return true // Rôle optionnel
+    const roles = val.split(',').map(r => r.trim())
+    const validRoles = ['owner', 'vet', 'assistant', 'admin']
+    return roles.every(role => validRoles.includes(role))
+  }, 'Rôles invalides').optional(),
   license_number: z.string().optional(),
   specialties: z.array(z.string()).default([]),
   clinic_id: z.string().optional(),

@@ -16,6 +16,8 @@ const inviteSchema = z.object({
   role: z.enum(['vet', 'assistant'], {
     required_error: 'Le rôle est requis'
   }),
+  isAdmin: z.boolean().optional().default(false),
+  calendarColor: z.enum(['emerald','blue','purple','rose','amber','lime','cyan','fuchsia','indigo','teal']).optional(),
 });
 
 type InviteFormData = z.infer<typeof inviteSchema>;
@@ -35,6 +37,8 @@ export function InviteCollaboratorModal({ onClose, onSuccess }: InviteCollaborat
       firstName: '',
       lastName: '',
       role: 'assistant',
+      isAdmin: false,
+      calendarColor: undefined,
     },
   });
 
@@ -42,13 +46,16 @@ export function InviteCollaboratorModal({ onClose, onSuccess }: InviteCollaborat
     try {
       await inviteCollaborator({
         ...data,
+        is_admin: data.isAdmin,
+        calendarColor: data.calendarColor,
       });
 
       toast.success('Invitation envoyée avec succès !');
       onSuccess();
     } catch (error) {
-      console.error('Erreur invitation:', error);
-      toast.error('Erreur lors de l\'envoi de l\'invitation');
+      const message = (error as Error)?.message || 'Erreur lors de l\'envoi de l\'invitation';
+      console.error('Erreur invitation:', message);
+      toast.error(message);
     }
   };
 
@@ -125,6 +132,47 @@ export function InviteCollaboratorModal({ onClose, onSuccess }: InviteCollaborat
               ]}
               placeholder="Sélectionner un rôle"
               error={form.formState.errors.role?.message}
+            />
+          </div>
+
+          {/* Droits administrateur */}
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                {...form.register('isAdmin')}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Accorder les droits administrateur
+              </span>
+            </label>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Permet d'inviter d'autres collaborateurs et d'accéder aux paramètres avancés
+            </p>
+          </div>
+
+          {/* Couleur calendrier */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Couleur du calendrier
+            </label>
+            <Select
+              value={form.watch('calendarColor') as any}
+              onChange={(value) => form.setValue('calendarColor', value as any)}
+              options={[
+                { value: 'emerald', label: 'Emerald' },
+                { value: 'blue', label: 'Blue' },
+                { value: 'purple', label: 'Purple' },
+                { value: 'rose', label: 'Rose' },
+                { value: 'amber', label: 'Amber' },
+                { value: 'lime', label: 'Lime' },
+                { value: 'cyan', label: 'Cyan' },
+                { value: 'fuchsia', label: 'Fuchsia' },
+                { value: 'indigo', label: 'Indigo' },
+                { value: 'teal', label: 'Teal' },
+              ]}
+              placeholder="Choisir une couleur (optionnel)"
             />
           </div>
 

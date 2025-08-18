@@ -2,46 +2,46 @@
 
 import { cn } from '@/lib/utils';
 
+interface ViewToggleOption {
+  value: string;
+  label: string;
+  icon?: string;
+}
+
 interface ViewToggleProps {
-  view: 'grid' | 'list';
-  onViewChange: (view: 'grid' | 'list') => void;
+  view: string;
+  onViewChange: (view: string) => void;
+  options?: ViewToggleOption[];
   className?: string;
 }
 
-export function ViewToggle({ view, onViewChange, className }: ViewToggleProps) {
+export function ViewToggle({ view, onViewChange, options, className }: ViewToggleProps) {
+  // Options par défaut pour la compatibilité
+  const defaultOptions: ViewToggleOption[] = [
+    { value: 'grid', label: 'Grille', icon: '⊞' },
+    { value: 'list', label: 'Liste', icon: '☰' }
+  ];
+
+  const toggleOptions = options || defaultOptions;
+
   return (
     <div className={cn('flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1', className)}>
-      <button
-        onClick={() => onViewChange('grid')}
-        className={cn(
-          'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-          view === 'grid'
-            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-        )}
-        aria-label="Vue grille"
-      >
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M3 3h7v7H3V3zm0 11h7v7H3v-7zm11-11h7v7h-7V3zm0 11h7v7h-7v-7z"/>
-        </svg>
-        <span className="hidden sm:inline">Grille</span>
-      </button>
-      
-      <button
-        onClick={() => onViewChange('list')}
-        className={cn(
-          'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-          view === 'list'
-            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-        )}
-        aria-label="Vue liste"
-      >
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
-        </svg>
-        <span className="hidden sm:inline">Liste</span>
-      </button>
+      {toggleOptions.map((option) => (
+        <button
+          key={option.value}
+          onClick={() => onViewChange(option.value)}
+          className={cn(
+            'flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-md text-sm font-medium transition-colors',
+            view === option.value
+              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          )}
+          aria-label={`Vue ${option.label}`}
+        >
+          {option.icon && <span className="text-base">{option.icon}</span>}
+          <span className="hidden sm:inline">{option.label}</span>
+        </button>
+      ))}
     </div>
   );
 }

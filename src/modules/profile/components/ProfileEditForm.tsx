@@ -6,15 +6,22 @@ import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
-import Select from '@/components/atoms/Select';
+import { MultiRoleSelect } from '@/components/molecules/MultiRoleSelect';
 import { useProfile } from '@/modules/profile/hooks/use-profile';
+import { useClinic } from '@/modules/clinic/hooks/use-clinic';
+import { useSession } from 'next-auth/react';
 import type { TProfile } from '@/types/database.types';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Le prénom est requis'),
   lastName: z.string().min(1, 'Le nom est requis'),
   phone: z.string().optional(),
-  role: z.enum(['owner', 'vet', 'assistant', 'admin']),
+  role: z.string().refine((val) => {
+    if (!val) return true // Rôle optionnel
+    const roles = val.split(',').map(r => r.trim())
+    const validRoles = ['owner', 'vet', 'assistant', 'admin']
+    return roles.every(role => validRoles.includes(role))
+  }, 'Rôles invalides'),
   licenseNumber: z.string().optional(),
   specialties: z.array(z.string()).default([]),
 });
@@ -29,6 +36,12 @@ interface ProfileEditFormProps {
 
 export function ProfileEditForm({ profile, onSuccess, onCancel }: ProfileEditFormProps) {
   const { updateProfile } = useProfile();
+  const { clinic } = useClinic();
+  const { data: session } = useSession();
+  
+  // Déterminer si l'utilisateur actuel est le créateur de la clinique
+  const isClinicCreator = clinic?.created_at && profile?.created_at && 
+    new Date(profile.created_at) <= new Date(clinic.created_at);
   
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -82,6 +95,9 @@ export function ProfileEditForm({ profile, onSuccess, onCancel }: ProfileEditFor
     form.setValue('specialties', currentSpecialties.filter((_, i) => i !== index));
   };
 
+  // Vérifier si l'utilisateur a le rôle vétérinaire
+  const hasVetRole = form.watch('role')?.includes('vet') || false;
+
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -122,43 +138,36 @@ export function ProfileEditForm({ profile, onSuccess, onCancel }: ProfileEditFor
             error={form.formState.errors.phone?.message}
           />
         </div>
-
-        {/* Rôle */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Rôle *
-          </label>
-          <Select
-            value={form.watch('role')}
-            onChange={(value) => form.setValue('role', value as 'vet' | 'assistant' | 'owner' | 'admin')}
-            options={[
-              { value: 'vet', label: 'Vétérinaire' },
-              { value: 'assistant', label: 'Assistant(e)' },
-              { value: 'owner', label: 'Propriétaire' },
-              { value: 'admin', label: 'Administrateur' }
-            ]}
-            placeholder="Sélectionner un rôle"
-            error={form.formState.errors.role?.message}
-          />
-        </div>
-
-        {/* Numéro de licence (conditionnel) */}
-        {form.watch('role') === 'vet' && (
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Numéro de licence vétérinaire
-            </label>
-            <Input
-              {...form.register('licenseNumber')}
-              placeholder="ex: 12345"
-              error={form.formState.errors.licenseNumber?.message}
-            />
-          </div>
-        )}
       </div>
 
+      {/* Rôles multiples */}
+      <div>
+        <MultiRoleSelect
+          value={form.watch('role') || ''}
+          onChange={(value) => form.setValue('role', value)}
+          label="Rôles *"
+          error={form.formState.errors.role?.message}
+          isCurrentUser={true}
+          isClinicCreator={isClinicCreator}
+        />
+      </div>
+
+      {/* Numéro de licence (conditionnel) */}
+      {hasVetRole && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Numéro de licence vétérinaire
+          </label>
+          <Input
+            {...form.register('licenseNumber')}
+            placeholder="ex: 12345"
+            error={form.formState.errors.licenseNumber?.message}
+          />
+        </div>
+      )}
+
       {/* Spécialités */}
-      {form.watch('role') === 'vet' && (
+      {hasVetRole && (
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Spécialités

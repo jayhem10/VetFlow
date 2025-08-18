@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useAuth } from '@/modules/auth/hooks/use-auth'
+import { useSession } from 'next-auth/react'
 import Header from '@/components/organisms/Header'
-
-// Utiliser le header unifié pour toutes les pages connectées
 
 function ProtectedFooter() {
   return (
@@ -75,21 +73,20 @@ export default function ProtectedLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { user, hasProfile, hasClinic, loading: authLoading } = useAuth()
+  const { data: session, status } = useSession()
   const router = useRouter()
   const pathname = usePathname()
   const [redirecting, setRedirecting] = useState(false)
 
-  const loading = authLoading
+  const loading = status === 'loading'
 
   useEffect(() => {
-    if (loading) return // Attendre que l'authentification, le profil et la clinique soient chargés
+    if (loading) return
 
-    console.log('🔍 ProtectedLayout - user:', !!user, 'hasProfile:', hasProfile, 'hasClinic:', hasClinic, 'pathname:', pathname, 'loading:', loading)
+    console.log('🔍 ProtectedLayout - session:', !!session, 'pathname:', pathname, 'loading:', loading)
 
-    if (!user) {
-      console.log('👤 Pas d\'utilisateur, redirection vers login')
-      // SEULEMENT rediriger si on n'est pas déjà sur login ou register
+    if (!session) {
+      console.log('👤 Pas de session, redirection vers login')
       if (pathname !== '/login' && pathname !== '/register') {
         router.push('/login')
       }
@@ -101,30 +98,33 @@ export default function ProtectedLayout({
       return
     }
 
+    // Vérifier si l'utilisateur a un profil et une clinique
+    const hasProfile = session.user?.hasProfile || false
+    const hasClinic = session.user?.hasClinic || false
+
     // Si l'utilisateur n'a pas de profil OU de clinique et que le chargement est terminé, rediriger vers complete-profile
     if ((!hasProfile || !hasClinic) && !redirecting && !loading) {
       console.log('📋 Profil ou clinique manquant, redirection vers complete-profile')
       setRedirecting(true)
-      // Petit délai pour éviter les redirections trop rapides
       setTimeout(() => {
         router.push('/complete-profile')
       }, 100)
     }
-  }, [loading, user, hasProfile, hasClinic, router, pathname, redirecting])
+  }, [loading, session, router, pathname, redirecting])
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div>
       </div>
     )
   }
 
-  if (!user) {
+  if (!session) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-muted-foreground">Redirection vers la page de connexion...</p>
+          <p className="text-gray-600 dark:text-gray-400">Redirection vers la page de connexion...</p>
         </div>
       </div>
     )
@@ -140,11 +140,14 @@ export default function ProtectedLayout({
   }
 
   // Si l'utilisateur n'a pas de profil ou de clinique et n'est pas sur complete-profile, rediriger
+  const hasProfile = session.user?.hasProfile || false
+  const hasClinic = session.user?.hasClinic || false
+  
   if (!hasProfile || !hasClinic) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-muted-foreground">Redirection vers la création du profil...</p>
+          <p className="text-gray-600 dark:text-gray-400">Redirection vers la création du profil...</p>
         </div>
       </div>
     )

@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
       role: c.role,
       license_number: c.licenseNumber,
       specialties: c.specialties,
+      calendar_color: c.calendarColor || null,
       is_active: true,
       last_login_at: null,
       created_at: c.createdAt.toISOString(),

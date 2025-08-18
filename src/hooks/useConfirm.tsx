@@ -1,55 +1,52 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import ConfirmDialog from '@/components/molecules/ConfirmDialog'
+import { useState, useCallback, useRef } from 'react'
+import { ConfirmDialog } from '@/components/molecules/ConfirmDialog'
 
 interface ConfirmOptions {
   title: string
-  description: string
-  confirmLabel?: string
-  cancelLabel?: string
+  message: string
+  confirmText?: string
+  cancelText?: string
   variant?: 'danger' | 'warning' | 'info'
-  icon?: React.ReactNode
 }
 
 interface ConfirmState extends ConfirmOptions {
   isOpen: boolean
   loading: boolean
-  onConfirm: () => void | Promise<void>
 }
 
 export function useConfirm() {
   const [state, setState] = useState<ConfirmState | null>(null)
+  const resolveRef = useRef<((value: boolean) => void) | null>(null)
 
   const confirm = useCallback((options: ConfirmOptions): Promise<boolean> => {
     return new Promise((resolve) => {
+      resolveRef.current = resolve
       setState({
         ...options,
         isOpen: true,
-        loading: false,
-        onConfirm: async () => {
-          setState(prev => prev ? { ...prev, loading: true } : null)
-          try {
-            resolve(true)
-          } finally {
-            setState(null)
-          }
-        }
+        loading: false
       })
-
-      // Handle cancel/close
-      const handleCancel = () => {
-        setState(null)
-        resolve(false)
-      }
-
-      // Store cancel handler for cleanup
-      setState(prev => prev ? { 
-        ...prev, 
-        onCancel: handleCancel 
-      } as any : null)
     })
   }, [])
+
+  const handleConfirm = useCallback(() => {
+    if (resolveRef.current && state?.isOpen) {
+      // Fermer immédiatement la modal et résoudre la promesse
+      resolveRef.current(true)
+      resolveRef.current = null
+      setState(null)
+    }
+  }, [state?.isOpen])
+
+  const handleCancel = useCallback(() => {
+    if (resolveRef.current && state?.isOpen) {
+      resolveRef.current(false)
+      resolveRef.current = null
+      setState(null)
+    }
+  }, [state?.isOpen])
 
   const ConfirmDialogComponent = useCallback(() => {
     if (!state) return null
@@ -57,20 +54,17 @@ export function useConfirm() {
     return (
       <ConfirmDialog
         isOpen={state.isOpen}
-        onClose={() => {
-          setState(null)
-        }}
-        onConfirm={state.onConfirm}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
         title={state.title}
-        description={state.description}
-        confirmLabel={state.confirmLabel}
-        cancelLabel={state.cancelLabel}
+        message={state.message}
+        confirmText={state.confirmText}
+        cancelText={state.cancelText}
         variant={state.variant}
         loading={state.loading}
-        icon={state.icon}
       />
     )
-  }, [state])
+  }, [state, handleConfirm, handleCancel])
 
   return {
     confirm,

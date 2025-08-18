@@ -8,8 +8,12 @@ import { useOwnerStore } from '@/stores/useOwnerStore'
 import { useAnimalStore } from '@/stores/useAnimalStore'
 import { useAppointmentStore } from '@/stores/useAppointmentStore'
 import { useCollaboratorsStore } from '@/stores/useCollaboratorsStore'
+import TodayAppointments from '@/components/organisms/TodayAppointments'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { AppointmentFormModal } from '@/components/molecules/AppointmentFormModal'
+import { AppointmentWithDetails } from '@/types/appointment.types'
+import { toast } from '@/lib/toast'
 
 export default function Dashboard() {
   const { user, hasProfile } = useAuth()
@@ -29,12 +33,13 @@ export default function Dashboard() {
   // Charger les données une fois que la clinique est disponible
   useEffect(() => {
     if (clinic?.id) {
-      fetchOwners()
+      // Ne pas charger les propriétaires ici car useOwnerSearch s'en charge
+      // fetchOwners()
       fetchAnimals()
       fetchAppointments(clinic.id)
       fetchCollaborators()
     }
-  }, [clinic?.id, fetchOwners, fetchAnimals, fetchAppointments, fetchCollaborators])
+  }, [clinic?.id, fetchAnimals, fetchAppointments, fetchCollaborators])
 
   // Récupérer les compteurs globaux via API count
   const [counts, setCounts] = useState<{owners?: number; animals?: number; appointments?: number; collaborators?: number}>({})
@@ -68,6 +73,38 @@ export default function Dashboard() {
              aptDate.getFullYear() === now.getFullYear()
     }).length,
     collaborators: counts.collaborators ?? collaborators.length
+  }
+
+  // États pour les modales
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentWithDetails | null>(null)
+  const [selectedVet, setSelectedVet] = useState<string>('all')
+
+  // Callbacks pour les modales
+  const handleEditAppointment = (appointment: AppointmentWithDetails) => {
+    setSelectedAppointment(appointment)
+    setShowEditModal(true)
+  }
+
+  const handleCreateAppointment = () => {
+    setShowCreateModal(true)
+  }
+
+  const handleModalSuccess = async () => {
+    if (clinic?.id) {
+      await fetchAppointments(clinic.id)
+    }
+    setShowEditModal(false)
+    setShowCreateModal(false)
+    setSelectedAppointment(null)
+    toast.success('Rendez-vous mis à jour avec succès')
+  }
+
+  const handleModalClose = () => {
+    setShowEditModal(false)
+    setShowCreateModal(false)
+    setSelectedAppointment(null)
   }
 
   
@@ -215,43 +252,31 @@ export default function Dashboard() {
 
           {/* Contenu principal */}
           <div className="lg:col-span-3 space-y-8">
-            
-
             {/* Activité récente */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
-                <span className="w-3 h-3 bg-emerald-500 rounded-full mr-3"></span>
-                Activité récente
-              </h2>
-              
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">📋</span>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Aucune activité récente
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  Commencez par ajouter des propriétaires et leurs animaux pour voir l'activité de votre clinique.
-                </p>
-                <div className="flex justify-center space-x-4">
-                  <button
-                    onClick={() => router.push('/owners')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                  >
-                    Ajouter un propriétaire
-                  </button>
-                  <button
-                    onClick={() => router.push('/animals')}
-                    className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                  >
-                    Ajouter un animal
-                  </button>
-                </div>
-              </div>
-            </div>
+            <TodayAppointments 
+              onEditAppointment={handleEditAppointment}
+              onCreateAppointment={handleCreateAppointment}
+            />
           </div>
         </div>
+
+        {/* Modales */}
+        <AppointmentFormModal
+          appointment={selectedAppointment}
+          isOpen={showEditModal}
+          onClose={handleModalClose}
+          onSuccess={handleModalSuccess}
+          mode="edit"
+        />
+
+        <AppointmentFormModal
+          isOpen={showCreateModal}
+          onClose={handleModalClose}
+          onSuccess={handleModalSuccess}
+          mode="create"
+          defaultDate={new Date().toISOString().slice(0, 16)}
+          defaultVetId={selectedVet !== 'all' ? selectedVet : undefined}
+        />
       </div>
     </DashboardLayout>
   )

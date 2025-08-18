@@ -14,6 +14,7 @@ interface OwnerStore {
 
   // Actions
   fetchOwners: (page?: number, pageSize?: number) => Promise<void>
+  fetchAllOwners: () => Promise<void>
   fetchOwnerById: (id: string) => Promise<void>
   createOwner: (owner: Omit<CreateOwner, 'clinic_id'>) => Promise<Owner>
   updateOwner: (id: string, updates: UpdateOwner) => Promise<Owner>
@@ -40,6 +41,16 @@ export const useOwnerStore = create<OwnerStore>((set, get) => ({
     try {
       const { owners, total, page: p, pageSize: ps } = await OwnersService.getAll(page, pageSize)
       set({ owners, ownersTotal: total, ownersPage: p, ownersPageSize: ps, loading: false })
+    } catch (error) {
+      set({ error: (error as Error).message, loading: false })
+    }
+  },
+
+  fetchAllOwners: async () => {
+    set({ loading: true, error: null })
+    try {
+      const owners = await OwnersService.getAllForSearch()
+      set({ owners, ownersTotal: owners.length, ownersPage: 1, ownersPageSize: owners.length, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
     }

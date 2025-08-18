@@ -19,6 +19,23 @@ export class OwnersService {
     return { owners: data.owners, total: data.total, page: data.page, pageSize: data.pageSize }
   }
 
+  static async getAllForSearch(): Promise<Owner[]> {
+    console.log('🔍 OwnersService.getAllForSearch() - Calling /api/owners/all')
+    const response = await fetch('/api/owners/all', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.message || 'Erreur lors de la récupération des propriétaires')
+    }
+
+    const data = await response.json()
+    console.log('🔍 OwnersService.getAllForSearch() - Received', data.owners?.length || 0, 'owners')
+    return data.owners
+  }
+
   static async getById(id: string): Promise<Owner> {
     const response = await fetch(`/api/owners/${id}`, {
       method: 'GET',

@@ -45,16 +45,27 @@ export class CollaboratorsService {
         first_name: inviteData.firstName,
         last_name: inviteData.lastName,
         role: inviteData.role,
+        is_admin: inviteData.is_admin,
+        calendar_color: inviteData.calendarColor,
       }),
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Erreur lors de l\'invitation')
+      let message = 'Erreur lors de l\'invitation'
+      try {
+        const text = await response.text()
+        try {
+          const errJson = JSON.parse(text)
+          message = errJson.error || errJson.message || message
+        } catch {
+          if (text) message = text
+        }
+      } catch {}
+      throw new Error(message)
     }
   }
 
-  static async updateRole(profileId: string, role: 'vet' | 'assistant'): Promise<void> {
+  static async updateRole(profileId: string, role: string): Promise<void> {
     const response = await fetch(`/api/collaborators/${profileId}/role`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -62,8 +73,41 @@ export class CollaboratorsService {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Erreur lors de la mise à jour du rôle')
+      let message = 'Erreur lors de la mise à jour du rôle'
+      try {
+        const errorData = await response.json()
+        message = errorData.error || errorData.message || message
+      } catch {
+        // Si la réponse n'est pas du JSON, utiliser le texte brut
+        try {
+          const text = await response.text()
+          if (text) message = text
+        } catch {}
+      }
+      throw new Error(message)
+    }
+  }
+
+  static async updateColor(profileId: string, calendarColor: string): Promise<void> {
+    const response = await fetch(`/api/collaborators/${profileId}/color`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ calendar_color: calendarColor }),
+    })
+
+    if (!response.ok) {
+      let message = 'Erreur lors de la mise à jour de la couleur'
+      try {
+        const errorData = await response.json()
+        message = errorData.error || errorData.message || message
+      } catch {
+        // Si la réponse n'est pas du JSON, utiliser le texte brut
+        try {
+          const text = await response.text()
+          if (text) message = text
+        } catch {}
+      }
+      throw new Error(message)
     }
   }
 
@@ -74,8 +118,18 @@ export class CollaboratorsService {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Erreur lors de la suppression')
+      let message = 'Erreur lors de la suppression'
+      try {
+        const errorData = await response.json()
+        message = errorData.error || errorData.message || message
+      } catch {
+        // Si la réponse n'est pas du JSON, utiliser le texte brut
+        try {
+          const text = await response.text()
+          if (text) message = text
+        } catch {}
+      }
+      throw new Error(message)
     }
   }
 }

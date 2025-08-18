@@ -73,11 +73,12 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Associer la clinique au profil de l'utilisateur
+    // Associer la clinique au profil de l'utilisateur et lui donner le rôle admin
     await prisma.profile.update({
       where: { id: profile.id },
       data: {
         clinicId: clinic.id,
+        role: profile.role ? `${profile.role},admin` : 'admin',
       },
     })
 

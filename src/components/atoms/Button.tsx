@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils"
 
-interface ButtonProps {
+export interface ButtonProps {
   children: React.ReactNode;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
   size?: 'sm' | 'md' | 'lg';
@@ -9,6 +9,7 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   type?: 'button' | 'submit' | 'reset';
+  style?: React.CSSProperties;
 }
 
 export default function Button({
@@ -19,16 +20,17 @@ export default function Button({
   onClick,
   disabled = false,
   loading = false,
-  type = 'button'
+  type = 'button',
+  style
 }: ButtonProps) {
-  const baseClasses = 'font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses = 'font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center';
   
   const variants = {
     primary: 'bg-green-700 hover:bg-green-800 text-white focus:ring-green-500 shadow-lg hover:shadow-xl',
     secondary: 'bg-green-700 hover:bg-green-800 text-white focus:ring-green-500 shadow-lg hover:shadow-xl',
     outline: 'border-2 border-green-700 text-green-700 hover:bg-green-800 hover:text-white focus:ring-green-500',
     ghost: 'text-gray-800 hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-700 focus:ring-gray-500',
-    destructive: 'border-2 border-red-700 text-red-700 hover:bg-red-700 hover:text-white focus:ring-red-500 shadow-lg hover:shadow-xl'
+    destructive: 'bg-red-600 hover:bg-red-700 text-white border-2 border-red-600 hover:border-red-700 focus:ring-red-500 shadow-lg hover:shadow-xl'
   };
 
   const sizes = {
@@ -45,6 +47,7 @@ export default function Button({
       className={combinedClasses}
       onClick={onClick}
       disabled={disabled || loading}
+      style={style}
     >
       {loading ? (
         <div className="flex items-center justify-center">

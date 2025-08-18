@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import SearchInput from '@/components/atoms/SearchInput';
+import { ViewToggle } from '@/components/atoms/ViewToggle';
 import { useClinic } from '@/modules/clinic/hooks/use-clinic';
 import { useCollaboratorsStore } from '@/stores/useCollaboratorsStore';
 import Button from '@/components/atoms/Button';
@@ -9,6 +10,7 @@ import Card from '@/components/atoms/Card';
 import { InviteCollaboratorModal } from '@/modules/collaborators/components/InviteCollaboratorModal';
 import ListLoader from '@/components/atoms/ListLoader';
 import { CollaboratorCard } from '@/modules/collaborators/components/CollaboratorCard';
+import { CollaboratorsList } from '@/modules/collaborators/components/CollaboratorsList';
 
 export default function CollaboratorsPage() {
   const { clinic, hasClinic } = useClinic();
@@ -23,6 +25,7 @@ export default function CollaboratorsPage() {
   
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [query, setQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const typingTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -49,27 +52,25 @@ export default function CollaboratorsPage() {
 
   if (!hasClinic) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-        <div className="max-w-4xl mx-auto">
-          <Card className="p-8 text-center">
-            <div className="mb-4">
-              <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">⚠️</span>
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                Clinique requise
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Vous devez créer votre clinique avant de pouvoir inviter des collaborateurs.
-              </p>
-              <a href="/complete-profile">
-                <Button>
-                  🏥 Créer ma clinique
-                </Button>
-              </a>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card className="p-8 text-center">
+          <div className="mb-4">
+            <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">⚠️</span>
             </div>
-          </Card>
-        </div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Clinique requise
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Vous devez créer votre clinique avant de pouvoir inviter des collaborateurs.
+            </p>
+            <a href="/complete-profile">
+              <Button>
+                🏥 Créer ma clinique
+              </Button>
+            </a>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -77,11 +78,10 @@ export default function CollaboratorsPage() {
   const isInitialLoading = loading && collaborators.length === 0
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         
         {/* Header */}
-        <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="space-y-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Collaborateurs
@@ -90,13 +90,21 @@ export default function CollaboratorsPage() {
               Gérez l'équipe de votre clinique {clinic?.name}
             </p>
           </div>
-          <div className="flex items-center gap-4 flex-1 justify-end min-w-[280px]">
-            <div className="w-full max-w-sm">
+          
+          {/* Actions et recherche - Mobile first */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="flex-1 min-w-0">
               <SearchInput value={query} onChange={setQuery} placeholder="Rechercher un collaborateur..." />
             </div>
-            <Button onClick={() => setShowInviteModal(true)}>
-              ➕ Inviter un collaborateur
-            </Button>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <ViewToggle 
+                view={viewMode} 
+                onViewChange={setViewMode}
+              />
+              <Button onClick={() => setShowInviteModal(true)} className="whitespace-nowrap">
+                ➕ Inviter
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -138,8 +146,10 @@ export default function CollaboratorsPage() {
                   ➕ Inviter un collaborateur
                 </Button>
               </Card>
+            ) : viewMode === 'list' ? (
+              <CollaboratorsList collaborators={collaborators} />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {collaborators.map((collaborator) => (
                   <CollaboratorCard 
                     key={collaborator.id} 
@@ -157,7 +167,7 @@ export default function CollaboratorsPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Statistiques de l'équipe
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-700 dark:text-green-400">
                   {collaborators.length}
@@ -199,7 +209,7 @@ export default function CollaboratorsPage() {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Actions rapides
           </h3>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <a href="/profile">
               <Button variant="outline">
                 👤 Mon profil
@@ -212,8 +222,6 @@ export default function CollaboratorsPage() {
             </a>
           </div>
         </Card>
-      </div>
-
       {/* Modal d'invitation */}
       {showInviteModal && (
         <InviteCollaboratorModal

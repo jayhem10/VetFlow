@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useProfile } from '@/modules/profile/hooks/use-profile';
 import { useClinic } from '@/modules/clinic/hooks/use-clinic';
 import Button from '@/components/atoms/Button';
+import { EditButton } from '@/components/atoms/EditButton';
 import Card from '@/components/atoms/Card';
 import { ProfileEditForm } from '@/modules/profile/components/ProfileEditForm';
 import { ClinicEditForm } from '@/modules/clinic/components/ClinicEditForm';
@@ -16,19 +17,16 @@ export default function ProfilePage() {
 
   if (profileLoading || clinicLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700"></div>
-          </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -48,12 +46,13 @@ export default function ProfilePage() {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Informations personnelles
             </h2>
-            <Button
-              variant="ghost"
-              onClick={() => setEditingProfile(!editingProfile)}
-            >
-              {editingProfile ? 'Annuler' : '✏️ Modifier'}
-            </Button>
+            <div className="flex justify-end">
+              <EditButton
+                showText={true}
+                text={editingProfile ? 'Annuler' : 'Modifier'}
+                onClick={() => setEditingProfile(!editingProfile)}
+              />
+            </div>
           </div>
 
           {editingProfile ? (
@@ -93,16 +92,36 @@ export default function ProfilePage() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Rôle
+                  Rôles
                 </label>
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-200">
-                    {profile?.role === 'vet' ? 'Vétérinaire' : 
-                     profile?.role === 'assistant' ? 'Assistant(e)' :
-                     profile?.role === 'owner' ? 'Propriétaire' : 
-                     profile?.role === 'admin' ? 'Administrateur' :
-                     'Non défini'}
-                  </span>
+                <div className="flex flex-wrap gap-2">
+                  {profile?.role ? profile.role.split(',').map((role, index) => {
+                    const roleLabel = (() => {
+                      switch (role.trim()) {
+                        case 'vet':
+                          return 'Vétérinaire';
+                        case 'assistant':
+                          return 'Assistant(e)';
+                        case 'owner':
+                          return 'Propriétaire';
+                        case 'admin':
+                          return 'Admin';
+                        default:
+                          return role.trim();
+                      }
+                    })();
+                    
+                    return (
+                      <span 
+                        key={index}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-200"
+                      >
+                        {roleLabel}
+                      </span>
+                    );
+                  }) : (
+                    <span className="text-gray-500 dark:text-gray-400">Non défini</span>
+                  )}
                 </div>
               </div>
               
@@ -145,12 +164,13 @@ export default function ProfilePage() {
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Ma clinique
               </h2>
-              <Button
-                variant="ghost"
-                onClick={() => setEditingClinic(!editingClinic)}
-              >
-                {editingClinic ? 'Annuler' : '✏️ Modifier'}
-              </Button>
+              <div className="flex justify-end">
+                <EditButton
+                  showText={true}
+                  text={editingClinic ? 'Annuler' : 'Modifier'}
+                  onClick={() => setEditingClinic(!editingClinic)}
+                />
+              </div>
             </div>
 
             {editingClinic ? (
@@ -233,6 +253,5 @@ export default function ProfilePage() {
           </div>
         </Card>
       </div>
-    </div>
   );
 }

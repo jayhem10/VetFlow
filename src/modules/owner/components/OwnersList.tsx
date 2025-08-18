@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import Button from '@/components/atoms/Button';
+import { EditButton } from '@/components/atoms/EditButton';
 import Card from '@/components/atoms/Card';
 import { ViewToggle } from '@/components/atoms/ViewToggle';
 import ListLoader from '@/components/atoms/ListLoader';
 import SearchInput from '@/components/atoms/SearchInput';
+import { Tooltip } from '@/components/atoms/Tooltip';
 import { useOwnerStore } from '@/stores/useOwnerStore';
 import { useClinic } from '@/modules/clinic/hooks/use-clinic';
 import { OwnerForm } from './OwnerForm';
@@ -73,9 +75,17 @@ export function OwnersList() {
   const handleDelete = async (owner: Owner) => {
     const confirmed = await confirm({
       title: 'Supprimer le propriétaire',
-      description: `Êtes-vous sûr de vouloir supprimer ${owner.first_name} ${owner.last_name} ? Cette action est irréversible et supprimera également tous les animaux associés.`,
-      confirmLabel: 'Supprimer',
-      cancelLabel: 'Annuler',
+      message: `Êtes-vous sûr de vouloir supprimer ${owner.first_name} ${owner.last_name} ? Cette action est irréversible et supprimera définitivement :
+      
+• Tous les animaux associés
+• Tous les rendez-vous
+• Tous les dossiers médicaux
+• Toutes les vaccinations
+• Toutes les prescriptions
+• Toutes les factures
+• Tous les rappels`,
+      confirmText: 'Supprimer définitivement',
+      cancelText: 'Annuler',
       variant: 'danger'
     });
 
@@ -94,7 +104,7 @@ export function OwnersList() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center gap-4 flex-wrap">
+      <div className="space-y-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Propriétaires d'animaux
@@ -103,17 +113,21 @@ export function OwnersList() {
             Gérez les propriétaires d'animaux de votre clinique
           </p>
         </div>
-        <div className="flex items-center gap-4 flex-1 justify-end min-w-[280px]">
-          <div className="w-full max-w-sm">
+        
+        {/* Actions et recherche - Mobile first */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
             <SearchInput value={query} onChange={setQuery} placeholder="Rechercher un propriétaire..." />
           </div>
-          <ViewToggle 
-            view={viewMode} 
-            onViewChange={setViewMode}
-          />
-          <Button onClick={handleAdd}>
-            ➕ Ajouter un propriétaire
-          </Button>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <ViewToggle 
+              view={viewMode} 
+              onViewChange={(view) => setViewMode(view as 'grid' | 'list')}
+            />
+            <Button onClick={handleAdd} className="whitespace-nowrap">
+              ➕ Ajouter
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -166,7 +180,7 @@ export function OwnersList() {
             </Button>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {owners.map((owner) => (
               <Card key={owner.id} className="p-6 flex flex-col">
                 {/* Avatar et nom */}
@@ -237,11 +251,23 @@ export function OwnersList() {
 
                 {/* Actions */}
                 <div className="mt-auto flex justify-end gap-2">
-                  <a href={`/owners/${owner.id}`}>
-                    <Button variant="outline" size="sm">🔎 Voir la fiche</Button>
-                  </a>
-                  <Button variant="outline" size="sm" onClick={() => handleEdit(owner)}>✏️ Modifier</Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(owner)}>🗑️ Supprimer</Button>
+                  <Tooltip content="Voir fiche">
+                    <a href={`/owners/${owner.id}`}>
+                      <Button variant="outline" size="sm">🔎</Button>
+                    </a>
+                  </Tooltip>
+                  
+                  <Tooltip content="Modifier">
+                    <EditButton onClick={() => handleEdit(owner)} />
+                  </Tooltip>
+                  
+                  <Tooltip content="Supprimer">
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(owner)}>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </Button>
+                  </Tooltip>
                 </div>
               </Card>
             ))}

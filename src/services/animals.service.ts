@@ -100,7 +100,7 @@ export class AnimalsService {
   }
 
   static async getByOwner(ownerId: string): Promise<Animal[]> {
-    const response = await fetch(`/api/animals/owner/${ownerId}`, {
+    const response = await fetch(`/api/animals/search?ownerId=${ownerId}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     })

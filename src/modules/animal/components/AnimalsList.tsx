@@ -3,13 +3,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import Button from '@/components/atoms/Button';
+import { EditButton } from '@/components/atoms/EditButton';
 import Card from '@/components/atoms/Card';
 import { ViewToggle } from '@/components/atoms/ViewToggle';
 import SearchInput from '@/components/atoms/SearchInput';
 import ListLoader from '@/components/atoms/ListLoader';
+import { Tooltip } from '@/components/atoms/Tooltip';
 import { useAnimalStore } from '@/stores/useAnimalStore';
 import { useOwnerStore } from '@/stores/useOwnerStore';
 import { useClinic } from '@/modules/clinic/hooks/use-clinic';
+import { useConfirm } from '@/hooks/useConfirm';
 import { AnimalForm } from './AnimalForm';
 import { AnimalsListTable } from './AnimalsListTable';
 import type { Animal } from '@/types/animal.types';
@@ -18,6 +21,7 @@ export function AnimalsList() {
   const { clinic } = useClinic();
   const { animals, loading, error, fetchAnimals, deleteAnimal, clearError, animalsTotal, animalsPageSize } = useAnimalStore();
   const { owners, fetchOwners, loading: ownersLoading } = useOwnerStore();
+  const { confirm, ConfirmDialog } = useConfirm();
   const [showForm, setShowForm] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
@@ -86,7 +90,15 @@ export function AnimalsList() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet animal ?')) {
+    const confirmed = await confirm({
+      title: 'Supprimer l\'animal',
+      message: 'Êtes-vous sûr de vouloir supprimer cet animal ? Cette action est irréversible.',
+      confirmText: 'Supprimer définitivement',
+      cancelText: 'Annuler',
+      variant: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -149,7 +161,7 @@ export function AnimalsList() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center gap-4 flex-wrap">
+      <div className="space-y-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Animaux
@@ -158,17 +170,21 @@ export function AnimalsList() {
             Gérez tous les animaux de votre clinique
           </p>
         </div>
-        <div className="flex items-center gap-4 flex-1 justify-end min-w-[280px]">
-          <div className="w-full max-w-sm">
+        
+        {/* Actions et recherche - Mobile first */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
             <SearchInput value={query} onChange={setQuery} placeholder="Rechercher un animal..." />
           </div>
-          <ViewToggle 
-            view={viewMode} 
-            onViewChange={setViewMode}
-          />
-          <Button onClick={handleAdd} disabled={owners.length === 0}>
-            🐾 Ajouter un animal
-          </Button>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <ViewToggle 
+              view={viewMode} 
+              onViewChange={(view) => setViewMode(view as 'grid' | 'list')}
+            />
+            <Button onClick={handleAdd} disabled={owners.length === 0} className="whitespace-nowrap">
+              🐾 Ajouter
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -258,7 +274,7 @@ export function AnimalsList() {
             )}
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {animals.map((animal) => (
               <Card key={animal.id} className="p-6 flex flex-col">
                 {/* Avatar et infos principales */}
@@ -333,8 +349,17 @@ export function AnimalsList() {
  
                  {/* Actions */}
                 <div className="mt-auto flex justify-end gap-2">
-                  <Button variant="outline" size="sm" onClick={() => handleEdit(animal)}>✏️ Modifier</Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(animal.id)}>🗑️ Supprimer</Button>
+                  <Tooltip content="Modifier">
+                    <EditButton onClick={() => handleEdit(animal)} />
+                  </Tooltip>
+                  
+                  <Tooltip content="Supprimer">
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(animal.id)}>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </Button>
+                  </Tooltip>
                 </div>
               </Card>
             ))}
@@ -406,6 +431,9 @@ export function AnimalsList() {
           onSuccess={handleFormSuccess}
         />
       )}
+
+      {/* Dialog de confirmation */}
+      <ConfirmDialog />
     </div>
   );
 }

@@ -18,6 +18,29 @@ export interface Appointment {
   updated_at: string
 }
 
+// Type pour les rendez-vous avec données enrichies (animal et propriétaire)
+export interface AppointmentWithDetails extends Appointment {
+  animal?: {
+    id: string
+    name: string
+    species: string
+    breed?: string
+    owner?: {
+      id: string
+      first_name: string
+      last_name: string
+      email?: string
+      phone?: string
+    } | null
+  } | null
+  veterinarian?: {
+    id: string
+    first_name: string
+    last_name: string
+    role?: string
+  } | null
+}
+
 export type CreateAppointment = Omit<Appointment, 'id' | 'created_at' | 'updated_at'>
 export type UpdateAppointment = Partial<CreateAppointment>
 

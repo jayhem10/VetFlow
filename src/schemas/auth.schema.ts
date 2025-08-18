@@ -185,7 +185,12 @@ export const profileCreationSchema = z.object({
   first_name: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères'),
   last_name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
   phone: z.string().optional(),
-  role: z.enum(['owner', 'vet', 'assistant', 'admin']).default('vet'),
+  role: z.string().refine((val) => {
+    if (!val) return true // Rôle optionnel
+    const roles = val.split(',').map(r => r.trim())
+    const validRoles = ['owner', 'vet', 'assistant', 'admin']
+    return roles.every(role => validRoles.includes(role))
+  }, 'Rôles invalides'),
   license_number: z.string().optional(),
   specialties: z.array(z.string()).default([]),
 })

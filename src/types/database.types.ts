@@ -11,6 +11,7 @@ export interface TProfile {
   specialties?: string[]
   is_active: boolean
   last_login_at?: string
+  calendar_color?: string
   registration_step: 'profile' | 'clinic' | 'completed'
   created_at?: string
   updated_at?: string

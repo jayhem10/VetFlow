@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { canManageCollaborators } from '@/lib/auth-utils'
 
 const updateRoleSchema = z.object({
-  role: z.enum(['vet', 'assistant']),
+  role: z.string().min(1, 'Le rôle est requis'),
 })
 
 export async function PATCH(
@@ -12,7 +14,7 @@ export async function PATCH(
   { params }: { params: Promise<{ profileId: string }> }
 ) {
   try {
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
     
     if (!session?.user) {
       return NextResponse.json(
@@ -42,15 +44,20 @@ export async function PATCH(
       where: {
         userId: session.user.id,
         clinicId: targetProfile.clinicId,
-        role: {
-          in: ['admin', 'vet'] // Seuls les vétérinaires et admins peuvent modifier les rôles
-        }
       },
     })
 
     if (!currentUserProfile) {
       return NextResponse.json(
-        { error: 'Accès non autorisé' },
+        { error: 'Profil utilisateur non trouvé' },
+        { status: 404 }
+      )
+    }
+
+    // Vérifier que l'utilisateur a les droits (owner, admin ou vet)
+    if (!canManageCollaborators(currentUserProfile.role)) {
+      return NextResponse.json(
+        { error: 'Accès non autorisé - Seuls les propriétaires, vétérinaires et admins peuvent modifier les rôles' },
         { status: 403 }
       )
     }
