@@ -114,27 +114,33 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        {/* En-tête du dashboard */}
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Tableau de bord
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Bienvenue dans votre espace VetFlow
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <a href="/animals" className="inline-flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2 transition shadow-sm">
-                <span>🐾</span>
-                <span className="font-medium">Animaux</span>
-              </a>
-              <a href="/collaborators" className="inline-flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2 transition shadow-sm">
-                <span>👥</span>
-                <span className="font-medium">Équipe</span>
-              </a>
+      <div className="max-w-7xl mx-auto">
+        {/* En-tête visuel amélioré avec bonjour personnalisé */}
+        <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600 text-white shadow-lg">
+          <div className="p-6 md:p-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <div className="text-sm opacity-90">Bienvenue{clinic?.name ? ` à ${clinic.name}` : ''}</div>
+                <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight">Tableau de bord</h1>
+                <p className="mt-2 text-white/90 max-w-2xl">
+                  Accédez rapidement à vos données, recherchez des propriétaires, animaux et collaborateurs, et gérez votre activité en un clin d'œil.
+                </p>
+                {/* Boutons d'accès rapides intégrés au bloc */}
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <a href="/owners" className="inline-flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2 transition shadow-sm">
+                    <span>👨‍👩‍👧‍👦</span>
+                    <span className="font-medium">Propriétaires</span>
+                  </a>
+                  <a href="/animals" className="inline-flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2 transition shadow-sm">
+                    <span>🐾</span>
+                    <span className="font-medium">Animaux</span>
+                  </a>
+                  <a href="/collaborators" className="inline-flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2 transition shadow-sm">
+                    <span>👥</span>
+                    <span className="font-medium">Équipe</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
