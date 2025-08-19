@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -85,8 +85,13 @@ export default function ChangePasswordPage() {
         throw new Error(error.error || 'Erreur lors du changement de mot de passe')
       }
 
-      toast.success('Mot de passe modifié avec succès !')
-      router.push('/dashboard')
+      toast.success('Mot de passe modifié avec succès ! Vous allez être déconnecté pour vous reconnecter avec votre nouveau mot de passe.')
+      
+      // Attendre un peu pour que l'utilisateur voie le message
+      setTimeout(async () => {
+        await signOut({ redirect: false })
+        router.push('/login')
+      }, 2000)
     } catch (error) {
       const message = (error as Error)?.message || 'Erreur lors du changement de mot de passe'
       toast.error(message)
