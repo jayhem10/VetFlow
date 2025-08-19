@@ -1,5 +1,6 @@
 'use client'
 
+import { DashboardLayout } from '@/components/templates/DashboardLayout'
 import { useAuth } from '@/modules/auth/hooks/use-auth'
 import { useProfile } from '@/modules/profile/hooks/use-profile'
 import { useClinic } from '@/modules/clinic/hooks/use-clinic'
@@ -112,113 +113,146 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* En-tête du dashboard */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Tableau de bord
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Bienvenue dans votre espace VetFlow
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <a href="/animals" className="inline-flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2 transition shadow-sm">
-              <span>🐾</span>
-              <span className="font-medium">Animaux</span>
-            </a>
-            <a href="/collaborators" className="inline-flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2 transition shadow-sm">
-              <span>👥</span>
-              <span className="font-medium">Équipe</span>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Actions rapides - Colonne latérale */}
-        <div className="lg:col-span-1 space-y-6">
-          
-          {/* Aperçu de la clinique */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-              <span className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>
-              Aperçu de la clinique
-            </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-                  {dataLoading ? (
-                    <div className="animate-pulse bg-blue-300 dark:bg-blue-600 h-6 w-6 rounded mx-auto"></div>
-                  ) : (
-                    stats.owners
-                  )}
+    <DashboardLayout>
+      <div className="space-y-8">
+        {/* En-tête visuel amélioré (sans salutation personnelle) */}
+        <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-8 border border-green-200 dark:border-green-800 shadow-sm">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="flex-1">
+              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                Tableau de bord
+              </h1>
+              <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+                Bienvenue dans votre espace VetFlow - Gérez votre clinique vétérinaire en toute simplicité
+              </p>
+              
+              {/* Statistiques rapides en ligne */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                <div className="text-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl border border-green-200 dark:border-green-700">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {dataLoading ? '...' : stats.owners}
+                  </div>
+                  <div className="text-xs font-medium text-blue-700 dark:text-blue-300">Propriétaires</div>
                 </div>
-                <div className="text-xs font-medium text-blue-700 dark:text-blue-300">Propriétaires</div>
-              </div>
-              <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-700">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">
-                  {dataLoading ? (
-                    <div className="animate-pulse bg-green-300 dark:bg-green-600 h-6 w-6 rounded mx-auto"></div>
-                  ) : (
-                    stats.animals
-                  )}
+                <div className="text-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl border border-green-200 dark:border-green-700">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {dataLoading ? '...' : stats.animals}
+                  </div>
+                  <div className="text-xs font-medium text-green-700 dark:text-green-300">Animaux</div>
                 </div>
-                <div className="text-xs font-medium text-green-700 dark:text-green-300">Animaux</div>
-              </div>
-              <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg border border-purple-200 dark:border-purple-700">
-                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
-                  {dataLoading ? (
-                    <div className="animate-pulse bg-purple-300 dark:bg-purple-600 h-6 w-6 rounded mx-auto"></div>
-                  ) : (
-                    stats.appointmentsThisMonth
-                  )}
+                <div className="text-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl border border-green-200 dark:border-green-700">
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    {dataLoading ? '...' : stats.appointmentsThisMonth}
+                  </div>
+                  <div className="text-xs font-medium text-purple-700 dark:text-purple-300">RDV ce mois</div>
                 </div>
-                <div className="text-xs font-medium text-purple-700 dark:text-purple-300">RDV ce mois</div>
-              </div>
-              <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg border border-orange-200 dark:border-orange-700">
-                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-1">
-                  {dataLoading ? (
-                    <div className="animate-pulse bg-orange-300 dark:bg-orange-600 h-6 w-6 rounded mx-auto"></div>
-                  ) : (
-                    stats.collaborators
-                  )}
+                <div className="text-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl border border-green-200 dark:border-green-700">
+                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    {dataLoading ? '...' : stats.collaborators}
+                  </div>
+                  <div className="text-xs font-medium text-orange-700 dark:text-orange-300">Équipe</div>
                 </div>
-                <div className="text-xs font-medium text-orange-700 dark:text-orange-300">Collaborateurs</div>
               </div>
+            </div>
+            
+            {/* Actions rapides */}
+            <div className="flex flex-col sm:flex-row gap-3 lg:flex-col">
+              <a href="/animals" className="inline-flex items-center gap-2 rounded-xl bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 px-4 py-3 transition-all shadow-sm border border-green-200 dark:border-green-700 hover:shadow-md">
+                <span className="text-xl">🐾</span>
+                <span className="font-medium">Gérer les animaux</span>
+              </a>
+              <a href="/collaborators" className="inline-flex items-center gap-2 rounded-xl bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 px-4 py-3 transition-all shadow-sm border border-green-200 dark:border-green-700 hover:shadow-md">
+                <span className="text-xl">👥</span>
+                <span className="font-medium">Équipe</span>
+              </a>
             </div>
           </div>
         </div>
 
-        {/* Contenu principal */}
-        <div className="lg:col-span-3 space-y-8">
-          {/* Activité récente */}
-          <TodayAppointments 
-            onEditAppointment={handleEditAppointment}
-            onCreateAppointment={handleCreateAppointment}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Actions rapides - Colonne latérale */}
+          <div className="lg:col-span-1 space-y-6">
+            
+            {/* Aperçu de la clinique sous la recherche */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <span className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>
+                Aperçu de la clinique
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+                <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                    {dataLoading ? (
+                      <div className="animate-pulse bg-blue-300 dark:bg-blue-600 h-6 w-6 rounded mx-auto"></div>
+                    ) : (
+                      stats.owners
+                    )}
+                  </div>
+                  <div className="text-xs font-medium text-blue-700 dark:text-blue-300">Propriétaires</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-700">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">
+                    {dataLoading ? (
+                      <div className="animate-pulse bg-green-300 dark:bg-green-600 h-6 w-6 rounded mx-auto"></div>
+                    ) : (
+                      stats.animals
+                    )}
+                  </div>
+                  <div className="text-xs font-medium text-green-700 dark:text-green-300">Animaux</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg border border-purple-200 dark:border-purple-700">
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
+                    {dataLoading ? (
+                      <div className="animate-pulse bg-purple-300 dark:bg-purple-600 h-6 w-6 rounded mx-auto"></div>
+                    ) : (
+                      stats.appointmentsThisMonth
+                    )}
+                  </div>
+                  <div className="text-xs font-medium text-purple-700 dark:text-purple-300">RDV ce mois</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg border border-orange-200 dark:border-orange-700">
+                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-1">
+                    {dataLoading ? (
+                      <div className="animate-pulse bg-orange-300 dark:bg-orange-600 h-6 w-6 rounded mx-auto"></div>
+                    ) : (
+                      stats.collaborators
+                    )}
+                  </div>
+                  <div className="text-xs font-medium text-orange-700 dark:text-orange-300">Collaborateurs</div>
+                  </div>
+              </div>
+            </div>
+            {/* Accès rapides (ajoutés ensuite) */}
+          </div>
+
+          {/* Contenu principal */}
+          <div className="lg:col-span-3 space-y-8">
+            {/* Activité récente */}
+            <TodayAppointments 
+              onEditAppointment={handleEditAppointment}
+              onCreateAppointment={handleCreateAppointment}
+            />
+          </div>
         </div>
+
+        {/* Modales */}
+        <AppointmentFormModal
+          appointment={selectedAppointment}
+          isOpen={showEditModal}
+          onClose={handleModalClose}
+          onSuccess={handleModalSuccess}
+          mode="edit"
+        />
+
+        <AppointmentFormModal
+          isOpen={showCreateModal}
+          onClose={handleModalClose}
+          onSuccess={handleModalSuccess}
+          mode="create"
+          defaultDate={new Date().toISOString().slice(0, 16)}
+          defaultVetId={selectedVet !== 'all' ? selectedVet : undefined}
+        />
       </div>
-
-      {/* Modales */}
-      <AppointmentFormModal
-        appointment={selectedAppointment}
-        isOpen={showEditModal}
-        onClose={handleModalClose}
-        onSuccess={handleModalSuccess}
-        mode="edit"
-      />
-
-      <AppointmentFormModal
-        isOpen={showCreateModal}
-        onClose={handleModalClose}
-        onSuccess={handleModalSuccess}
-        mode="create"
-        defaultDate={new Date().toISOString().slice(0, 16)}
-        defaultVetId={selectedVet !== 'all' ? selectedVet : undefined}
-      />
-    </div>
+    </DashboardLayout>
   )
 }
