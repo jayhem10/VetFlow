@@ -18,6 +18,15 @@ interface InvitationEmailData {
   loginUrl: string
 }
 
+interface PasswordResetEmailData {
+  email: string
+  firstName: string
+  lastName: string
+  tempPassword: string
+  clinicName: string
+  loginUrl: string
+}
+
 export class EmailService {
   private static readonly BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email'
   private static readonly API_KEY = process.env.BREVO_API_KEY
@@ -126,20 +135,21 @@ export class EmailService {
     })
   }
 
-  static async sendPasswordReset(data: { email: string; resetToken: string; resetUrl: string }): Promise<void> {
+  static async sendPasswordReset(data: PasswordResetEmailData): Promise<void> {
     const htmlContent = `
       <!DOCTYPE html>
       <html lang="fr">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Réinitialisation de mot de passe - VetFlow</title>
+        <title>Réinitialisation VetFlow</title>
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
           .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
           .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
           .button { display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0; }
+          .password-box { background: #e5e7eb; padding: 15px; border-radius: 6px; margin: 20px 0; font-family: monospace; font-size: 16px; text-align: center; }
           .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
         </style>
       </head>
@@ -151,20 +161,26 @@ export class EmailService {
           </div>
           
           <div class="content">
-            <h2>Bonjour,</h2>
+            <h2>Bonjour ${data.firstName} ${data.lastName},</h2>
             
-            <p>Vous avez demandé la réinitialisation de votre mot de passe VetFlow.</p>
+            <p>Vous avez demandé la réinitialisation de votre mot de passe pour votre compte VetFlow.</p>
+            
+            <h3>🔐 Votre nouveau mot de passe temporaire :</h3>
+            <div class="password-box">
+              <strong>Email :</strong> ${data.email}<br>
+              <strong>Mot de passe temporaire :</strong> ${data.tempPassword}
+            </div>
+            
+            <p><strong>⚠️ Important :</strong> Vous devrez changer votre mot de passe lors de votre prochaine connexion.</p>
             
             <div style="text-align: center;">
-              <a href="${data.resetUrl}" class="button">🔐 Réinitialiser mon mot de passe</a>
+              <a href="${data.loginUrl}" class="button">🚀 Se connecter à VetFlow</a>
             </div>
             
             <p>Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :</p>
-            <p style="word-break: break-all; color: #6b7280;">${data.resetUrl}</p>
+            <p style="word-break: break-all; color: #6b7280;">${data.loginUrl}</p>
             
-            <p><strong>⚠️ Ce lien expirera dans 1 heure pour des raisons de sécurité.</strong></p>
-            
-            <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
+            <p>Si vous n'avez pas demandé cette réinitialisation, veuillez ignorer cet email.</p>
           </div>
           
           <div class="footer">
@@ -175,10 +191,9 @@ export class EmailService {
       </body>
       </html>
     `
-
     await this.sendEmail({
       to: data.email,
-      subject: 'Réinitialisation de mot de passe - VetFlow',
+      subject: `Réinitialisation VetFlow - Nouveau mot de passe`,
       htmlContent
     })
   }

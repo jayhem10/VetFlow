@@ -1,0 +1,96 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { prisma } from '@/lib/prisma'
+import { EmailService } from '@/lib/email'
+import { generateTempPassword } from '@/lib/password'
+import { hashPassword } from '@/lib/auth-utils'
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Email invalide'),
+})
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { email } = forgotPasswordSchema.parse(body)
+
+    // Vérifier si l'utilisateur existe
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        profile: {
+          include: {
+            clinic: true
+          }
+        }
+      }
+    })
+
+    if (!user) {
+      // Pour des raisons de sécurité, ne pas révéler si l'email existe ou non
+      return NextResponse.json(
+        { message: 'Si cet email existe dans notre base de données, vous recevrez un email de réinitialisation.' },
+        { status: 200 }
+      )
+    }
+
+    // Générer un mot de passe temporaire
+    const tempPassword = generateTempPassword()
+    const hashedPassword = await hashPassword(tempPassword)
+
+    // Mettre à jour l'utilisateur avec le nouveau mot de passe temporaire
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        mustChangePassword: true,
+      }
+    })
+
+    // Envoyer l'email de réinitialisation
+    try {
+      await EmailService.sendPasswordReset({
+        email: user.email,
+        firstName: user.profile?.firstName || user.name || 'Utilisateur',
+        lastName: user.profile?.lastName || '',
+        tempPassword,
+        clinicName: user.profile?.clinic?.name || 'VetFlow',
+        loginUrl: `${process.env.NEXTAUTH_URL}/login`
+      })
+    } catch (emailError) {
+      console.error('Erreur envoi email mot de passe oublié:', emailError)
+      
+      // En mode développement, afficher le mot de passe temporaire
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔐 Mode développement - Mot de passe temporaire:', tempPassword)
+        console.log('🔗 URL de connexion:', `${process.env.NEXTAUTH_URL}/login`)
+      }
+      
+      // En production, ne pas révéler l'erreur d'email
+      return NextResponse.json(
+        { message: 'Si cet email existe dans notre base de données, vous recevrez un email de réinitialisation.' },
+        { status: 200 }
+      )
+    }
+
+    return NextResponse.json(
+      { message: 'Si cet email existe dans notre base de données, vous recevrez un email de réinitialisation.' },
+      { status: 200 }
+    )
+
+  } catch (error) {
+    console.error('Erreur mot de passe oublié:', error)
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Données invalides', details: error.errors },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json(
+      { error: 'Erreur interne du serveur' },
+      { status: 500 }
+    )
+  }
+}

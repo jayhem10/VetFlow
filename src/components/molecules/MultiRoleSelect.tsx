@@ -75,6 +75,11 @@ export function MultiRoleSelect({
       return // Ne pas permettre de retirer le rôle admin au créateur
     }
 
+    // Empêcher les utilisateurs non-admin de se donner le rôle admin
+    if (roleValue === 'admin' && isCurrentUser && !selectedRoles.includes('admin')) {
+      return // Ne pas permettre d'ajouter le rôle admin si l'utilisateur n'en a pas déjà
+    }
+
     const newRoles = selectedRoles.includes(roleValue)
       ? selectedRoles.filter(r => r !== roleValue)
       : [...selectedRoles, roleValue]
@@ -90,7 +95,9 @@ export function MultiRoleSelect({
 
   const isRoleProtected = (roleValue: string) => {
     const role = AVAILABLE_ROLES.find(r => r.value === roleValue)
-    return role?.protected && isClinicCreator
+    // Protection pour le créateur de la clinique OU pour empêcher les non-admin de se donner le rôle admin
+    return (role?.protected && isClinicCreator) || 
+           (roleValue === 'admin' && isCurrentUser && !selectedRoles.includes('admin'))
   }
 
   return (

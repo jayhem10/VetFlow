@@ -16,6 +16,7 @@ import {
   type SignUpFormData 
 } from '@/schemas/auth.schema'
 import { cn } from '@/lib/utils'
+import { ForgotPasswordForm } from '@/components/molecules/ForgotPasswordForm'
 
 interface AuthFormProps {
   type: 'login' | 'register'
@@ -25,6 +26,7 @@ export default function AuthForm({ type }: AuthFormProps) {
   const router = useRouter()
   const { signIn, signUp, loading } = useAuth()
   const [submitLoading, setSubmitLoading] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
   console.log('loading', loading, 'submitLoading', submitLoading)
   const isLogin = type === 'login'
   const title = isLogin ? 'Connexion à VetFlow' : 'Créer votre compte VetFlow'
@@ -100,6 +102,15 @@ export default function AuthForm({ type }: AuthFormProps) {
     }
   }
 
+  // Si on affiche le formulaire de mot de passe oublié
+  if (isLogin && showForgotPassword) {
+    return (
+      <div className="w-full max-w-md mx-auto">
+        <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} />
+      </div>
+    )
+  }
+
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-8">
@@ -162,10 +173,7 @@ export default function AuthForm({ type }: AuthFormProps) {
           <div className="text-center">
             <button 
               type="button"
-              onClick={() => {
-                // TODO: Implémenter la réinitialisation de mot de passe
-                toast.error('Fonctionnalité à venir')
-              }}
+              onClick={() => setShowForgotPassword(true)}
               className="text-sm text-green-700 dark:text-green-400 hover:underline"
             >
               Mot de passe oublié ?
