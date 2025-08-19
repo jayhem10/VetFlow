@@ -49,12 +49,35 @@ export async function POST(request: NextRequest) {
 
     // Envoyer l'email de réinitialisation
     try {
+      console.log('🔍 Données utilisateur pour email:', {
+        email: user.email,
+        name: user.name,
+        profile: user.profile,
+        firstName: user.profile?.firstName,
+        lastName: user.profile?.lastName,
+        clinicName: user.profile?.clinic?.name
+      })
+
+      // Vérifier que l'utilisateur a un profil
+      if (!user.profile) {
+        console.error('❌ Utilisateur sans profil:', user.email)
+        // En mode développement, afficher le mot de passe temporaire
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔐 Mode développement - Mot de passe temporaire:', tempPassword)
+          console.log('🔗 URL de connexion:', `${process.env.NEXTAUTH_URL}/login`)
+        }
+        return NextResponse.json(
+          { message: 'Si cet email existe dans notre base de données, vous recevrez un email de réinitialisation.' },
+          { status: 200 }
+        )
+      }
+
       await EmailService.sendPasswordReset({
         email: user.email,
-        firstName: user.profile?.firstName || user.name || 'Utilisateur',
-        lastName: user.profile?.lastName || '',
+        firstName: user.profile.firstName || user.name || 'Utilisateur',
+        lastName: user.profile.lastName || '',
         tempPassword,
-        clinicName: user.profile?.clinic?.name || 'VetFlow',
+        clinicName: user.profile.clinic?.name || 'VetFlow',
         loginUrl: `${process.env.NEXTAUTH_URL}/login`
       })
     } catch (emailError) {
