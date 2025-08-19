@@ -12,11 +12,8 @@ export function TemporaryPasswordBanner() {
   // Vérifier si l'utilisateur doit changer son mot de passe
   const mustChangePassword = session?.user?.mustChangePassword || false
 
-  console.log('🔍 TemporaryPasswordBanner - pathname:', pathname, 'mustChangePassword:', mustChangePassword, 'session:', !!session)
-
   // Ne pas afficher sur la home page ou la page de changement de mot de passe
   if (!mustChangePassword || pathname === '/' || pathname === '/change-password') {
-    console.log('🔍 TemporaryPasswordBanner - Ne pas afficher')
     return null
   }
 

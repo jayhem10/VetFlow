@@ -8,6 +8,7 @@ import ThemeToggle from '@/components/atoms/ThemeToggle'
 import { GlobalSearch } from '@/components/molecules/GlobalSearch'
 import { Dropdown } from '@/components/atoms/Dropdown'
 import { NavLink } from '@/components/atoms/NavLink'
+import { TemporaryPasswordBanner } from '@/components/molecules/TemporaryPasswordBanner'
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -130,6 +131,7 @@ export function DashboardLayout({ children, actions }: DashboardLayoutProps) {
 
   return (
     <>
+      <TemporaryPasswordBanner />
       <div className="min-h-screen bg-white dark:bg-gray-900">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-white/90 dark:bg-gray-900 shadow-sm border-b border-stone-200 dark:border-gray-700 backdrop-blur-sm">
