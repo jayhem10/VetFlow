@@ -11,7 +11,6 @@ import Card from '@/components/atoms/Card'
 import Button from '@/components/atoms/Button'
 import Input from '@/components/atoms/Input'
 import { validatePassword } from '@/lib/password'
-import { TemporaryPasswordBanner } from '@/components/molecules/TemporaryPasswordBanner'
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Mot de passe actuel requis'),
@@ -108,9 +107,7 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <TemporaryPasswordBanner />
-      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">

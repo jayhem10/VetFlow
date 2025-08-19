@@ -143,8 +143,8 @@ export default function ProtectedLayout({
     )
   }
 
-  // Si on est sur complete-profile ou change-password, afficher sans header/footer
-  if (pathname === '/complete-profile' || pathname === '/change-password') {
+  // Si on est sur complete-profile, afficher sans header/footer pour se concentrer sur la création du profil
+  if (pathname === '/complete-profile') {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {children}
