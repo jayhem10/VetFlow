@@ -139,8 +139,8 @@ export default function ProtectedLayout({
     )
   }
 
-  // Si on est sur complete-profile, afficher sans header/footer pour se concentrer sur la création du profil
-  if (pathname === '/complete-profile') {
+  // Si on est sur complete-profile ou dashboard, afficher sans header/footer du layout protégé
+  if (pathname === '/complete-profile' || pathname === '/dashboard') {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {children}
