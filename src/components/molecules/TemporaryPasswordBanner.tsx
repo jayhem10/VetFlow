@@ -35,7 +35,10 @@ export function TemporaryPasswordBanner() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => router.push('/change-password')}
+            onClick={() => {
+              // Utiliser window.location pour éviter les problèmes de navigation
+              window.location.href = '/change-password'
+            }}
             className="border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/30"
           >
             Changer maintenant
