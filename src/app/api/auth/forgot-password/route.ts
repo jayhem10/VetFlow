@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { EmailService } from '@/lib/email'
 import { generateTempPassword } from '@/lib/password'
-import { hashPassword } from '@/lib/auth-utils'
+import { hashPassword } from '@/lib/hash'
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Email invalide'),
