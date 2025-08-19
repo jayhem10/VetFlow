@@ -53,9 +53,10 @@ export default function ChangePasswordPage() {
       return
     }
 
-    // Si l'utilisateur a déjà un profil complet, rediriger vers le dashboard
-    if (session.user.profile?.firstName && session.user.profile?.lastName) {
+    // Si l'utilisateur n'a pas besoin de changer son mot de passe, rediriger vers le dashboard
+    if (!session.user.mustChangePassword) {
       router.push('/dashboard')
+      return
     }
   }, [session, status, router])
 
