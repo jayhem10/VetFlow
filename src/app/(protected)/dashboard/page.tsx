@@ -14,6 +14,8 @@ import { useEffect, useState } from 'react'
 import { AppointmentFormModal } from '@/components/molecules/AppointmentFormModal'
 import { AppointmentWithDetails } from '@/types/appointment.types'
 import { toast } from '@/lib/toast'
+import Card from '@/components/atoms/Card'
+import Button from '@/components/atoms/Button'
 
 export default function Dashboard() {
   const { user, hasProfile } = useAuth()
@@ -156,16 +158,33 @@ export default function Dashboard() {
             </div>
             
             {/* Actions rapides */}
-            <div className="flex flex-col sm:flex-row gap-3 lg:flex-col">
-              <a href="/animals" className="inline-flex items-center gap-2 rounded-xl bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 px-4 py-3 transition-all shadow-sm border border-green-200 dark:border-green-700 hover:shadow-md">
-                <span className="text-xl">🐾</span>
-                <span className="font-medium">Gérer les animaux</span>
-              </a>
-              <a href="/collaborators" className="inline-flex items-center gap-2 rounded-xl bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 px-4 py-3 transition-all shadow-sm border border-green-200 dark:border-green-700 hover:shadow-md">
-                <span className="text-xl">👥</span>
-                <span className="font-medium">Équipe</span>
-              </a>
-            </div>
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                Actions rapides
+              </h2>
+              <div className="flex flex-wrap gap-4">
+                <a href="/animals">
+                  <Button variant="outline">
+                    🐾 Gérer les animaux
+                  </Button>
+                </a>
+                <a href="/collaborators">
+                  <Button variant="outline">
+                    👥 Équipe
+                  </Button>
+                </a>
+                <a href="/owners">
+                  <Button variant="outline">
+                    👤 Propriétaires
+                  </Button>
+                </a>
+                <a href="/appointments">
+                  <Button variant="outline">
+                    📅 Rendez-vous
+                  </Button>
+                </a>
+              </div>
+            </Card>
           </div>
         </div>
 
