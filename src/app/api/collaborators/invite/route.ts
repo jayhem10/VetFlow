@@ -4,7 +4,9 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/hash'
 import { authOptions } from '@/lib/auth'
-import { canInviteCollaborators } from '@/lib/auth-utils'
+import { canManageCollaborators } from '@/lib/auth-utils'
+import { EmailService } from '@/lib/email'
+import { generateTempPassword } from '@/lib/password'
 
 const inviteSchema = z.object({
   email: z.string().email(),
@@ -36,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier que l'utilisateur est autorisé (admin, owner ou vet)
-    if (!canInviteCollaborators(currentProfile.role)) {
+    if (!canManageCollaborators(currentProfile.role)) {
       return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 })
     }
 
@@ -46,20 +48,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Un utilisateur avec cet email existe déjà' }, { status: 400 })
     }
 
-    const tempPassword = Math.random().toString(36).slice(-8)
+    // Récupérer les informations de la clinique et de l'inviteur
+    const clinic = await prisma.clinic.findUnique({
+      where: { id: currentProfile.clinicId },
+      select: { name: true }
+    })
+
+    if (!clinic) {
+      return NextResponse.json({ error: 'Clinique introuvable' }, { status: 404 })
+    }
+
+    // Générer un mot de passe temporaire sécurisé
+    const tempPassword = generateTempPassword()
     const hashedPassword = await hashPassword(tempPassword)
 
+    // Créer l'utilisateur
     const user = await prisma.user.create({
       data: {
         email: validatedData.email,
         password: hashedPassword,
         name: `${validatedData.first_name} ${validatedData.last_name}`,
+        mustChangePassword: true, // Forcer le changement de mot de passe
       }
     })
 
     // Construire le rôle final (rôle de base + admin si demandé)
     const finalRole = validatedData.is_admin ? `${validatedData.role},admin` : validatedData.role
 
+    // Créer le profil
     const newProfile = await prisma.profile.create({
       data: {
         userId: user.id,
@@ -71,7 +87,31 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    console.log(`Invitation sent to ${validatedData.email} with temp password: ${tempPassword}`)
+    // Envoyer l'email d'invitation
+    try {
+      const loginUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/login`
+      const inviterName = `${currentProfile.firstName} ${currentProfile.lastName}`
+
+      await EmailService.sendCollaboratorInvitation({
+        email: validatedData.email,
+        firstName: validatedData.first_name,
+        lastName: validatedData.last_name,
+        tempPassword,
+        clinicName: clinic.name,
+        inviterName,
+        loginUrl
+      })
+
+      console.log(`Email d'invitation envoyé à ${validatedData.email}`)
+    } catch (emailError) {
+      console.error('Erreur envoi email:', emailError)
+      // Supprimer l'utilisateur créé si l'email échoue
+      await prisma.user.delete({ where: { id: user.id } })
+      return NextResponse.json(
+        { error: 'Erreur lors de l\'envoi de l\'email d\'invitation' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       message: 'Invitation envoyée avec succès',

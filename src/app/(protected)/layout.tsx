@@ -102,6 +102,19 @@ export default function ProtectedLayout({
     const hasProfile = session.user?.hasProfile || false
     const hasClinic = session.user?.hasClinic || false
 
+    // Vérifier si l'utilisateur doit changer son mot de passe
+    const mustChangePassword = session.user?.mustChangePassword || false
+    
+    // Si l'utilisateur doit changer son mot de passe et n'est pas déjà sur la page de changement
+    if (mustChangePassword && pathname !== '/change-password' && !redirecting && !loading) {
+      console.log('🔐 Mot de passe temporaire détecté, redirection vers change-password')
+      setRedirecting(true)
+      setTimeout(() => {
+        router.push('/change-password')
+      }, 100)
+      return
+    }
+
     // Si l'utilisateur n'a pas de profil OU de clinique et que le chargement est terminé, rediriger vers complete-profile
     if ((!hasProfile || !hasClinic) && !redirecting && !loading) {
       console.log('📋 Profil ou clinique manquant, redirection vers complete-profile')

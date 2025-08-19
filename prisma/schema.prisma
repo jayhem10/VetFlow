@@ -8,15 +8,16 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  name          String?   @db.VarChar(100)
-  email         String    @unique @db.VarChar(255)
-  emailVerified DateTime?
-  password      String
-  image         String?   @db.VarChar(255)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  profile       Profile?
+  id                    String    @id @default(uuid())
+  name                  String?   @db.VarChar(100)
+  email                 String    @unique @db.VarChar(255)
+  emailVerified         DateTime?
+  password              String
+  image                 String?   @db.VarChar(255)
+  mustChangePassword    Boolean   @default(false)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  profile               Profile?
 }
 
 model VerificationToken {

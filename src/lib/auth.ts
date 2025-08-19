@@ -9,6 +9,7 @@ declare module 'next-auth' {
       id: string
       hasProfile?: boolean
       hasClinic?: boolean
+      mustChangePassword?: boolean
       profile?: any
     } & DefaultSession['user']
   }
@@ -64,6 +65,7 @@ const authOptions: NextAuthOptions = {
             image: user.image,
             hasProfile: !!user.profile,
             hasClinic: !!(user.profile?.clinic),
+            mustChangePassword: user.mustChangePassword,
             profile: user.profile,
           }
         } catch (error) {
@@ -78,6 +80,7 @@ const authOptions: NextAuthOptions = {
       if (user) {
         token.hasProfile = (user as any).hasProfile
         token.hasClinic = (user as any).hasClinic
+        token.mustChangePassword = (user as any).mustChangePassword
         token.profile = (user as any).profile
       }
       return token
@@ -87,6 +90,7 @@ const authOptions: NextAuthOptions = {
         session.user.id = token.sub as string
         session.user.hasProfile = token.hasProfile as boolean
         session.user.hasClinic = token.hasClinic as boolean
+        session.user.mustChangePassword = token.mustChangePassword as boolean
         session.user.profile = token.profile as any
       }
       return session
