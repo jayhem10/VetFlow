@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const publicRoutes = ['/', '/login', '/register', '/change-password']
+const publicRoutes = ['/', '/login', '/register', '/change-password', '/test-email']
 const authRoutes = ['/api/auth']
 
 export function middleware(req: NextRequest) {

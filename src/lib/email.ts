@@ -24,7 +24,8 @@ export class EmailService {
 
   private static async sendEmail(data: EmailData): Promise<void> {
     if (!this.API_KEY) {
-      throw new Error('BREVO_API_KEY non configurée')
+      console.error('BREVO_API_KEY non configurée dans les variables d\'environnement')
+      throw new Error('Configuration email manquante. Veuillez configurer BREVO_API_KEY dans .env.local')
     }
 
     const payload = {

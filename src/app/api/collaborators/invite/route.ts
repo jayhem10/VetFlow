@@ -105,12 +105,24 @@ export async function POST(request: NextRequest) {
       console.log(`Email d'invitation envoyé à ${validatedData.email}`)
     } catch (emailError) {
       console.error('Erreur envoi email:', emailError)
-      // Supprimer l'utilisateur créé si l'email échoue
-      await prisma.user.delete({ where: { id: user.id } })
-      return NextResponse.json(
-        { error: 'Erreur lors de l\'envoi de l\'email d\'invitation' },
-        { status: 500 }
-      )
+      
+      // En mode développement, on peut continuer sans email
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`⚠️ Mode développement: Email non envoyé, mais utilisateur créé`)
+        console.log(`📧 Email: ${validatedData.email}`)
+        console.log(`🔐 Mot de passe temporaire: ${tempPassword}`)
+        console.log(`🌐 URL de connexion: ${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/login`)
+      } else {
+        // En production, supprimer l'utilisateur si l'email échoue
+        await prisma.user.delete({ where: { id: user.id } })
+        return NextResponse.json(
+          { 
+            error: 'Erreur lors de l\'envoi de l\'email d\'invitation',
+            details: emailError instanceof Error ? emailError.message : 'Erreur inconnue'
+          },
+          { status: 500 }
+        )
+      }
     }
 
     return NextResponse.json({
