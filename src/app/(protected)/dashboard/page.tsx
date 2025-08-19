@@ -14,8 +14,6 @@ import { useEffect, useState } from 'react'
 import { AppointmentFormModal } from '@/components/molecules/AppointmentFormModal'
 import { AppointmentWithDetails } from '@/types/appointment.types'
 import { toast } from '@/lib/toast'
-import Card from '@/components/atoms/Card'
-import Button from '@/components/atoms/Button'
 
 export default function Dashboard() {
   const { user, hasProfile } = useAuth()
@@ -117,74 +115,27 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* En-tête visuel amélioré (sans salutation personnelle) */}
-        <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-8 border border-green-200 dark:border-green-800 shadow-sm">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div className="flex-1">
-              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+        {/* En-tête du dashboard */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Tableau de bord
               </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
-                Bienvenue dans votre espace VetFlow - Gérez votre clinique vétérinaire en toute simplicité
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Bienvenue dans votre espace VetFlow
               </p>
-              
-              {/* Statistiques rapides en ligne */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                <div className="text-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl border border-green-200 dark:border-green-700">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {dataLoading ? '...' : stats.owners}
-                  </div>
-                  <div className="text-xs font-medium text-blue-700 dark:text-blue-300">Propriétaires</div>
-                </div>
-                <div className="text-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl border border-green-200 dark:border-green-700">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {dataLoading ? '...' : stats.animals}
-                  </div>
-                  <div className="text-xs font-medium text-green-700 dark:text-green-300">Animaux</div>
-                </div>
-                <div className="text-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl border border-green-200 dark:border-green-700">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {dataLoading ? '...' : stats.appointmentsThisMonth}
-                  </div>
-                  <div className="text-xs font-medium text-purple-700 dark:text-purple-300">RDV ce mois</div>
-                </div>
-                <div className="text-center p-3 bg-white/60 dark:bg-gray-800/60 rounded-xl border border-green-200 dark:border-green-700">
-                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                    {dataLoading ? '...' : stats.collaborators}
-                  </div>
-                  <div className="text-xs font-medium text-orange-700 dark:text-orange-300">Équipe</div>
-                </div>
-              </div>
             </div>
-            
-            {/* Actions rapides */}
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                Actions rapides
-              </h2>
-              <div className="flex flex-wrap gap-4">
-                <a href="/animals">
-                  <Button variant="outline">
-                    🐾 Gérer les animaux
-                  </Button>
-                </a>
-                <a href="/collaborators">
-                  <Button variant="outline">
-                    👥 Équipe
-                  </Button>
-                </a>
-                <a href="/owners">
-                  <Button variant="outline">
-                    👤 Propriétaires
-                  </Button>
-                </a>
-                <a href="/appointments">
-                  <Button variant="outline">
-                    📅 Rendez-vous
-                  </Button>
-                </a>
-              </div>
-            </Card>
+            <div className="flex gap-2">
+              <a href="/animals" className="inline-flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2 transition shadow-sm">
+                <span>🐾</span>
+                <span className="font-medium">Animaux</span>
+              </a>
+              <a href="/collaborators" className="inline-flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2 transition shadow-sm">
+                <span>👥</span>
+                <span className="font-medium">Équipe</span>
+              </a>
+            </div>
           </div>
         </div>
 
@@ -192,13 +143,13 @@ export default function Dashboard() {
           {/* Actions rapides - Colonne latérale */}
           <div className="lg:col-span-1 space-y-6">
             
-            {/* Aperçu de la clinique sous la recherche */}
+            {/* Aperçu de la clinique */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                 <span className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>
                 Aperçu de la clinique
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-700">
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
                     {dataLoading ? (
@@ -238,10 +189,9 @@ export default function Dashboard() {
                     )}
                   </div>
                   <div className="text-xs font-medium text-orange-700 dark:text-orange-300">Collaborateurs</div>
-                  </div>
+                </div>
               </div>
             </div>
-            {/* Accès rapides (ajoutés ensuite) */}
           </div>
 
           {/* Contenu principal */}
