@@ -105,14 +105,10 @@ export default function ProtectedLayout({
     // Vérifier si l'utilisateur doit changer son mot de passe
     const mustChangePassword = session.user?.mustChangePassword || false
     
-    // Si l'utilisateur doit changer son mot de passe et n'est pas déjà sur la page de changement
-    if (mustChangePassword && pathname !== '/change-password' && !redirecting && !loading) {
-      console.log('🔐 Mot de passe temporaire détecté, redirection vers change-password')
-      setRedirecting(true)
-      setTimeout(() => {
-        router.push('/change-password')
-      }, 100)
-      return
+    // Si l'utilisateur doit changer son mot de passe, on ne force plus la redirection
+    // Il peut naviguer librement et verra la bannière d'avertissement
+    if (mustChangePassword) {
+      console.log('🔐 Mot de passe temporaire détecté, bannière affichée')
     }
 
     // Si l'utilisateur n'a pas de profil OU de clinique et qu'il n'a pas besoin de changer son mot de passe, rediriger vers complete-profile
