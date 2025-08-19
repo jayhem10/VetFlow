@@ -115,8 +115,8 @@ export default function ProtectedLayout({
       return
     }
 
-    // Si l'utilisateur n'a pas de profil OU de clinique et que le chargement est terminé, rediriger vers complete-profile
-    if ((!hasProfile || !hasClinic) && !redirecting && !loading) {
+    // Si l'utilisateur n'a pas de profil OU de clinique et qu'il n'a pas besoin de changer son mot de passe, rediriger vers complete-profile
+    if ((!hasProfile || !hasClinic) && !mustChangePassword && !redirecting && !loading) {
       console.log('📋 Profil ou clinique manquant, redirection vers complete-profile')
       setRedirecting(true)
       setTimeout(() => {
@@ -152,11 +152,12 @@ export default function ProtectedLayout({
     )
   }
 
-  // Si l'utilisateur n'a pas de profil ou de clinique et n'est pas sur complete-profile, rediriger
+  // Si l'utilisateur n'a pas de profil ou de clinique et qu'il n'a pas besoin de changer son mot de passe, rediriger
   const hasProfile = session.user?.hasProfile || false
   const hasClinic = session.user?.hasClinic || false
+  const mustChangePassword = session.user?.mustChangePassword || false
   
-  if (!hasProfile || !hasClinic) {
+  if ((!hasProfile || !hasClinic) && !mustChangePassword) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

@@ -1,17 +1,19 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Button from '@/components/atoms/Button'
 
 export function TemporaryPasswordBanner() {
   const { data: session } = useSession()
   const router = useRouter()
+  const pathname = usePathname()
 
   // Vérifier si l'utilisateur doit changer son mot de passe
   const mustChangePassword = session?.user?.mustChangePassword || false
 
-  if (!mustChangePassword) {
+  // Ne pas afficher sur la home page ou la page de changement de mot de passe
+  if (!mustChangePassword || pathname === '/' || pathname === '/change-password') {
     return null
   }
 
