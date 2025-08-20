@@ -1,13 +1,14 @@
+import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { profileCreationSchema, type ProfileCreationData } from '@/schemas/auth.schema'
-import Input from '@/components/atoms/Input'
-import Button from '@/components/atoms/Button'
-
-import { useCompleteProfileStore, type ProfileData } from '@/stores/completeProfileStore'
-import { useAuth } from '@/modules/auth/hooks/use-auth'
 import { toast } from 'react-hot-toast'
 import { cn } from '@/lib/utils'
+import Input from '@/components/atoms/Input'
+import Button from '@/components/atoms/Button'
+import { MultiRoleSelect } from '@/components/molecules/MultiRoleSelect'
+import { profileCreationSchema, type ProfileCreationData } from '@/schemas/auth.schema'
+import { useCompleteProfileStore, type ProfileData } from '@/stores/completeProfileStore'
+import { useAuth } from '@/modules/auth/hooks/use-auth'
 
 // Schéma strictement pour les champs de la table profiles uniquement
 type ProfileFormData = ProfileCreationData
@@ -61,11 +62,7 @@ export function ProfileCreationForm({ onSuccess }: ProfileCreationFormProps = {}
     }
   }
 
-  const roleOptions = [
-    { value: 'owner', label: 'Propriétaire de clinique' },
-    { value: 'vet', label: 'Vétérinaire' },
-    { value: 'assistant', label: 'Assistant(e) vétérinaire' },
-  ]
+
 
   const specialtyOptions = [
     'Médecine générale',
@@ -149,30 +146,12 @@ export function ProfileCreationForm({ onSuccess }: ProfileCreationFormProps = {}
           name="role"
           control={form.control}
           render={({ field, fieldState: { error } }) => (
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Rôle professionnel *
-              </label>
-              <select
-                {...field}
-                className={cn(
-                  "w-full px-4 py-3 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100",
-                  "focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors",
-                  error ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                )}
-                required
-              >
-                <option value="">Sélectionnez votre rôle</option>
-                {roleOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {error && (
-                <p className="text-sm text-red-500">{error.message}</p>
-              )}
-            </div>
+            <MultiRoleSelect
+              value={field.value || ''}
+              onChange={field.onChange}
+              label="Rôles professionnels *"
+              error={error?.message}
+            />
           )}
         />
 

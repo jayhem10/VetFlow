@@ -126,7 +126,7 @@ export function validateRoles(roleString: string | null | undefined): boolean {
   if (!roleString) return true; // Rôles optionnels
   
   const roles = roleString.split(',').map(r => r.trim());
-  const validRoles = ['owner', 'vet', 'assistant', 'admin'];
+  const validRoles = ['owner', 'vet', 'assistant', 'admin', 'stock_manager'];
   
   return roles.every(role => validRoles.includes(role));
 }

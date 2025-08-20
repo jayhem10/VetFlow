@@ -43,6 +43,11 @@ const AVAILABLE_ROLES: Role[] = [
     value: 'assistant',
     label: 'Assistant(e)',
     description: 'Accès limité aux fonctionnalités de base'
+  },
+  {
+    value: 'stock_manager',
+    label: 'Gestionnaire de stock',
+    description: 'Gestion des prestations, produits et stock'
   }
 ]
 

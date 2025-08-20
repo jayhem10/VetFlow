@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -318,7 +319,7 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
           })()
       
       // Titre enrichi avec animal et propriétaire
-      const enrichedTitle = `${animalName} - ${ownerName}`
+      const enrichedTitle = animalName
       
       // Données étendues pour l'info-bulle
       const extendedData = {
@@ -335,14 +336,108 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
         title: enrichedTitle,
         start: apt.appointment_date,
         end: new Date(new Date(apt.appointment_date).getTime() + (apt.duration_minutes ?? 30) * 60000).toISOString(),
-        extendedProps: { ...apt, extendedData },
-        backgroundColor: vetStyles.accent,
-        borderColor: vetStyles.border,
-        textColor: vetStyles.text,
+        extendedProps: { ...apt, extendedData, durationMinutes: apt.duration_minutes ?? 30, ownerName },
+        backgroundColor: vetStyles.bg,
+        borderColor: vetStyles.accent,
+        textColor: '#111827',
         classNames: ['rounded-md', 'border'],
       }
     })
   }, [filteredAppointments, animals, owners, selectedVets])
+
+  const renderEventContent = useCallback((arg: any) => {
+    const ext = arg.event.extendedProps?.extendedData || {}
+    const duration = arg.event.extendedProps?.durationMinutes || 30
+    const ownerName = arg.event.extendedProps?.ownerName || ''
+    const start = arg.timeText || ''
+    const viewType = (calendarRef.current as any)?.getApi()?.view?.type || ''
+    const isTimeGrid = viewType.includes('timeGrid')
+    
+    const container = document.createElement('div')
+    container.style.display = 'flex'
+    container.style.flexDirection = 'column'
+    container.style.gap = '2px'
+    container.style.padding = '2px 4px'
+    container.style.overflow = 'hidden'
+    container.style.maxHeight = '100%'
+
+    if (isTimeGrid) {
+      // Vue semaine/jour : contenu compact
+      const line1 = document.createElement('div')
+      line1.style.display = 'flex'
+      line1.style.alignItems = 'center'
+      line1.style.justifyContent = 'space-between'
+      line1.style.fontSize = '10px'
+      line1.style.fontWeight = '600'
+      const left = document.createElement('span')
+      left.textContent = start
+      const right = document.createElement('span')
+      right.style.opacity = '0.8'
+      right.textContent = ext.type ? String(ext.type).substring(0, 3) : ''
+      line1.appendChild(left)
+      line1.appendChild(right)
+
+      const line2 = document.createElement('div')
+      line2.style.fontSize = '11px'
+      line2.style.fontWeight = '700'
+      line2.style.whiteSpace = 'nowrap'
+      line2.style.overflow = 'hidden'
+      line2.style.textOverflow = 'ellipsis'
+      line2.textContent = String(arg.event.title || '')
+
+      container.appendChild(line1)
+      container.appendChild(line2)
+      
+      // Ajouter la 3ème ligne seulement si l'événement est assez long (>= 45 min)
+      if (duration >= 45 && (ownerName || ext.owner)) {
+        const line3 = document.createElement('div')
+        line3.style.fontSize = '9px'
+        line3.style.opacity = '0.9'
+        line3.style.whiteSpace = 'nowrap'
+        line3.style.overflow = 'hidden'
+        line3.style.textOverflow = 'ellipsis'
+        line3.textContent = (ownerName || ext.owner || '').substring(0, 15)
+        container.appendChild(line3)
+      }
+    } else {
+      // Vue mois : contenu complet
+      const line1 = document.createElement('div')
+      line1.style.display = 'flex'
+      line1.style.alignItems = 'center'
+      line1.style.justifyContent = 'space-between'
+      line1.style.fontSize = '11px'
+      line1.style.fontWeight = '600'
+      const left = document.createElement('span')
+      left.textContent = start
+      const right = document.createElement('span')
+      right.style.opacity = '0.8'
+      right.textContent = ext.type ? String(ext.type) : ''
+      line1.appendChild(left)
+      line1.appendChild(right)
+
+      const line2 = document.createElement('div')
+      line2.style.fontSize = '12px'
+      line2.style.fontWeight = '700'
+      line2.style.whiteSpace = 'nowrap'
+      line2.style.overflow = 'hidden'
+      line2.style.textOverflow = 'ellipsis'
+      line2.textContent = String(arg.event.title || '')
+
+      const line3 = document.createElement('div')
+      line3.style.fontSize = '11px'
+      line3.style.opacity = '0.9'
+      line3.style.whiteSpace = 'nowrap'
+      line3.style.overflow = 'hidden'
+      line3.style.textOverflow = 'ellipsis'
+      line3.textContent = ownerName || (ext.owner ? String(ext.owner) : '')
+
+      container.appendChild(line1)
+      container.appendChild(line2)
+      if (ownerName || ext.owner) container.appendChild(line3)
+    }
+
+    return { domNodes: [container] }
+  }, [])
 
   const watched = form.watch()
   const canSubmit = Boolean(
@@ -605,7 +700,12 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {collaborators.map((collaborator) => {
+              {collaborators
+                .filter(collaborator => {
+                  const roles = collaborator.role ? collaborator.role.split(',').map(r => r.trim()) : []
+                  return roles.some(role => role === 'vet' || role === 'admin')
+                })
+                .map((collaborator) => {
                 const color = colorForVet(collaborator.id)
                 const styles = getVetStyles(color)
                 const isSelected = selectedVets.includes(collaborator.id)
@@ -697,6 +797,7 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
                 border-radius: 6px !important;
                 margin: 1px 2px !important;
                 min-height: 24px !important;
+                overflow: hidden !important;
               }
               .fc-timegrid-event-harness {
                 margin: 1px 0 !important;
@@ -706,6 +807,10 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
               }
               .fc-timegrid-event-harness-inset .fc-timegrid-event {
                 margin: 0 2px !important;
+              }
+              .fc-timegrid-event .fc-event-main, 
+              .fc-timegrid-event .fc-event-main-frame {
+                overflow: hidden !important;
               }
               /* Améliorer la lisibilité quand les événements se chevauchent */
               .fc-timegrid-event.fc-event {
@@ -717,7 +822,19 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
               }
               /* Augmenter légèrement la hauteur des créneaux */
               .fc-timegrid-slot {
-                height: 35px !important;
+                height: 45px !important;
+              }
+              /* Bandes alternées pour repères visuels */
+              .fc-timegrid-slots tr:nth-child(2n) td {
+                background-color: rgba(0,0,0,0.015);
+              }
+              /* Mettre en évidence le jour courant */
+              .fc .fc-day-today {
+                background-color: rgba(16,185,129,0.08) !important;
+              }
+              /* Lien +N événements en vue mois */
+              .fc-daygrid-more-link {
+                font-weight: 600;
               }
             `}</style>
             <FullCalendar
@@ -744,11 +861,14 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
               locale={frLocale}
               firstDay={1}
               nowIndicator={true}
-              dayMaxEventRows={false}
+              dayMaxEventRows={3}
               expandRows={true}
               slotDuration={'00:30:00'}
               eventOverlap={false}
               eventDisplay={'block'}
+              stickyHeaderDates={true}
+              eventTimeFormat={{ hour: '2-digit', minute: '2-digit', hour12: false }}
+              moreLinkClick={(arg) => { (calendarRef.current as any)?.getApi().changeView('timeGridDay', arg.date); return 'popover'; }}
               slotLabelFormat={{
                 hour: '2-digit',
                 minute: '2-digit',
@@ -757,6 +877,7 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
               weekNumbers={true}
               weekText={'S'}
               eventClassNames={(arg) => arg.event.classNames as string[]}
+              eventContent={renderEventContent}
               eventDidMount={(info) => {
                 // Appliquer les styles personnalisés aux événements
                 const event = info.event
@@ -795,7 +916,13 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
                 const el = info.el as HTMLElement
                 el.style.cursor = 'pointer'
                 el.style.transition = 'all 0.2s ease'
-                el.style.minHeight = '28px'
+                el.style.minHeight = '35px'
+                // Title attribute en fallback pour accessibilité
+                const ext = (event as any)?.extendedProps?.extendedData
+                if (ext) {
+                  const tooltip = `${event.title || ''}\n${ext.owner || ''}\n${ext.duration || ''} • ${ext.type || ''}`.trim()
+                  if (tooltip) el.setAttribute('title', tooltip)
+                }
                 
                 // Gestionnaires d'événements
                 el.addEventListener('mouseenter', () => {
@@ -916,9 +1043,14 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
                 defaultValue=""
               >
                 <option value="" disabled>Sélectionner...</option>
-                {collaborators.map(c => (
-                  <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>
-                ))}
+                {collaborators
+                  .filter(c => {
+                    const roles = c.role ? c.role.split(',').map(r => r.trim()) : []
+                    return roles.some(role => role === 'vet' || role === 'admin')
+                  })
+                  .map(c => (
+                    <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>
+                  ))}
               </select>
               <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">👩‍⚕️</span>
             </div>

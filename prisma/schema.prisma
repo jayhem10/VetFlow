@@ -73,6 +73,9 @@ model Clinic {
   profiles           Profile[]
   reminders          Reminder[]
   vaccinations       Vaccination[]
+  services           Service[]
+  products           Product[]
+  stockMovements     StockMovement[]
 }
 
 model Animal {
@@ -135,6 +138,7 @@ model Appointment {
   invoices         Invoice[]
   medicalRecords   MedicalRecord[]
   reminders        Reminder[]
+  stockMovements   StockMovement[]
 }
 
 model Breed {
@@ -164,15 +168,20 @@ model Breed {
 }
 
 model InvoiceItem {
-  id          String    @id @default(uuid())
-  invoice_id  String
-  description String    @db.VarChar(255)
-  quantity    Int       @default(1)
-  unit_price  Decimal   @db.Decimal(10, 2)
-  total_price Decimal   @db.Decimal(10, 2)
-  category    String?   @db.VarChar(50)
-  created_at  DateTime? @default(now()) @db.Timestamptz(6)
-  invoice     Invoice   @relation(fields: [invoice_id], references: [id])
+  id            String    @id @default(uuid())
+  invoice_id    String
+  description   String    @db.VarChar(255)
+  quantity      Int
+  unit_price    Decimal   @db.Decimal(10, 2)
+  total_price   Decimal   @db.Decimal(10, 2)
+  tax_rate      Decimal?  @default(20.00) @db.Decimal(5, 2)
+  item_type     String?   @db.VarChar(20) // 'product' or 'service'
+  product_id    String?
+  service_id    String?
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  invoice       Invoice   @relation(fields: [invoice_id], references: [id])
+  product       Product?  @relation(fields: [product_id], references: [id])
+  service       Service?  @relation(fields: [service_id], references: [id])
 }
 
 model Invoice {
@@ -197,6 +206,56 @@ model Invoice {
   clinic         Clinic        @relation(fields: [clinic_id], references: [id])
   owner          Owner         @relation(fields: [owner_id], references: [id])
   items          InvoiceItem[]
+  stockMovements StockMovement[]
+}
+
+model Service {
+  id            String    @id @default(uuid())
+  clinic_id     String
+  code          String    @unique @db.VarChar(50)
+  name          String    @db.VarChar(150)
+  description   String?
+  default_price Decimal   @db.Decimal(10, 2)
+  tax_rate      Decimal?  @default(20.00) @db.Decimal(5, 2)
+  active        Boolean   @default(true)
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime? @default(now()) @db.Timestamptz(6)
+  clinic        Clinic    @relation(fields: [clinic_id], references: [id])
+  invoiceItems  InvoiceItem[]
+}
+
+model Product {
+  id                 String          @id @default(uuid())
+  clinic_id          String
+  sku                String          @unique @db.VarChar(50)
+  name               String          @db.VarChar(150)
+  unit               String          @db.VarChar(20)
+  stock_qty          Int
+  low_stock_threshold Int
+  price              Decimal         @db.Decimal(10, 2)
+  tax_rate           Decimal?        @default(20.00) @db.Decimal(5, 2)
+  active             Boolean         @default(true)
+  created_at         DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?       @default(now()) @db.Timestamptz(6)
+  clinic             Clinic          @relation(fields: [clinic_id], references: [id])
+  movements          StockMovement[]
+  invoiceItems       InvoiceItem[]
+}
+
+model StockMovement {
+  id            String    @id @default(uuid())
+  clinic_id     String
+  product_id    String
+  type          String    @db.VarChar(20) // 'in', 'out', 'adjust'
+  quantity      Int
+  reason        String?
+  appointment_id String?
+  invoice_id    String?
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  product       Product   @relation(fields: [product_id], references: [id])
+  clinic        Clinic    @relation(fields: [clinic_id], references: [id])
+  appointment   Appointment? @relation(fields: [appointment_id], references: [id])
+  invoice       Invoice?  @relation(fields: [invoice_id], references: [id])
 }
 
 model MedicalRecord {

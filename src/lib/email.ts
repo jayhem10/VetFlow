@@ -121,7 +121,7 @@ export class EmailService {
           
           <div class="footer">
             <p>Cet email a été envoyé automatiquement par VetFlow</p>
-            <p>© 2024 VetFlow - Tous droits réservés</p>
+            <p>© 2025 VetFlow - Tous droits réservés</p>
           </div>
         </div>
       </body>
@@ -185,7 +185,7 @@ export class EmailService {
           
           <div class="footer">
             <p>Cet email a été envoyé automatiquement par VetFlow</p>
-            <p>© 2024 VetFlow - Tous droits réservés</p>
+            <p>© 2025 VetFlow - Tous droits réservés</p>
           </div>
         </div>
       </body>

@@ -142,10 +142,11 @@ export function AppointmentFormModal({
     onClose()
   }
 
-  // Filtrer les vétérinaires (exclure les assistants)
-  const veterinarians = collaborators.filter(collab => 
-    collab.role === 'vet' || collab.role === 'admin' || collab.role === 'owner'
-  )
+  // Filtrer les vétérinaires (seulement les vétérinaires et admins)
+  const veterinarians = collaborators.filter(collab => {
+    const roles = collab.role ? collab.role.split(',').map(r => r.trim()) : []
+    return roles.some(role => role === 'vet' || role === 'admin')
+  })
 
   return (
     <Dialog

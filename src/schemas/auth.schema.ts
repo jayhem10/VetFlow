@@ -188,7 +188,7 @@ export const profileCreationSchema = z.object({
   role: z.string().refine((val) => {
     if (!val) return true // Rôle optionnel
     const roles = val.split(',').map(r => r.trim())
-    const validRoles = ['owner', 'vet', 'assistant', 'admin']
+    const validRoles = ['owner', 'vet', 'assistant', 'admin', 'stock_manager']
     return roles.every(role => validRoles.includes(role))
   }, 'Rôles invalides'),
   license_number: z.string().optional(),

@@ -6,8 +6,7 @@ export interface InviteCollaboratorData {
   email: string
   firstName: string
   lastName: string
-  role: 'vet' | 'assistant'
-  is_admin?: boolean
+  role: string // Rôles multiples séparés par des virgules
   calendarColor?: string
 }
 
@@ -24,8 +23,8 @@ interface CollaboratorsStore {
   fetchDeactivated: () => Promise<void>
   searchCollaborators: (query: string) => Promise<void>
   inviteCollaborator: (data: InviteCollaboratorData) => Promise<void>
-  updateCollaboratorRole: (profileId: string, role: 'vet' | 'assistant') => Promise<void>
-  updateCollaboratorColor: (profileId: string, calendarColor: string) => Promise<void>
+  updateCollaboratorRole: (profileId: string, role: string) => Promise<void>
+  updateCollaboratorColor: (profileId: string, calendarColor: string | undefined) => Promise<void>
   removeCollaborator: (profileId: string) => Promise<void>
   reactivateCollaborator: (profileId: string) => Promise<void>
   clearError: () => void
@@ -98,16 +97,18 @@ export const useCollaboratorsStore = create<CollaboratorsStore>((set, get) => ({
     }
   },
 
-  updateCollaboratorColor: async (profileId: string, calendarColor: string) => {
+  updateCollaboratorColor: async (profileId: string, calendarColor: string | undefined) => {
     set({ loading: true, error: null })
     try {
-      await CollaboratorsService.updateColor(profileId, calendarColor)
-      set((state) => ({
-        collaborators: state.collaborators.map(collab => 
-          collab.id === profileId ? { ...collab, calendar_color: calendarColor } : collab
-        ),
-        loading: false
-      }))
+      if (calendarColor) {
+        await CollaboratorsService.updateColor(profileId, calendarColor)
+        set((state) => ({
+          collaborators: state.collaborators.map(collab => 
+            collab.id === profileId ? { ...collab, calendar_color: calendarColor } : collab
+          ),
+          loading: false
+        }))
+      }
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
       throw error

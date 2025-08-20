@@ -12,8 +12,12 @@ const inviteSchema = z.object({
   email: z.string().email(),
   first_name: z.string().min(1),
   last_name: z.string().min(1),
-  role: z.enum(['vet', 'assistant']),
-  is_admin: z.boolean().optional().default(false),
+  role: z.string().refine((val) => {
+    if (!val) return false
+    const roles = val.split(',').map(r => r.trim())
+    const validRoles = ['owner', 'vet', 'assistant', 'admin', 'stock_manager']
+    return roles.every(role => validRoles.includes(role))
+  }, 'Rôles invalides'),
   calendar_color: z.enum(['emerald','blue','purple','rose','amber','lime','cyan','fuchsia','indigo','teal']).optional(),
 })
 
@@ -72,8 +76,8 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Construire le rôle final (rôle de base + admin si demandé)
-    const finalRole = validatedData.is_admin ? `${validatedData.role},admin` : validatedData.role
+    // Le rôle est déjà dans le bon format (rôles multiples séparés par des virgules)
+    const finalRole = validatedData.role
 
     // Créer le profil
     const newProfile = await prisma.profile.create({

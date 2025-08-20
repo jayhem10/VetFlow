@@ -7,7 +7,6 @@ import { useEffect } from 'react'
 import ThemeToggle from '@/components/atoms/ThemeToggle'
 import { GlobalSearch } from '@/components/molecules/GlobalSearch'
 import { Dropdown } from '@/components/atoms/Dropdown'
-import { NavLink } from '@/components/atoms/NavLink'
 import { TemporaryPasswordBanner } from '@/components/molecules/TemporaryPasswordBanner'
 
 interface DashboardLayoutProps {

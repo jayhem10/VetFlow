@@ -102,6 +102,8 @@ export default function ProfilePage() {
                           return 'Vétérinaire';
                         case 'assistant':
                           return 'Assistant(e)';
+                        case 'stock_manager':
+                          return 'Gestionnaire de stock';
                         case 'owner':
                           return 'Propriétaire';
                         case 'admin':

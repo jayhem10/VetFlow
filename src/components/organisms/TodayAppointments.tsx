@@ -211,10 +211,15 @@ export default function TodayAppointments({
             onChange={setSelectedVet}
             options={[
               { value: 'all', label: 'Tous les vétérinaires' },
-              ...collaborators.map(c => ({
-                value: c.id,
-                label: `${c.first_name} ${c.last_name}`
-              }))
+              ...collaborators
+                .filter(c => {
+                  const roles = c.role ? c.role.split(',').map(r => r.trim()) : []
+                  return roles.some(role => role === 'vet' || role === 'admin')
+                })
+                .map(c => ({
+                  value: c.id,
+                  label: `${c.first_name} ${c.last_name}`
+                }))
             ]}
             placeholder="Filtrer par vétérinaire"
           />

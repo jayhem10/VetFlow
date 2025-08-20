@@ -63,7 +63,7 @@ export interface TCreateInitialProfileData {
   last_name: string
   email: string
   phone?: string
-  role: 'owner' | 'vet' | 'assistant' | 'admin'
+  role: string // Rôles multiples séparés par des virgules
   license_number?: string
   specialties?: string[]
   clinic_id?: string

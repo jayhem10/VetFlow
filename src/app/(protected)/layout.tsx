@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import Header from '@/components/organisms/Header'
+import AuthenticatedHeader from '@/components/organisms/Header'
 
 function ProtectedFooter() {
   return (
@@ -33,6 +33,8 @@ function ProtectedFooter() {
               <li><a href="/animals" className="text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-400 text-sm">Animaux</a></li>
               <li><a href="/owners" className="text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-400 text-sm">Propriétaires</a></li>
               <li><a href="/collaborators" className="text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-400 text-sm">Équipe</a></li>
+              <li><a href="/services" className="text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-400 text-sm">Prestations</a></li>
+              <li><a href="/inventory" className="text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-400 text-sm">Stock</a></li>
             </ul>
           </div>
           
@@ -148,14 +150,7 @@ export default function ProtectedLayout({
     )
   }
 
-  // Si on est sur dashboard, afficher sans header/footer du layout protégé (utilise DashboardLayout)
-  if (pathname === '/dashboard') {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        {children}
-      </div>
-    )
-  }
+
 
   // Si l'utilisateur n'a pas de profil ou de clinique et qu'il n'a pas besoin de changer son mot de passe, rediriger
   const hasProfile = session.user?.hasProfile || false
@@ -174,7 +169,7 @@ export default function ProtectedLayout({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <AuthenticatedHeader />
       <main className="flex-1">
         {children}
       </main>

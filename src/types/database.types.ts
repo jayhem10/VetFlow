@@ -5,7 +5,7 @@ export interface TProfile {
   last_name: string
   email: string
   phone?: string
-  role: 'owner' | 'vet' | 'assistant' | 'admin'
+  role: string // Rôles multiples séparés par des virgules (ex: 'vet, stock_manager')
   permissions?: any
   license_number?: string
   specialties?: string[]
@@ -49,7 +49,7 @@ export interface TCreateInitialProfileData {
   last_name: string
   email: string
   phone?: string
-  role: 'owner' | 'vet' | 'assistant' | 'admin'
+  role: string // Rôles multiples séparés par des virgules
   permissions?: any
   license_number?: string
   specialties?: string[]
@@ -88,7 +88,7 @@ export interface TUpdateProfileData {
   last_name?: string
   email?: string
   phone?: string
-  role?: 'owner' | 'vet' | 'assistant' | 'admin'
+  role?: string // Rôles multiples séparés par des virgules
   permissions?: any
   license_number?: string
   specialties?: string[]

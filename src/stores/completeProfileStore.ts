@@ -6,7 +6,7 @@ export interface ProfileData {
   first_name: string
   last_name: string
   phone?: string
-  role?: 'owner' | 'vet' | 'assistant' | 'admin'
+  role?: string
   license_number?: string
   specialties?: string[]
 }

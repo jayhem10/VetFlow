@@ -1,4 +1,4 @@
-import Header from '@/components/organisms/Header';
+import PublicHeader from '@/components/organisms/PublicHeader';
 import HeroSection from '@/components/organisms/HeroSection';
 import FeaturesSection from '@/components/organisms/FeaturesSection';
 import PricingSection from '@/components/organisms/PricingSection';
@@ -9,7 +9,7 @@ import Footer from '@/components/organisms/Footer';
 export default function Home() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
-      <Header />
+      <PublicHeader />
       <HeroSection />
       <FeaturesSection />
       <PricingSection />

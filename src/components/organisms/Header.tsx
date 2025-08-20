@@ -7,11 +7,14 @@ import { GlobalSearch } from '@/components/molecules/GlobalSearch';
 import { Dropdown } from '@/components/atoms/Dropdown';
 import { NavLink } from '@/components/atoms/NavLink';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useRouter } from 'next/navigation';
 import { TemporaryPasswordBanner } from '@/components/molecules/TemporaryPasswordBanner';
 
-export default function Header() {
+// Header pour les utilisateurs authentifiés avec menus selon les permissions
+export default function AuthenticatedHeader() {
   const { user, isAuthenticated, signOut } = useAuth();
+  const { menuItems, shortcutItems } = usePermissions();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
@@ -25,34 +28,6 @@ export default function Header() {
     setShowShortcutsModal(false);
     router.push(path);
   };
-
-  const navigationItems = [
-    {
-      label: 'Dashboard',
-      href: '/dashboard',
-      icon: '📊'
-    },
-    {
-      label: 'Animaux',
-      href: '/animals',
-      icon: '🐾'
-    },
-    {
-      label: 'Propriétaires',
-      href: '/owners',
-      icon: '👥'
-    },
-    {
-      label: 'Rendez-vous',
-      href: '/appointments',
-      icon: '📅'
-    },
-    {
-      label: 'Équipe',
-      href: '/collaborators',
-      icon: '🤝'
-    }
-  ];
 
   const userMenuItems = [
     {
@@ -72,33 +47,6 @@ export default function Header() {
       label: 'Déconnexion',
       onClick: handleSignOut,
       icon: '🔓'
-    }
-  ];
-
-  const shortcutsItems = [
-    {
-      label: 'Ajouter un animal',
-      icon: '➕',
-      onClick: () => handleShortcutClick('/animals'),
-      description: 'Créer un nouveau dossier animal'
-    },
-    {
-      label: 'Nouveau propriétaire',
-      icon: '👤',
-      onClick: () => handleShortcutClick('/owners'),
-      description: 'Enregistrer un nouveau propriétaire'
-    },
-    {
-      label: 'Nouveau rendez-vous',
-      icon: '📅',
-      onClick: () => handleShortcutClick('/appointments'),
-      description: 'Planifier une consultation'
-    },
-    {
-      label: 'Inviter collaborateur',
-      icon: '🤝',
-      onClick: () => handleShortcutClick('/collaborators'),
-      description: 'Ajouter un membre à l\'équipe'
     }
   ];
 
@@ -189,7 +137,7 @@ export default function Header() {
                     </div>
                   }
                   items={[
-                    ...navigationItems,
+                    ...menuItems,
                     { separator: true },
                     {
                       label: 'Raccourcis',
@@ -224,7 +172,7 @@ export default function Header() {
                 <div className="px-1 py-2">
                   <GlobalSearch />
                 </div>
-                {navigationItems.map((item) => (
+                {menuItems.map((item) => (
                   <a
                     key={item.href}
                     href={item.href}
@@ -290,10 +238,10 @@ export default function Header() {
             
             <div className="p-6">
               <div className="space-y-3">
-                {shortcutsItems.map((item, index) => (
+                {shortcutItems.map((item, index) => (
                   <button
                     key={index}
-                    onClick={item.onClick}
+                    onClick={() => handleShortcutClick(item.href)}
                     className="w-full group flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors border border-gray-200 dark:border-gray-600 hover:border-green-200 dark:hover:border-green-700"
                   >
                     <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center text-green-600 text-lg mr-4">
