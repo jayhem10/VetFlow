@@ -20,7 +20,7 @@ export async function DELETE(
 
     const { profileId } = await params
 
-    // Récupérer le profil à supprimer
+    // Récupérer le profil à désactiver
     const targetProfile = await prisma.profile.findUnique({
       where: { id: profileId },
       include: { user: true }
@@ -52,25 +52,25 @@ export async function DELETE(
     // Vérifier que l'utilisateur a les droits (owner, admin ou vet)
     if (!canManageCollaborators(currentUserProfile.role)) {
       return NextResponse.json(
-        { error: 'Accès non autorisé - Seuls les propriétaires, vétérinaires et admins peuvent supprimer des collaborateurs' },
+        { error: 'Accès non autorisé - Seuls les propriétaires, vétérinaires et admins peuvent désactiver des collaborateurs' },
         { status: 403 }
       )
     }
 
-    // Ne pas permettre de se supprimer soi-même
+    // Ne pas permettre de se désactiver soi-même
     if (targetProfile.userId === session.user.id) {
       return NextResponse.json(
-        { error: 'Vous ne pouvez pas vous supprimer vous-même' },
+        { error: 'Vous ne pouvez pas vous désactiver vous-même' },
         { status: 400 }
       )
     }
 
-    console.log('🔍 Suppression collaborateur:', { profileId, userId: targetProfile.userId })
+    console.log('🔍 Désactivation collaborateur:', { profileId, userId: targetProfile.userId })
     
-    // Supprimer le profil et l'utilisateur
+    // Soft delete : désactiver le profil sans supprimer les données
     try {
       await prisma.$transaction(async (tx) => {
-        // Vérifier s'il y a des données liées
+        // Vérifier s'il y a des données liées (pour information)
         const appointments = await tx.appointment.count({
           where: { veterinarian_id: profileId }
         })
@@ -84,50 +84,29 @@ export async function DELETE(
           where: { veterinarian_id: profileId }
         })
         
-        console.log('📊 Données liées:', { appointments, medicalRecords, prescriptions, vaccinations })
+        console.log('📊 Données liées conservées:', { appointments, medicalRecords, prescriptions, vaccinations })
         
-        // Supprimer les données liées en premier
-        if (appointments > 0) {
-          await tx.appointment.deleteMany({
-            where: { veterinarian_id: profileId }
-          })
-        }
-        
-        if (medicalRecords > 0) {
-          await tx.medicalRecord.deleteMany({
-            where: { veterinarian_id: profileId }
-          })
-        }
-        
-        if (prescriptions > 0) {
-          await tx.prescription.deleteMany({
-            where: { veterinarian_id: profileId }
-          })
-        }
-        
-        if (vaccinations > 0) {
-          await tx.vaccination.deleteMany({
-            where: { veterinarian_id: profileId }
-          })
-        }
-        
-        // Maintenant supprimer le profil
-        await tx.profile.delete({
-          where: { id: profileId }
+        // Désactiver le profil (soft delete)
+        await tx.profile.update({
+          where: { id: profileId },
+          data: {
+            isActive: false,
+            deactivatedAt: new Date()
+          }
         })
       })
-      console.log('✅ Suppression réussie')
+      console.log('✅ Désactivation réussie')
     } catch (transactionError) {
       console.error('❌ Erreur transaction:', transactionError)
       throw transactionError
     }
 
     return NextResponse.json({
-      message: 'Collaborateur supprimé avec succès'
+      message: 'Collaborateur désactivé avec succès - Les données médicales et rendez-vous sont conservés'
     })
 
   } catch (error) {
-    console.error('Erreur suppression collaborateur:', error)
+    console.error('Erreur désactivation collaborateur:', error)
     return NextResponse.json(
       { error: 'Erreur interne du serveur' },
       { status: 500 }

@@ -14,16 +14,20 @@ export interface InviteCollaboratorData {
 interface CollaboratorsStore {
   // État
   collaborators: TProfile[]
+  deactivatedCollaborators: TProfile[]
   invitations: any[] // Pour les invitations en attente
   loading: boolean
   error: string | null
 
   // Actions
   fetchCollaborators: () => Promise<void>
+  fetchDeactivated: () => Promise<void>
   searchCollaborators: (query: string) => Promise<void>
   inviteCollaborator: (data: InviteCollaboratorData) => Promise<void>
   updateCollaboratorRole: (profileId: string, role: 'vet' | 'assistant') => Promise<void>
+  updateCollaboratorColor: (profileId: string, calendarColor: string) => Promise<void>
   removeCollaborator: (profileId: string) => Promise<void>
+  reactivateCollaborator: (profileId: string) => Promise<void>
   clearError: () => void
   reset: () => void
 }
@@ -31,6 +35,7 @@ interface CollaboratorsStore {
 export const useCollaboratorsStore = create<CollaboratorsStore>((set, get) => ({
   // État initial
   collaborators: [],
+  deactivatedCollaborators: [],
   invitations: [],
   loading: false,
   error: null,
@@ -41,6 +46,16 @@ export const useCollaboratorsStore = create<CollaboratorsStore>((set, get) => ({
     try {
       const collaborators = await CollaboratorsService.getAll()
       set({ collaborators, loading: false })
+    } catch (error) {
+      set({ error: (error as Error).message, loading: false })
+    }
+  },
+
+  fetchDeactivated: async () => {
+    set({ loading: true, error: null })
+    try {
+      const deactivated = await CollaboratorsService.getDeactivated()
+      set({ deactivatedCollaborators: deactivated, loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
     }
@@ -60,7 +75,7 @@ export const useCollaboratorsStore = create<CollaboratorsStore>((set, get) => ({
     set({ loading: true, error: null })
     try {
       await CollaboratorsService.invite(data)
-      await get().fetchCollaborators()
+      await Promise.all([get().fetchCollaborators(), get().fetchDeactivated()])
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
       throw error
@@ -103,10 +118,24 @@ export const useCollaboratorsStore = create<CollaboratorsStore>((set, get) => ({
     set({ loading: true, error: null })
     try {
       await CollaboratorsService.remove(profileId)
+      // Retirer de la liste active et rafraîchir la liste des désactivés
       set((state) => ({
         collaborators: state.collaborators.filter(collab => collab.id !== profileId),
         loading: false
       }))
+      await get().fetchDeactivated()
+    } catch (error) {
+      set({ error: (error as Error).message, loading: false })
+      throw error
+    }
+  },
+
+  reactivateCollaborator: async (profileId: string) => {
+    set({ loading: true, error: null })
+    try {
+      await CollaboratorsService.reactivate(profileId)
+      await Promise.all([get().fetchCollaborators(), get().fetchDeactivated()])
+      set({ loading: false })
     } catch (error) {
       set({ error: (error as Error).message, loading: false })
       throw error
@@ -114,5 +143,5 @@ export const useCollaboratorsStore = create<CollaboratorsStore>((set, get) => ({
   },
 
   clearError: () => set({ error: null }),
-  reset: () => set({ collaborators: [], invitations: [], loading: false, error: null })
+  reset: () => set({ collaborators: [], deactivatedCollaborators: [], invitations: [], loading: false, error: null })
 }))

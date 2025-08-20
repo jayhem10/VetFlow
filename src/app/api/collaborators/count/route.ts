@@ -19,7 +19,12 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ error: 'Aucune clinique associée' }, { status: 404 })
     }
 
-    const count = await prisma.profile.count({ where: { clinicId: profile.clinicId } })
+    const count = await prisma.profile.count({ 
+      where: { 
+        clinicId: profile.clinicId,
+        isActive: true, // Seulement les collaborateurs actifs
+      } 
+    })
     return NextResponse.json({ count })
   } catch (error) {
     console.error('Erreur collaborators count:', error)

@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
     const whereClause = {
       clinicId: profile.clinicId,
       userId: { not: session.user.id },
+      isActive: true, // Seulement les collaborateurs actifs
       ...(query
         ? {
             OR: [

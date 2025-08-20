@@ -11,15 +11,19 @@ import { InviteCollaboratorModal } from '@/modules/collaborators/components/Invi
 import ListLoader from '@/components/atoms/ListLoader';
 import { CollaboratorCard } from '@/modules/collaborators/components/CollaboratorCard';
 import { CollaboratorsList } from '@/modules/collaborators/components/CollaboratorsList';
+import { toast } from '@/lib/toast';
 
 export default function CollaboratorsPage() {
   const { clinic, hasClinic } = useClinic();
   const { 
     collaborators, 
+    deactivatedCollaborators,
     loading, 
     error, 
     fetchCollaborators, 
+    fetchDeactivated,
     searchCollaborators,
+    reactivateCollaborator,
     clearError 
   } = useCollaboratorsStore();
   
@@ -31,8 +35,9 @@ export default function CollaboratorsPage() {
   useEffect(() => {
     if (clinic?.id) {
       fetchCollaborators();
+      fetchDeactivated();
     }
-  }, [clinic?.id, fetchCollaborators]);
+  }, [clinic?.id, fetchCollaborators, fetchDeactivated]);
 
   // Recherche avec debounce
   useEffect(() => {
@@ -157,6 +162,42 @@ export default function CollaboratorsPage() {
                   />
                 ))}
               </div>
+            )}
+            {/* Désactivés */}
+            {deactivatedCollaborators.length > 0 && (
+              <Card className="p-6 mt-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Collaborateurs désactivés ({deactivatedCollaborators.length})
+                </h3>
+                <div className="space-y-3">
+                  {deactivatedCollaborators.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {c.first_name} {c.last_name}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
+                          {c.email} • {c.role}
+                        </div>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            await reactivateCollaborator(c.id)
+                            toast.success('Collaborateur réactivé')
+                          } catch (e) {
+                            toast.error('Erreur de réactivation')
+                          }
+                        }}
+                      >
+                        Réactiver
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </Card>
             )}
           </>
         )}

@@ -10,6 +10,7 @@ export interface TProfile {
   license_number?: string
   specialties?: string[]
   is_active: boolean
+  deactivated_at?: string
   last_login_at?: string
   calendar_color?: string
   registration_step: 'profile' | 'clinic' | 'completed'

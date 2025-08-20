@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
       where: {
         clinicId: profile.clinicId,
         userId: { not: session.user.id },
+        isActive: true, // Seulement les collaborateurs actifs
       },
       include: {
         user: { select: { email: true } },
