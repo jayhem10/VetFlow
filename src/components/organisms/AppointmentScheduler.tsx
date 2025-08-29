@@ -28,6 +28,7 @@ import { appointmentSchema, type AppointmentFormData } from '@/schemas/appointme
 import { type AppointmentWithDetails } from '@/types/appointment.types'
 import AppointmentDetails from '@/components/molecules/AppointmentDetails'
 import { EditButton } from '@/components/atoms/EditButton'
+import { Plus, Trash2, PawPrint, Calendar, User, DollarSign, Paperclip, Eye, FileText, Receipt } from 'lucide-react'
 
 interface AppointmentSchedulerProps {
   defaultView?: 'timeGridWeek' | 'timeGridDay' | 'dayGridMonth'
@@ -678,7 +679,8 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
               )}
             </div>
             <Button onClick={() => setIsDialogOpen(true)} className="whitespace-nowrap">
-              ➕ Nouveau RDV
+              <Plus className="w-4 h-4 mr-2" />
+              Nouveau RDV
             </Button>
           </div>
         </div>
@@ -941,33 +943,243 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
         )}
       </div>
 
-      {/* Modale de détails du rendez-vous */}
-      <Dialog isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} className="w-[96vw] max-w-2xl max-h-[85vh] overflow-y-auto">
+      {/* Modale de résumé du rendez-vous - Simplifiée */}
+      <Dialog isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} className="w-[96vw] max-w-lg max-h-[85vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Détails du rendez-vous</h3>
-            <div className="flex gap-2">
-              <EditButton
-                showText={true}
-                onClick={() => selectedAppointment && handleEditAppointment(selectedAppointment)}
-              />
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  if (selectedAppointment) {
-                    setEditingId(selectedAppointment.id)
-                    setShowDetailsModal(false)
-                    setShowDeleteConfirm(true)
-                  }
-                }}
-              >
-                🗑️ Supprimer
-              </Button>
-            </div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              Résumé du rendez-vous
+            </h3>
           </div>
           
           {selectedAppointment && (
-            <AppointmentDetails appointment={selectedAppointment} />
+            <div className="space-y-4">
+              {/* Informations de base */}
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Informations du rendez-vous
+                </h4>
+                <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Titre :</span>
+                    <span>{selectedAppointment.title}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Date :</span>
+                    <span>
+                      {new Date(selectedAppointment.appointment_date).toLocaleString('fr-FR', {
+                        weekday: 'long',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Durée :</span>
+                    <span>{selectedAppointment.duration_minutes || 30} minutes</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Type :</span>
+                    <span className="capitalize">{selectedAppointment.appointment_type?.replace('_', ' ')}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Priorité :</span>
+                    <span className={cn(
+                      "px-2 py-1 rounded-full text-xs font-medium",
+                      selectedAppointment.priority === 'urgent' ? "bg-red-100 text-red-700" :
+                      selectedAppointment.priority === 'high' ? "bg-orange-100 text-orange-700" :
+                      selectedAppointment.priority === 'normal' ? "bg-blue-100 text-blue-700" :
+                      "bg-gray-100 text-gray-700"
+                    )}>
+                      {selectedAppointment.priority === 'urgent' ? 'Urgente' :
+                       selectedAppointment.priority === 'high' ? 'Haute' :
+                       selectedAppointment.priority === 'normal' ? 'Normale' : 'Basse'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Statut :</span>
+                    <span className={cn(
+                      "px-2 py-1 rounded-full text-xs font-medium",
+                      selectedAppointment.status === 'completed' ? "bg-green-100 text-green-700" :
+                      selectedAppointment.status === 'in_progress' ? "bg-blue-100 text-blue-700" :
+                      selectedAppointment.status === 'confirmed' ? "bg-yellow-100 text-yellow-700" :
+                      selectedAppointment.status === 'cancelled' ? "bg-red-100 text-red-700" :
+                      selectedAppointment.status === 'no_show' ? "bg-gray-100 text-gray-700" :
+                      "bg-gray-100 text-gray-700"
+                    )}>
+                      {selectedAppointment.status === 'completed' ? 'Terminé' :
+                       selectedAppointment.status === 'in_progress' ? 'En cours' :
+                       selectedAppointment.status === 'confirmed' ? 'Confirmé' :
+                       selectedAppointment.status === 'cancelled' ? 'Annulé' :
+                       selectedAppointment.status === 'no_show' ? 'Absent' : 'Planifié'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Animal et propriétaire */}
+              {selectedAppointment.animal && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <PawPrint className="w-5 h-5" />
+                    Informations du patient
+                  </h4>
+                  <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Nom :</span>
+                      <span>{selectedAppointment.animal.name}</span>
+                    </div>
+                    {selectedAppointment.animal.species && (
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Espèce :</span>
+                        <span className="capitalize">{selectedAppointment.animal.species}</span>
+                      </div>
+                    )}
+                    {selectedAppointment.animal.breed && (
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Race :</span>
+                        <span>{selectedAppointment.animal.breed}</span>
+                      </div>
+                    )}
+                    {selectedAppointment.animal.owner && (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">Propriétaire :</span>
+                          <span>
+                            {selectedAppointment.animal.owner.first_name} {selectedAppointment.animal.owner.last_name}
+                          </span>
+                        </div>
+                        {selectedAppointment.animal.owner.email && (
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">Email :</span>
+                            <span className="text-blue-600">{selectedAppointment.animal.owner.email}</span>
+                          </div>
+                        )}
+                        {selectedAppointment.animal.owner.phone && (
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">Téléphone :</span>
+                            <span className="text-blue-600">{selectedAppointment.animal.owner.phone}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Vétérinaire */}
+              {selectedAppointment.veterinarian ? (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Vétérinaire assigné
+                  </h4>
+                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Nom :</span>
+                      <span>
+                        {selectedAppointment.veterinarian.first_name} {selectedAppointment.veterinarian.last_name}
+                      </span>
+                    </div>
+                    {selectedAppointment.veterinarian.role && (
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Rôle :</span>
+                        <span className="capitalize">{selectedAppointment.veterinarian.role}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Vétérinaire assigné
+                  </h4>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <p>Vétérinaire non assigné ou données manquantes</p>
+                    <p className="text-xs mt-1">ID: {selectedAppointment.veterinarian_id}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Facture */}
+              {selectedAppointment.invoice && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5" />
+                    Facture
+                  </h4>
+                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Numéro :</span>
+                      <span className="font-mono">{selectedAppointment.invoice.invoice_number}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Montant :</span>
+                      <span className="font-medium">{Number(selectedAppointment.invoice.total_amount).toFixed(2)} €</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Statut :</span>
+                      <span className={cn(
+                        "px-2 py-1 rounded-full text-xs font-medium",
+                        selectedAppointment.invoice.payment_status === 'paid' 
+                          ? "bg-green-100 text-green-700" 
+                          : "bg-yellow-100 text-yellow-700"
+                      )}>
+                        {selectedAppointment.invoice.payment_status === 'paid' ? 'Payée' : 'En attente'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Fichiers */}
+              {selectedAppointment.files && selectedAppointment.files.length > 0 && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <Paperclip className="w-5 h-5" />
+                    Documents attachés
+                  </h4>
+                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Nombre :</span>
+                      <span>{selectedAppointment.files.length} document{selectedAppointment.files.length > 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Dernier upload :</span>
+                      <span>{new Date(selectedAppointment.files[0].uploaded_at || '').toLocaleDateString('fr-FR')}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {selectedAppointment.notes && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Notes du rendez-vous
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{selectedAppointment.notes}</p>
+                </div>
+              )}
+
+              {/* Notes internes */}
+              {selectedAppointment.internal_notes && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border-l-4 border-blue-500">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Notes internes
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{selectedAppointment.internal_notes}</p>
+                </div>
+              )}
+            </div>
           )}
           
           <div className="mt-6 flex justify-end">
@@ -1022,7 +1234,9 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
                     <option key={a.id} value={a.id}>{a.name}</option>
                   ))}
                 </select>
-                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">🐾</span>
+                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                  <PawPrint className="w-4 h-4" />
+                </span>
               </div>
               {ownerAnimals.length === 0 && (
                 <p className="text-sm text-gray-500 mt-1">Aucun animal trouvé pour ce propriétaire.</p>
@@ -1132,7 +1346,8 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
                 variant="destructive" 
                 onClick={() => setShowDeleteConfirm(true)}
               >
-                🗑️ Supprimer
+                <Trash2 className="w-4 h-4 mr-2" />
+                Supprimer
               </Button>
             )}
             <div className="flex gap-2">
@@ -1148,8 +1363,9 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
       {/* Modale de confirmation de suppression */}
       <Dialog isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} className="w-[96vw] max-w-md">
         <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4 text-red-600">
-            🗑️ Confirmer la suppression
+          <h3 className="text-lg font-semibold mb-4 text-red-600 flex items-center gap-2">
+            <Trash2 className="w-5 h-5" />
+            Confirmer la suppression
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             Êtes-vous sûr de vouloir supprimer ce rendez-vous ? Cette action est irréversible.
@@ -1176,7 +1392,8 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
                 }
               }}
             >
-              🗑️ Supprimer définitivement
+              <Trash2 className="w-4 h-4 mr-2" />
+              Supprimer définitivement
             </Button>
           </div>
         </div>

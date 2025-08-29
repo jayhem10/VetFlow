@@ -10,7 +10,8 @@ import { toast } from '@/lib/toast'
 import Button from '@/components/atoms/Button'
 import Card from '@/components/atoms/Card'
 import Select from '@/components/atoms/Select'
-import { cn } from '@/lib/utils'
+import { cn, translateAppointmentStatus, getStatusColor } from '@/lib/utils'
+import AppointmentDetails from '@/components/molecules/AppointmentDetails'
 import type { AppointmentWithDetails } from '@/types/appointment.types'
 import { AppointmentFormModal } from '@/components/molecules/AppointmentFormModal'
 import { canCreateAppointments, canEditAppointments } from '@/lib/auth-utils'
@@ -18,17 +19,25 @@ import { useSession } from 'next-auth/react'
 import { useProfileStore } from '@/stores/useProfileStore'
 import { useClinicStore } from '@/stores/useClinicStore'
 import { EditButton } from '@/components/atoms/EditButton'
+import { Tooltip } from '@/components/atoms/Tooltip'
+import { Plus, Calendar, PawPrint, User, DollarSign, Paperclip, FileText, Receipt, Eye, FileText as FileTextIcon } from 'lucide-react'
 
 interface TodayAppointmentsProps {
   className?: string
   onEditAppointment?: (appointment: AppointmentWithDetails) => void
   onCreateAppointment?: () => void
+  onShowSummary?: (appointment: AppointmentWithDetails) => void
+  onShowInvoice?: (appointment: AppointmentWithDetails) => void
+  onShowFiles?: (appointment: AppointmentWithDetails) => void
 }
 
 export default function TodayAppointments({ 
   className,
   onEditAppointment,
-  onCreateAppointment
+  onCreateAppointment,
+  onShowSummary,
+  onShowInvoice,
+  onShowFiles,
 }: TodayAppointmentsProps) {
   const { data: session } = useSession()
   const { profile } = useProfileStore()
@@ -86,10 +95,19 @@ export default function TodayAppointments({
   const handleStatusChange = async (appointmentId: string, newStatus: string) => {
     setIsUpdating(appointmentId)
     try {
-      // This function is no longer used directly in this component
-      // as the modal handles updates.
-      // If you need to update appointments, you'd do it via the modal.
-      // For now, we'll just toast a success message.
+      const res = await fetch(`/api/appointments/${appointmentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Mise à jour impossible')
+      }
+      // rafraîchir la liste du jour
+      if (clinic?.id) {
+        await fetchAppointments(clinic.id)
+      }
       toast.success('Statut mis à jour avec succès')
     } catch (error) {
       toast.error('Erreur lors de la mise à jour du statut')
@@ -104,6 +122,18 @@ export default function TodayAppointments({
     }
   }
 
+  const handleGenerateInvoice = (appointment: AppointmentWithDetails) => {
+    onShowInvoice?.(appointment)
+  }
+
+  const handleShowSummary = (appointment: AppointmentWithDetails) => {
+    onShowSummary?.(appointment)
+  }
+
+  const handleShowFiles = (appointment: AppointmentWithDetails) => {
+    onShowFiles?.(appointment)
+  }
+
   const handleCreateAppointment = () => {
     if (onCreateAppointment) {
       onCreateAppointment()
@@ -116,29 +146,7 @@ export default function TodayAppointments({
     }
   }
 
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case 'scheduled': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-      case 'confirmed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-      case 'in_progress': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-      case 'completed': return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-      case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-      case 'no_show': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-    }
-  }
-
-  const getStatusLabel = (status?: string) => {
-    switch (status) {
-      case 'scheduled': return 'Planifié'
-      case 'confirmed': return 'Confirmé'
-      case 'in_progress': return 'En cours'
-      case 'completed': return 'Terminé'
-      case 'cancelled': return 'Annulé'
-      case 'no_show': return 'Absent'
-      default: return status
-    }
-  }
+  // Utilisation des fonctions centralisées de utils.ts
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString('fr-FR', {
@@ -230,7 +238,8 @@ export default function TodayAppointments({
               onClick={handleCreateAppointment}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              ➕ Nouveau RDV
+              <Plus className="w-4 h-4 mr-2" />
+              Nouveau RDV
             </Button>
           )}
         </div>
@@ -272,9 +281,9 @@ export default function TodayAppointments({
       <div className="space-y-3">
         {todayAppointments.length === 0 ? (
           <div className="text-center py-8">
-            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-xl">📅</span>
-            </div>
+                      <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Calendar className="w-6 h-6 text-gray-500" />
+          </div>
             <p className="text-gray-600 dark:text-gray-400">
               {selectedVet === 'all' 
                 ? 'Aucun rendez-vous aujourd\'hui' 
@@ -315,13 +324,44 @@ export default function TodayAppointments({
                       "px-2 py-1 text-xs font-medium rounded-full",
                       getStatusColor(appointment.status)
                     )}>
-                      {getStatusLabel(appointment.status)}
+                      {translateAppointmentStatus(appointment.status)}
                     </span>
                   </div>
                   
                   <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                    <div>🐾 {animalName}</div>
-                    <div>👤 {ownerName}</div>
+                    <div className="flex items-center gap-1">
+                      <PawPrint className="w-3 h-3" />
+                      {animalName}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      {ownerName}
+                    </div>
+                    {aptWithDetails.invoice && (
+                      <div className="flex items-center gap-1 text-xs">
+                        <DollarSign className="w-3 h-3 text-green-600" />
+                        <span className="text-green-600 font-medium">Facture #{aptWithDetails.invoice.invoice_number}</span>
+                        <span className={cn(
+                          "px-1 py-0.5 text-xs rounded",
+                          aptWithDetails.invoice.payment_status === 'paid' 
+                            ? "bg-green-100 text-green-700" 
+                            : "bg-yellow-100 text-yellow-700"
+                        )}>
+                          {aptWithDetails.invoice.payment_status === 'paid' ? 'Payée' : 'En attente'}
+                        </span>
+                      </div>
+                    )}
+                    {aptWithDetails.files && aptWithDetails.files.length > 0 && (
+                      <div className="flex items-center gap-1 text-xs">
+                        <Paperclip className="w-3 h-3 text-blue-600" />
+                        <span className="text-blue-600 font-medium">{aptWithDetails.files.length} document{aptWithDetails.files.length > 1 ? 's' : ''}</span>
+                        {aptWithDetails.files.length > 0 && (
+                          <span className="text-gray-500">
+                            ({new Date(aptWithDetails.files[0].uploaded_at || '').toLocaleDateString('fr-FR')})
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -331,7 +371,10 @@ export default function TodayAppointments({
                     "px-2 py-1 text-xs font-medium rounded-full",
                     getVetColor(appointment.veterinarian_id)
                   )}>
-                    {getVetName(appointment.veterinarian_id)}
+                    {aptWithDetails.veterinarian 
+                      ? `${aptWithDetails.veterinarian.first_name || ''} ${aptWithDetails.veterinarian.last_name || ''}`.trim()
+                      : getVetName(appointment.veterinarian_id)
+                    }
                   </span>
                 </div>
 
@@ -352,11 +395,46 @@ export default function TodayAppointments({
                     className="w-32"
                   />
                   
+                  {/* Bouton résumé */}
+                  <Tooltip content="Voir le résumé">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleShowSummary(aptWithDetails)}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+
+                  <Tooltip content={aptWithDetails.invoice ? "Modifier la facture" : "Créer une facture"}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleGenerateInvoice(aptWithDetails)}
+                      className={aptWithDetails.invoice ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100" : ""}
+                    >
+                      {aptWithDetails.invoice ? <Receipt className="w-4 h-4" /> : <FileTextIcon className="w-4 h-4" />}
+                    </Button>
+                  </Tooltip>
+                  
+                  {/* Bouton fichiers */}
+                  <Tooltip content="Ajouter / voir des documents">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleShowFiles(aptWithDetails)}
+                    >
+                      <Paperclip className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+
                   {canEditAppointments(profile?.role) && (
+                    <Tooltip content='Modifier le rendez-vous'>
                     <EditButton
                       onClick={() => handleEditAppointment(aptWithDetails)}
                       disabled={isUpdating === appointment.id}
                     />
+                    </Tooltip>
                   )}
                 </div>
               </div>
@@ -364,6 +442,7 @@ export default function TodayAppointments({
           })
         )}
       </div>
+
     </Card>
   )
 }

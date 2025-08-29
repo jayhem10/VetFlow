@@ -15,6 +15,7 @@ import { OwnerAppointmentsHistory } from '@/components/molecules/OwnerAppointmen
 import { toast } from 'react-hot-toast'
 import { useConfirm } from '@/hooks/useConfirm'
 import { EditButton } from '@/components/atoms/EditButton'
+import { Trash2, Phone, Smartphone, Mail, FileText } from 'lucide-react'
 
 export default function OwnerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -112,7 +113,24 @@ export default function OwnerDetailPage({ params }: { params: Promise<{ id: stri
                 <div className="mt-1 flex flex-wrap gap-2">
                   {owner.preferred_contact && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                      {owner.preferred_contact === 'email' ? '📧 Email préféré' : owner.preferred_contact === 'mobile' ? '📱 Mobile préféré' : '📞 Téléphone préféré'}
+                      <div className="flex items-center gap-1">
+                        {owner.preferred_contact === 'email' ? (
+                          <>
+                            <Mail className="w-3 h-3" />
+                            Email préféré
+                          </>
+                        ) : owner.preferred_contact === 'mobile' ? (
+                          <>
+                            <Smartphone className="w-3 h-3" />
+                            Mobile préféré
+                          </>
+                        ) : (
+                          <>
+                            <Phone className="w-3 h-3" />
+                            Téléphone préféré
+                          </>
+                        )}
+                      </div>
                     </span>
                   )}
                   {owner.marketing_consent && (
@@ -121,7 +139,7 @@ export default function OwnerDetailPage({ params }: { params: Promise<{ id: stri
                     </span>
                   )}
                   <span className="inline-flex items-center px-2 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-xs">
-                    🐾 {animalsCount} animal{animalsCount > 1 ? 's' : ''}
+                    🐾 {animalsCount} anima{animalsCount > 1 ? 'ux' : 'l'}
                   </span>
                 </div>
               </div>
@@ -148,7 +166,7 @@ export default function OwnerDetailPage({ params }: { params: Promise<{ id: stri
               {/* Bloc Contact */}
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 p-4 h-full">
                 <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                  <span>📞</span>
+                  <Phone className="w-4 h-4" />
                   <span>Contact</span>
                 </div>
                 <div className="grid grid-cols-1 gap-3 text-sm text-gray-800 dark:text-gray-200">
@@ -159,8 +177,18 @@ export default function OwnerDetailPage({ params }: { params: Promise<{ id: stri
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Téléphone</div>
                     <div className="flex flex-wrap gap-2">
-                      {owner.phone ? <a className="hover:underline" href={`tel:${owner.phone}`}>📞 {owner.phone}</a> : <span>—</span>}
-                      {owner.mobile ? <a className="hover:underline" href={`tel:${owner.mobile}`}>📱 {owner.mobile}</a> : null}
+                      {owner.phone ? (
+                        <a className="hover:underline flex items-center gap-1" href={`tel:${owner.phone}`}>
+                          <Phone className="w-3 h-3" />
+                          {owner.phone}
+                        </a>
+                      ) : <span>—</span>}
+                      {owner.mobile ? (
+                        <a className="hover:underline flex items-center gap-1" href={`tel:${owner.mobile}`}>
+                          <Smartphone className="w-3 h-3" />
+                          {owner.mobile}
+                        </a>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -186,7 +214,7 @@ export default function OwnerDetailPage({ params }: { params: Promise<{ id: stri
               {/* Bloc Notes (avant Historique) */}
               <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 p-4 h-full">
                 <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                  <span>📝</span>
+                  <FileText className="w-4 h-4" />
                   <span>Notes</span>
                 </div>
                 <div className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{owner.notes || '—'}</div>
@@ -235,7 +263,7 @@ export default function OwnerDetailPage({ params }: { params: Promise<{ id: stri
                     onClick={() => handleEditAnimal(animal)}
                   />
                   <Button variant="destructive" size="sm" onClick={() => handleDeleteAnimal(animal.id)}>
-                    🗑️
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </Card>

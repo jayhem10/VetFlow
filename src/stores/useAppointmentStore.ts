@@ -1,13 +1,13 @@
 import { create } from 'zustand'
 import { AppointmentsService } from '@/services/appointments.service'
-import type { Appointment, CreateAppointment, UpdateAppointment, AppointmentSearchFilters } from '@/types/appointment.types'
+import type { Appointment, CreateAppointment, UpdateAppointment, AppointmentSearchFilters, AppointmentWithDetails } from '@/types/appointment.types'
 
 interface AppointmentStore {
   // État
-  appointments: Appointment[]
-  selectedAppointment: Appointment | null
-  todayAppointments: Appointment[]
-  upcomingAppointments: Appointment[]
+  appointments: AppointmentWithDetails[]
+  selectedAppointment: AppointmentWithDetails | null
+  todayAppointments: AppointmentWithDetails[]
+  upcomingAppointments: AppointmentWithDetails[]
   loading: boolean
   error: string | null
 
@@ -22,7 +22,7 @@ interface AppointmentStore {
   fetchUpcomingAppointments: (clinicId: string, days?: number) => Promise<void>
   updateAppointmentStatus: (id: string, status: Appointment['status']) => Promise<void>
   checkAvailability: (clinicId: string, veterinarianId: string, appointmentDate: string, durationMinutes?: number, excludeAppointmentId?: string) => Promise<boolean>
-  setSelectedAppointment: (appointment: Appointment | null) => void
+  setSelectedAppointment: (appointment: AppointmentWithDetails | null) => void
   clearError: () => void
   reset: () => void
 }

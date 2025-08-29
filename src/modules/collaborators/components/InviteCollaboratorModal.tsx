@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { toast } from 'react-hot-toast'
+import { toast } from '@/lib/toast'
 import Input from '@/components/atoms/Input'
 import Button from '@/components/atoms/Button'
 import Select from '@/components/atoms/Select'
 import { MultiRoleSelect } from '@/components/molecules/MultiRoleSelect'
 import { Dialog } from '@/components/atoms/Dialog'
 import { useCollaboratorsStore } from '@/stores/useCollaboratorsStore'
+import { Mail } from 'lucide-react'
 
 const inviteSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -166,7 +167,12 @@ export function InviteCollaboratorModal({ onClose, onSuccess }: InviteCollaborat
             disabled={form.formState.isSubmitting}
             loading={form.formState.isSubmitting}
           >
-            {form.formState.isSubmitting ? 'Envoi...' : '📧 Envoyer l\'invitation'}
+            {form.formState.isSubmitting ? 'Envoi...' : (
+              <>
+                <Mail className="w-4 h-4" />
+                Envoyer l'invitation
+              </>
+            )}
           </Button>
         </div>
       </form>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import LogoIcon from '@/components/atoms/LogoIcon'
 import AuthenticatedHeader from '@/components/organisms/Header'
 
 function ProtectedFooter() {
@@ -12,8 +13,8 @@ function ProtectedFooter() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-green-700 to-green-700 rounded-lg flex items-center justify-center">
-                <span className="text-white text-lg font-bold">V</span>
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center text-emerald-600">
+                <LogoIcon size={40} />
               </div>
               <span className="text-xl font-bold text-gray-900 dark:text-white">
                 Vet<span className="text-green-700 dark:text-green-400">Flow</span>

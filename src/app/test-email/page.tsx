@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast'
 import Card from '@/components/atoms/Card'
 import Button from '@/components/atoms/Button'
 import Input from '@/components/atoms/Input'
+import { Mail } from 'lucide-react'
 
 export default function TestEmailPage() {
   const [email, setEmail] = useState('')
@@ -77,7 +78,12 @@ export default function TestEmailPage() {
               disabled={isLoading || !email}
               loading={isLoading}
             >
-              {isLoading ? 'Envoi...' : '📧 Envoyer email de test'}
+              {isLoading ? 'Envoi...' : (
+                <>
+                  <Mail className="w-4 h-4" />
+                  Envoyer email de test
+                </>
+              )}
             </Button>
           </div>
         </Card>

@@ -8,7 +8,7 @@ interface DropdownItem {
   label?: string;
   href?: string;
   onClick?: () => void;
-  icon?: string;
+  icon?: React.ReactNode;
   separator?: boolean;
   disabled?: boolean;
 }

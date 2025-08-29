@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 import Button from '@/components/atoms/Button';
 import { EditButton } from '@/components/atoms/EditButton';
 import Card from '@/components/atoms/Card';
@@ -71,6 +71,10 @@ export function CollaboratorsList({ collaborators }: CollaboratorsListProps) {
           return 'Assistant(e)';
         case 'admin':
           return 'Admin';
+        case 'stock_manager':
+          return 'Gestionnaire de stock';
+        case 'owner':
+          return 'Propriétaire';
         default:
           return r.trim();
       }

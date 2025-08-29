@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
 import { useClinic } from '@/modules/clinic/hooks/use-clinic';

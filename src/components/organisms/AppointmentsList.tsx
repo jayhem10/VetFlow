@@ -12,16 +12,38 @@ import Card from '@/components/atoms/Card'
 import SearchInput from '@/components/atoms/SearchInput'
 import Select from '@/components/atoms/Select'
 import AppointmentDetails from '@/components/molecules/AppointmentDetails'
+import InvoiceFormModal from '@/components/molecules/InvoiceFormModal'
+import InvoiceEditModal from '@/components/molecules/InvoiceEditModal'
+import { Tooltip } from '@/components/atoms/Tooltip'
+import { AppointmentFormModal } from '@/components/molecules/AppointmentFormModal'
+import AppointmentSummaryModal from '@/components/molecules/AppointmentSummaryModal'
+import FileUpload from '@/components/molecules/FileUpload'
+import type { Invoice } from '@/types/invoice.types'
 import Dialog from '@/components/atoms/Dialog'
-import { cn } from '@/lib/utils'
+import { cn, translateAppointmentStatus, getStatusColor } from '@/lib/utils'
 import { EditButton } from '@/components/atoms/EditButton'
+import { AppointmentWithDetails } from '@/types'
+import { canEditAppointments } from '@/lib/auth-utils'
+import { useProfileStore } from '@/stores/useProfileStore'
+import { Plus, Calendar, PawPrint, User, DollarSign, Paperclip, FileText, Receipt, Edit, Trash2, Eye, FileText as FileTextIcon } from 'lucide-react'
 
 interface AppointmentsListProps {
   className?: string
+  onEditAppointment?: (appointment: AppointmentWithDetails) => void
+  onShowSummary?: (appointment: AppointmentWithDetails) => void
+  onShowInvoice?: (appointment: AppointmentWithDetails) => void
+  onShowFiles?: (appointment: AppointmentWithDetails) => void
 }
 
-export function AppointmentsList({ className }: AppointmentsListProps) {
+export function AppointmentsList({ 
+  className,
+  onEditAppointment,
+  onShowSummary,
+  onShowInvoice,
+  onShowFiles
+}: AppointmentsListProps) {
   const { clinic } = useClinic()
+  const { profile } = useProfileStore()
   const { appointments, fetchAppointments, deleteAppointment, loading } = useAppointmentStore()
   const { animals, fetchAnimals } = useAnimalStore()
   const { owners, fetchOwners } = useOwnerStore()
@@ -39,7 +61,13 @@ export function AppointmentsList({ className }: AppointmentsListProps) {
   // États pour les modales
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false)
+  const [showEditInvoiceModal, setShowEditInvoiceModal] = useState(false)
+  const [existingInvoice, setExistingInvoice] = useState<Invoice | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showSummaryModal, setShowSummaryModal] = useState(false)
+  const [showFilesModal, setShowFilesModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   // États de chargement
   const [isLoadingData, setIsLoadingData] = useState(false)
@@ -219,28 +247,72 @@ export function AppointmentsList({ className }: AppointmentsListProps) {
     })
   }
 
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case 'scheduled': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-      case 'confirmed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-      case 'in_progress': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-      case 'completed': return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-      case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-      case 'no_show': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+  // Fonctions pour gérer les actions des boutons
+  const handleShowSummary = (appointment: AppointmentWithDetails) => {
+    if (onShowSummary) {
+      onShowSummary(appointment)
+    } else {
+      setSelectedAppointment(appointment)
+      setShowSummaryModal(true)
     }
   }
 
-  const getStatusLabel = (status?: string) => {
-    switch (status) {
-      case 'scheduled': return 'Planifié'
-      case 'confirmed': return 'Confirmé'
-      case 'in_progress': return 'En cours'
-      case 'completed': return 'Terminé'
-      case 'cancelled': return 'Annulé'
-      case 'no_show': return 'Absent'
-      default: return status
+  const handleGenerateInvoice = async (appointment: AppointmentWithDetails) => {
+    if (onShowInvoice) {
+      onShowInvoice(appointment)
+    } else {
+      setSelectedAppointment(appointment)
+      // Utiliser les données de facture incluses dans le rendez-vous
+      if (appointment.invoice) {
+        setExistingInvoice(appointment.invoice as unknown as Invoice)
+        setShowEditInvoiceModal(true)
+      } else {
+        setExistingInvoice(null)
+        setShowCreateInvoiceModal(true)
+      }
     }
+  }
+
+  const handleShowFiles = (appointment: AppointmentWithDetails) => {
+    if (onShowFiles) {
+      onShowFiles(appointment)
+    } else {
+      setSelectedAppointment(appointment)
+      setShowFilesModal(true)
+    }
+  }
+
+  const handleEditAppointment = (appointment: AppointmentWithDetails) => {
+    if (onEditAppointment) {
+      onEditAppointment(appointment)
+    } else {
+      // Ouvrir la modale de modification
+      setSelectedAppointment(appointment)
+      setShowEditModal(true)
+    }
+  }
+
+  // Fonctions utilitaires pour les vétérinaires
+  const getVetName = (vetId: string) => {
+    const vet = collaborators.find(c => c.id === vetId)
+    if (vet) {
+      const firstName = vet.first_name || ''
+      const lastName = vet.last_name || ''
+      return `${firstName} ${lastName}`.trim() || 'Vétérinaire inconnu'
+    }
+    return 'Vétérinaire inconnu'
+  }
+
+  const getVetColor = (vetId: string) => {
+    const colors = [
+      'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+      'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+      'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200'
+    ]
+    const index = collaborators.findIndex(c => c.id === vetId)
+    return colors[index % colors.length] || colors[0]
   }
 
   return (
@@ -383,7 +455,7 @@ export function AppointmentsList({ className }: AppointmentsListProps) {
         ) : (
           filteredAndSortedAppointments.map((appointment) => {
             // Cast pour accéder aux données enrichies si elles existent
-            const aptWithDetails = appointment as any
+            const aptWithDetails = appointment as AppointmentWithDetails
             
             // Utiliser les données enrichies de l'API si disponibles, sinon fallback sur les stores
             const animalName = aptWithDetails.animal?.name || animals.find(a => a.id === appointment.animal_id)?.name || 'Animal inconnu'
@@ -394,86 +466,146 @@ export function AppointmentsList({ className }: AppointmentsListProps) {
                   const owner = animal ? owners.find(o => o.id === animal.owner_id) : null
                   return owner ? `${owner.first_name || ''} ${owner.last_name || ''}`.trim() : 'Propriétaire inconnu'
                 })()
-            
-            // Améliorer la gestion du nom du vétérinaire
-            let vetName = 'Vétérinaire inconnu'
-            if (aptWithDetails.veterinarian) {
-              const firstName = aptWithDetails.veterinarian.first_name || ''
-              const lastName = aptWithDetails.veterinarian.last_name || ''
-              vetName = `${firstName} ${lastName}`.trim() || 'Vétérinaire inconnu'
-            } else if (collaborators.length > 0) {
-              const vet = collaborators.find(c => c.id === appointment.veterinarian_id)
-              if (vet) {
-                const firstName = vet.first_name || ''
-                const lastName = vet.last_name || ''
-                vetName = `${firstName} ${lastName}`.trim() || 'Vétérinaire inconnu'
-              }
-            }
-            
-            // S'assurer que le nom du vétérinaire n'est pas vide ou undefined
-            const displayVetName = vetName && vetName !== 'undefined undefined' && vetName !== ' ' ? vetName : 'Vétérinaire inconnu'
 
             return (
-              <div key={appointment.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700" onClick={() => {
-                setSelectedAppointment(appointment)
-                setShowDetailsModal(true)
-              }}>
-                <div className="flex items-center justify-between">
+              <div key={appointment.id} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                {/* Date et heure */}
+                <div className="flex-shrink-0 text-center">
+                  <div className="text-lg font-bold text-gray-900 dark:text-white">
+                    {new Date(appointment.appointment_date).toLocaleTimeString('fr-FR', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {new Date(appointment.appointment_date).toLocaleDateString('fr-FR', {
+                      weekday: 'short',
+                      day: '2-digit',
+                      month: '2-digit'
+                    })}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {appointment.duration_minutes || 30} min
+                  </div>
+                </div>
+
+                {/* Informations du rendez-vous */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                      {appointment.title}
+                    </h3>
+                                        <span className={cn(
+                  "px-2 py-1 text-xs font-medium rounded-full",
+                  getStatusColor(appointment.status)
+                )}>
+                  {translateAppointmentStatus(appointment.status)}
+                </span>
+                      </div>
+                  
+                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                    <div className="flex items-center gap-1">
+                      <PawPrint className="w-3 h-3" />
+                      {animalName}
+                      </div>
+                    <div className="flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      {ownerName}
+                    </div>
+                    {aptWithDetails.invoice && (
+                      <div className="flex items-center gap-1 text-xs">
+                        <DollarSign className="w-3 h-3 text-green-600" />
+                        <span className="text-green-600 font-medium">Facture #{aptWithDetails.invoice.invoice_number}</span>
                         <span className={cn(
-                          "px-2 py-1 text-xs font-medium rounded-full",
-                          getStatusColor(appointment.status)
+                          "px-1 py-0.5 text-xs rounded",
+                          aptWithDetails.invoice.payment_status === 'paid' 
+                            ? "bg-green-100 text-green-700" 
+                            : "bg-yellow-100 text-yellow-700"
                         )}>
-                          {getStatusLabel(appointment.status)}
+                          {aptWithDetails.invoice.payment_status === 'paid' ? 'Payée' : 'En attente'}
                         </span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white truncate">
-                          {appointment.title}
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {formatDate(appointment.appointment_date)}
-                          {appointment.duration_minutes && ` • ${appointment.duration_minutes} min`}
-                        </p>
+                    )}
+                    {aptWithDetails.files && aptWithDetails.files.length > 0 && (
+                      <div className="flex items-center gap-1 text-xs">
+                        <Paperclip className="w-3 h-3 text-blue-600" />
+                        <span className="text-blue-600 font-medium">{aptWithDetails.files.length} document{aptWithDetails.files.length > 1 ? 's' : ''}</span>
+                        {aptWithDetails.files.length > 0 && (
+                          <span className="text-gray-500">
+                            ({new Date(aptWithDetails.files[0].uploaded_at || '').toLocaleDateString('fr-FR')})
+                          </span>
+                        )}
                       </div>
-                    </div>
-                    
-                    <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                      <div className="text-gray-600 dark:text-gray-400">
-                        <span className="font-medium">Animal:</span> {animalName}
-                      </div>
-                      <div className="text-gray-600 dark:text-gray-400">
-                        <span className="font-medium">Propriétaire:</span> {ownerName}
-                      </div>
-                      <div className="text-gray-600 dark:text-gray-400">
-                        <span className="font-medium">Vétérinaire:</span> {displayVetName}
-                      </div>
-                    </div>
+                    )}
                   </div>
+                </div>
+
+                {/* Vétérinaire */}
+                <div className="flex-shrink-0">
+                  <span className={cn(
+                    "px-2 py-1 text-xs font-medium rounded-full",
+                    getVetColor(appointment.veterinarian_id)
+                  )}>
+                    {aptWithDetails.veterinarian 
+                      ? `${aptWithDetails.veterinarian.first_name || ''} ${aptWithDetails.veterinarian.last_name || ''}`.trim()
+                      : getVetName(appointment.veterinarian_id)
+                    }
+                  </span>
+                </div>
+
+                {/* Actions - Identiques au Dashboard */}
+                <div className="flex-shrink-0 flex gap-2">
+                  {/* Bouton résumé */}
+                  <Tooltip content="Voir le résumé">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleShowSummary(aptWithDetails)}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+
+                  <Tooltip content={aptWithDetails.invoice ? "Modifier la facture" : "Créer une facture"}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleGenerateInvoice(aptWithDetails)}
+                      className={aptWithDetails.invoice ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100" : ""}
+                    >
+                      {aptWithDetails.invoice ? <Receipt className="w-4 h-4" /> : <FileTextIcon className="w-4 h-4" />}
+                    </Button>
+                  </Tooltip>
                   
-                  <div className="flex-shrink-0 ml-4">
-                    <div className="flex gap-2">
-                      <EditButton
-                        showText={true}
-                        onClick={() => {
-                          // Rediriger vers la page du planning pour modifier
-                          window.location.href = '/appointments?edit=' + appointment.id
-                        }}
-                      />
+                  {/* Bouton fichiers */}
+                  <Tooltip content="Ajouter / voir des documents">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleShowFiles(aptWithDetails)}
+                    >
+                      <Paperclip className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+
+                  {canEditAppointments(profile?.role) && (
+                    <Tooltip content="Modifier le rendez-vous">
                       <Button
-                        variant="outline"
                         size="sm"
-                        onClick={() => {
-                          setSelectedAppointment(appointment)
-                          setShowDetailsModal(true)
+                        variant="outline"
+                        type="button"
+                        onClick={(e) => {
+                          if (e) {
+                            e.preventDefault()
+                            e.stopPropagation()
+                          }
+                          handleEditAppointment(aptWithDetails)
                         }}
                       >
-                        👁️ Détails
+                        <Edit className="w-4 h-4" />
                       </Button>
-                    </div>
-                  </div>
+                    </Tooltip>
+                  )}
                 </div>
               </div>
             )
@@ -481,38 +613,243 @@ export function AppointmentsList({ className }: AppointmentsListProps) {
         )}
       </div>
 
-      {/* Modale de détails */}
-      <Dialog isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} className="w-[96vw] max-w-2xl max-h-[85vh] overflow-y-auto">
+      {/* Modale de résumé enrichi */}
+      <Dialog isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} className="w-[96vw] max-w-lg max-h-[85vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Détails du rendez-vous</h3>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (selectedAppointment) {
-                    // Rediriger vers la page du planning pour modifier
-                    window.location.href = '/appointments?edit=' + selectedAppointment.id
-                  }
-                }}
-              >
-                ✏️ Modifier
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  if (selectedAppointment) {
-                    setShowDeleteConfirm(true)
-                  }
-                }}
-              >
-                🗑️ Supprimer
-              </Button>
-            </div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              Résumé du rendez-vous
+            </h3>
           </div>
           
           {selectedAppointment && (
-            <AppointmentDetails appointment={selectedAppointment} />
+            <div className="space-y-4">
+              {/* Informations de base */}
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Informations du rendez-vous
+                </h4>
+                <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Titre :</span>
+                    <span>{selectedAppointment.title}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Date :</span>
+                    <span>
+                      {new Date(selectedAppointment.appointment_date).toLocaleString('fr-FR', {
+                        weekday: 'long',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Durée :</span>
+                    <span>{selectedAppointment.duration_minutes || 30} minutes</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Type :</span>
+                    <span className="capitalize">{selectedAppointment.appointment_type?.replace('_', ' ')}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Priorité :</span>
+                    <span className={cn(
+                      "px-2 py-1 rounded-full text-xs font-medium",
+                      selectedAppointment.priority === 'urgent' ? "bg-red-100 text-red-700" :
+                      selectedAppointment.priority === 'high' ? "bg-orange-100 text-orange-700" :
+                      selectedAppointment.priority === 'normal' ? "bg-blue-100 text-blue-700" :
+                      "bg-gray-100 text-gray-700"
+                    )}>
+                      {selectedAppointment.priority === 'urgent' ? 'Urgente' :
+                       selectedAppointment.priority === 'high' ? 'Haute' :
+                       selectedAppointment.priority === 'normal' ? 'Normale' : 'Basse'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Statut :</span>
+                    <span className={cn(
+                      "px-2 py-1 rounded-full text-xs font-medium",
+                      selectedAppointment.status === 'completed' ? "bg-green-100 text-green-700" :
+                      selectedAppointment.status === 'in_progress' ? "bg-blue-100 text-blue-700" :
+                      selectedAppointment.status === 'confirmed' ? "bg-yellow-100 text-yellow-700" :
+                      selectedAppointment.status === 'cancelled' ? "bg-red-100 text-red-700" :
+                      selectedAppointment.status === 'no_show' ? "bg-gray-100 text-gray-700" :
+                      "bg-gray-100 text-gray-700"
+                    )}>
+                      {selectedAppointment.status === 'completed' ? 'Terminé' :
+                       selectedAppointment.status === 'in_progress' ? 'En cours' :
+                       selectedAppointment.status === 'confirmed' ? 'Confirmé' :
+                       selectedAppointment.status === 'cancelled' ? 'Annulé' :
+                       selectedAppointment.status === 'no_show' ? 'Absent' : 'Planifié'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Animal et propriétaire */}
+              {selectedAppointment.animal && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <PawPrint className="w-5 h-5" />
+                    Informations du patient
+                  </h4>
+                  <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Nom :</span>
+                      <span>{selectedAppointment.animal.name}</span>
+                    </div>
+                    {selectedAppointment.animal.species && (
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Espèce :</span>
+                        <span className="capitalize">{selectedAppointment.animal.species}</span>
+                      </div>
+                    )}
+                    {selectedAppointment.animal.breed && (
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Race :</span>
+                        <span>{selectedAppointment.animal.breed}</span>
+                      </div>
+                    )}
+                    {selectedAppointment.animal.owner && (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">Propriétaire :</span>
+                          <span>
+                            {selectedAppointment.animal.owner.first_name} {selectedAppointment.animal.owner.last_name}
+                          </span>
+                        </div>
+                        {selectedAppointment.animal.owner.email && (
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">Email :</span>
+                            <span className="text-blue-600">{selectedAppointment.animal.owner.email}</span>
+                          </div>
+                        )}
+                        {selectedAppointment.animal.owner.phone && (
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">Téléphone :</span>
+                            <span className="text-blue-600">{selectedAppointment.animal.owner.phone}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Vétérinaire */}
+              {selectedAppointment.veterinarian ? (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Vétérinaire assigné
+                  </h4>
+                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Nom :</span>
+                      <span>
+                        {selectedAppointment.veterinarian.first_name} {selectedAppointment.veterinarian.last_name}
+                      </span>
+                    </div>
+                    {selectedAppointment.veterinarian.role && (
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Rôle :</span>
+                        <span className="capitalize">{selectedAppointment.veterinarian.role}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Vétérinaire assigné
+                  </h4>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <p>Vétérinaire non assigné ou données manquantes</p>
+                    <p className="text-xs mt-1">ID: {selectedAppointment.veterinarian_id}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Facture */}
+              {selectedAppointment.invoice && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5" />
+                    Facture
+                  </h4>
+                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Numéro :</span>
+                      <span className="font-mono">{selectedAppointment.invoice.invoice_number}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Montant :</span>
+                      <span className="font-medium">{Number(selectedAppointment.invoice.total_amount).toFixed(2)} €</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Statut :</span>
+                      <span className={cn(
+                        "px-2 py-1 rounded-full text-xs font-medium",
+                        selectedAppointment.invoice.payment_status === 'paid' 
+                          ? "bg-green-100 text-green-700" 
+                          : "bg-yellow-100 text-yellow-700"
+                      )}>
+                        {selectedAppointment.invoice.payment_status === 'paid' ? 'Payée' : 'En attente'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Fichiers */}
+              {selectedAppointment.files && selectedAppointment.files.length > 0 && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <Paperclip className="w-5 h-5" />
+                    Documents attachés
+                  </h4>
+                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Nombre :</span>
+                      <span>{selectedAppointment.files.length} document{selectedAppointment.files.length > 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Dernier upload :</span>
+                      <span>{new Date(selectedAppointment.files[0].uploaded_at || '').toLocaleDateString('fr-FR')}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {selectedAppointment.notes && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Notes du rendez-vous
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{selectedAppointment.notes}</p>
+                </div>
+              )}
+
+              {/* Notes internes */}
+              {selectedAppointment.internal_notes && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border-l-4 border-blue-500">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Notes internes
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{selectedAppointment.internal_notes}</p>
+                </div>
+              )}
+            </div>
           )}
           
           <div className="mt-6 flex justify-end">
@@ -523,11 +860,100 @@ export function AppointmentsList({ className }: AppointmentsListProps) {
         </div>
       </Dialog>
 
+      {/* Modale de résumé */}
+      {showSummaryModal && selectedAppointment && (
+        <AppointmentSummaryModal
+          isOpen={showSummaryModal}
+          onClose={() => setShowSummaryModal(false)}
+          appointment={selectedAppointment}
+        />
+      )}
+
+      {/* Modale de fichiers */}
+      {showFilesModal && selectedAppointment && (
+        <Dialog isOpen={showFilesModal} onClose={() => setShowFilesModal(false)} className="w-[96vw] max-w-2xl max-h-[85vh] overflow-y-auto">
+            <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Documents du rendez-vous</h3>
+            </div>
+            
+            <FileUpload
+              appointmentId={selectedAppointment.id}
+            />
+            
+            <div className="mt-6 flex justify-end">
+              <Button variant="outline" onClick={() => setShowFilesModal(false)}>
+                Fermer
+                </Button>
+            </div>
+          </div>
+        </Dialog>
+      )}
+
+      {/* Modales de facturation page-level */}
+      {showCreateInvoiceModal && selectedAppointment && (
+        <InvoiceFormModal
+          isOpen={showCreateInvoiceModal}
+          onClose={() => {
+            setShowCreateInvoiceModal(false)
+            setSelectedAppointment(null)
+          }}
+          appointment={selectedAppointment}
+          onInvoiceCreated={async () => {
+            if (clinic?.id) {
+              await fetchAppointments(clinic.id)
+            }
+            setShowCreateInvoiceModal(false)
+            setSelectedAppointment(null)
+          }}
+        />
+      )}
+
+      {showEditInvoiceModal && existingInvoice && (
+        <InvoiceEditModal
+          isOpen={showEditInvoiceModal}
+          onClose={() => {
+            setShowEditInvoiceModal(false)
+            setExistingInvoice(null)
+          }}
+          invoice={existingInvoice}
+          onUpdate={async () => {
+            if (clinic?.id) {
+              await fetchAppointments(clinic.id)
+            }
+            setShowEditInvoiceModal(false)
+            setExistingInvoice(null)
+          }}
+        />
+      )}
+
+      {/* Modale de modification d'appointment */}
+      {showEditModal && selectedAppointment && (
+        <AppointmentFormModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false)
+            setSelectedAppointment(null)
+          }}
+          mode="edit"
+          appointment={selectedAppointment}
+          onSuccess={async () => {
+            if (clinic?.id) {
+              await fetchAppointments(clinic.id)
+            }
+            setShowEditModal(false)
+            setSelectedAppointment(null)
+            toast.success('Rendez-vous modifié avec succès')
+          }}
+        />
+      )}
+
       {/* Modale de confirmation de suppression */}
       <Dialog isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} className="w-[96vw] max-w-md">
         <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4 text-red-600">
-            🗑️ Confirmer la suppression
+          <h3 className="text-lg font-semibold mb-4 text-red-600 flex items-center gap-2">
+            <Trash2 className="w-5 h-5" />
+            Confirmer la suppression
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             Êtes-vous sûr de vouloir supprimer ce rendez-vous ? Cette action est irréversible.
@@ -547,7 +973,8 @@ export function AppointmentsList({ className }: AppointmentsListProps) {
                 }
               }}
             >
-              🗑️ Supprimer définitivement
+              <Trash2 className="w-4 h-4 mr-2" />
+              Supprimer définitivement
             </Button>
           </div>
         </div>

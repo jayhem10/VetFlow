@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import SearchInput from '@/components/atoms/SearchInput'
 import { cn } from '@/lib/utils'
+import { User } from 'lucide-react'
 
 interface OwnerItem {
   id: string
@@ -168,7 +169,10 @@ export function GlobalSearch() {
                     <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{a.name}</div>
                     <div className="text-xs text-gray-500">{a.species}</div>
                     {a.owner_name && (
-                      <div className="text-xs text-gray-500">👤 {a.owner_name}</div>
+                      <div className="text-xs text-gray-500 flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        {a.owner_name}
+                      </div>
                     )}
                   </div>
                   <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
@@ -199,7 +203,7 @@ export function GlobalSearch() {
               <li key={c.id}>
                 <div className="relative flex items-start gap-3 p-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 text-sm font-semibold">
-                    {(c.first_name?.[0] || '') + (c.last_name?.[0] || '') || '👤'}
+                    {(c.first_name?.[0] || '') + (c.last_name?.[0] || '') || <User className="w-4 h-4" />}
                   </div>
                   <div className="min-w-0 flex-1 pr-6">
                     <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{c.first_name} {c.last_name}</div>

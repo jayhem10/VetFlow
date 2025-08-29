@@ -6,6 +6,14 @@ import Button from '@/components/atoms/Button'
 import Input from '@/components/atoms/Input'
 import { toast } from '@/lib/toast'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useStatusFilter } from '@/hooks/useStatusFilter'
+import { useSearch } from '@/hooks/useSearch'
+import { usePagination } from '@/hooks/usePagination'
+import { StatusFilterButtons } from '@/components/molecules/StatusFilterButtons'
+import SearchInput from '@/components/atoms/SearchInput'
+import { Pagination } from '@/components/molecules/Pagination'
+import { EmptyState } from '@/components/molecules/EmptyState'
+import { Edit } from 'lucide-react'
 
 interface Product {
   id: string
@@ -24,9 +32,20 @@ export default function InventoryPage() {
   const { can } = usePermissions()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'low_stock'>('active')
-  const [currentPage, setCurrentPage] = useState(1)
+  // Hooks réutilisables
+  const { filteredItems: statusFilteredProducts, statusFilter, setStatusFilter, counts } = useStatusFilter({
+    items: products,
+    getActiveStatus: (product) => product.active,
+    getLowStockStatus: (product) => product.stock_qty <= product.low_stock_threshold,
+    initialFilter: 'active'
+  })
+
+  const { searchTerm, setSearchTerm, filteredItems: searchResults } = useSearch({
+    items: statusFilteredProducts,
+    searchFields: ['name', 'sku']
+  })
+
+  const { paginatedItems, currentPage, setCurrentPage, totalPages } = usePagination(searchResults)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showStockModal, setShowStockModal] = useState(false)
@@ -136,25 +155,6 @@ export default function InventoryPage() {
     setShowStockModal(true)
   }
 
-  // Filtrage et pagination
-  const filteredProducts = products.filter(product => {
-    // Filtre par recherche
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    // Filtre par statut
-    const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'active' && product.active) ||
-      (statusFilter === 'inactive' && !product.active) ||
-      (statusFilter === 'low_stock' && product.active && product.stock_qty <= product.low_stock_threshold)
-    
-    return matchesSearch && matchesStatus
-  })
-
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage)
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
   }
@@ -256,61 +256,25 @@ export default function InventoryPage() {
 
       {/* Barre de recherche et filtres */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-        <Input
-          type="text"
-          placeholder="Rechercher par nom ou SKU..."
+        <SearchInput
           value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value)
-            setCurrentPage(1) // Reset to first page when searching
+          onChange={(value) => {
+            setSearchTerm(value)
+            setCurrentPage(1)
           }}
+          placeholder="Rechercher par nom ou SKU..."
           className="min-w-80 max-w-lg"
         />
         
-        {/* Filtres de statut */}
-        <div className="flex gap-2">
-          <Button
-            variant={statusFilter === 'active' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setStatusFilter('active')
-              setCurrentPage(1)
-            }}
-          >
-            ✅ Actifs ({products.filter(p => p.active).length})
-          </Button>
-          <Button
-            variant={statusFilter === 'low_stock' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setStatusFilter('low_stock')
-              setCurrentPage(1)
-            }}
-            className={lowStockProducts.length > 0 ? 'border-orange-300 text-orange-700 dark:text-orange-300' : ''}
-          >
-            ⚠️ Stock bas ({lowStockProducts.length})
-          </Button>
-          <Button
-            variant={statusFilter === 'inactive' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setStatusFilter('inactive')
-              setCurrentPage(1)
-            }}
-          >
-            ⏸️ Inactifs ({products.filter(p => !p.active).length})
-          </Button>
-          <Button
-            variant={statusFilter === 'all' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setStatusFilter('all')
-              setCurrentPage(1)
-            }}
-          >
-            📋 Tous ({products.length})
-          </Button>
-        </div>
+        <StatusFilterButtons
+          currentFilter={statusFilter}
+          onFilterChange={(filter) => {
+            setStatusFilter(filter)
+            setCurrentPage(1)
+          }}
+          counts={counts}
+          showLowStock={true}
+        />
       </div>
 
       {/* Alertes stock bas */}
@@ -355,7 +319,7 @@ export default function InventoryPage() {
       </div>
 
       {/* Liste des produits */}
-      {filteredProducts.length === 0 ? (
+      {paginatedItems.length === 0 ? (
         <Card className="p-8 text-center">
           <div className="text-6xl mb-4">📦</div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -375,7 +339,7 @@ export default function InventoryPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {paginatedProducts.map((product) => (
+          {paginatedItems.map((product) => (
             <Card key={product.id} className="p-4">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -425,7 +389,7 @@ export default function InventoryPage() {
                       variant="outline"
                       onClick={() => handleEditProduct(product)}
                     >
-                      ✏️ Modifier
+                      <Edit className="w-4 h-4" />
                     </Button>
                   )}
                   {can('products', 'delete') && (

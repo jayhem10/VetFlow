@@ -1,19 +1,8 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 
-interface InputProps {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
-  type?: 'text' | 'email' | 'password' | 'tel' | 'number';
-  placeholder?: string;
-  value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
-  required?: boolean;
-  className?: string;
-  id?: string;
   error?: string;
-  disabled?: boolean;
-  name?: string;
-  autoComplete?: string;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(({

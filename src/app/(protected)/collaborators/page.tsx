@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import SearchInput from '@/components/atoms/SearchInput';
+import { useState, useEffect } from 'react';
 import { ViewToggle } from '@/components/atoms/ViewToggle';
 import { useClinic } from '@/modules/clinic/hooks/use-clinic';
 import { useCollaboratorsStore } from '@/stores/useCollaboratorsStore';
@@ -12,6 +11,10 @@ import ListLoader from '@/components/atoms/ListLoader';
 import { CollaboratorCard } from '@/modules/collaborators/components/CollaboratorCard';
 import { CollaboratorsList } from '@/modules/collaborators/components/CollaboratorsList';
 import { toast } from '@/lib/toast';
+import { useSearch } from '@/hooks/useSearch';
+import SearchInput from '@/components/atoms/SearchInput';
+import { EmptyState } from '@/components/molecules/EmptyState';
+import { User } from 'lucide-react';
 
 export default function CollaboratorsPage() {
   const { clinic, hasClinic } = useClinic();
@@ -28,9 +31,13 @@ export default function CollaboratorsPage() {
   } = useCollaboratorsStore();
   
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [query, setQuery] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  const typingTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Hook de recherche réutilisable
+  const { searchTerm, setSearchTerm, filteredItems: searchResults } = useSearch({
+    items: collaborators,
+    searchFields: ['first_name', 'last_name', 'email']
+  });
 
   useEffect(() => {
     if (clinic?.id) {
@@ -39,21 +46,15 @@ export default function CollaboratorsPage() {
     }
   }, [clinic?.id, fetchCollaborators, fetchDeactivated]);
 
-  // Recherche avec debounce
+  // Charger les collaborateurs au changement de recherche
   useEffect(() => {
     if (!clinic?.id) return
-    if (typingTimer.current) clearTimeout(typingTimer.current)
-    typingTimer.current = setTimeout(() => {
-      if (!query) {
-        fetchCollaborators()
-      } else {
-        searchCollaborators(query)
-      }
-    }, 300)
-    return () => {
-      if (typingTimer.current) clearTimeout(typingTimer.current)
+    if (!searchTerm) {
+      fetchCollaborators()
+    } else {
+      searchCollaborators(searchTerm)
     }
-  }, [query, clinic?.id, fetchCollaborators, searchCollaborators])
+  }, [searchTerm, clinic?.id, fetchCollaborators, searchCollaborators])
 
   if (!hasClinic) {
     return (
@@ -99,12 +100,16 @@ export default function CollaboratorsPage() {
           {/* Actions et recherche - Mobile first */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
-              <SearchInput value={query} onChange={setQuery} placeholder="Rechercher un collaborateur..." />
+              <SearchInput 
+                value={searchTerm} 
+                onChange={setSearchTerm} 
+                placeholder="Rechercher un collaborateur..." 
+              />
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               <ViewToggle 
                 view={viewMode} 
-                onViewChange={setViewMode}
+                onViewChange={(view) => setViewMode(view as 'list' | 'grid')}
               />
               <Button onClick={() => setShowInviteModal(true)} className="whitespace-nowrap">
                 ➕ Inviter
@@ -253,7 +258,7 @@ export default function CollaboratorsPage() {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <a href="/profile">
               <Button variant="outline">
-                👤 Mon profil
+                <User className="w-4 h-4" /> Mon profil
               </Button>
             </a>
             <a href="/dashboard">

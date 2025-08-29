@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
 import Select from '@/components/atoms/Select';
@@ -165,18 +165,64 @@ export function AnimalForm({ animal, onClose, onSuccess, presetOwner, lockOwner 
     }
   };
 
-  const speciesOptions = [
-    { value: 'dog', label: '🐕 Chien' },
-    { value: 'cat', label: '🐱 Chat' },
-    { value: 'bird', label: '🐦 Oiseau' },
-    { value: 'rabbit', label: '🐰 Lapin' },
-    { value: 'hamster', label: '🐹 Hamster' },
-    { value: 'guinea pig', label: '🐹 Cochon d\'inde' },
-    { value: 'ferret', label: '🦔 Furet' },
-    { value: 'reptile', label: '🦎 Reptile' },
-    { value: 'fish', label: '🐠 Poisson' },
-    { value: 'other', label: '🐾 Autre' },
-  ];
+  const [speciesOptions, setSpeciesOptions] = useState<Array<{ value: string; label: string }>>([])
+
+  useEffect(() => {
+    const loadSpecies = async () => {
+      try {
+        const res = await fetch('/api/species', { cache: 'no-store' })
+        if (!res.ok) throw new Error('load species failed')
+        const data = await res.json()
+        const opts = (data.species || []).map((s: any) => ({ value: s.name.toLowerCase(), label: s.name }))
+        // Trier pour mettre les espèces courantes en tête
+        const PRIORITY = [
+          'chien',
+          'chat',
+          'lapin',
+          'oiseau',
+          'furet',
+          "cochon d'inde",
+          'hamster',
+          'reptile',
+          'poisson',
+          'autre',
+        ]
+        const normalize = (s: string) => s.toLowerCase().replace(/[’']/g, "'")
+        const rank = (label: string) => {
+          const idx = PRIORITY.indexOf(normalize(label))
+          return idx === -1 ? 999 : idx
+        }
+        opts.sort((a, b) => {
+          const ra = rank(a.label)
+          const rb = rank(b.label)
+          if (ra !== rb) return ra - rb
+          return a.label.localeCompare(b.label, 'fr')
+        })
+        // Insérer un séparateur visuel entre les prioritaires et les autres
+        const firstNonPriority = opts.findIndex(o => rank(o.label) === 999)
+        const withSeparator = [...opts]
+        if (firstNonPriority > 0 && firstNonPriority < opts.length) {
+          withSeparator.splice(firstNonPriority, 0, { value: '__sep__', label: '──────────' } as any)
+        }
+        setSpeciesOptions(withSeparator)
+      } catch (e) {
+        setSpeciesOptions([
+          { value: 'dog', label: '🐕 Chien' },
+          { value: 'cat', label: '🐱 Chat' },
+          { value: 'rabbit', label: '🐰 Lapin' },
+          { value: 'bird', label: '🐦 Oiseau' },
+          { value: '__sep__', label: '──────────' } as any,
+          { value: 'hamster', label: '🐹 Hamster' },
+          { value: 'guinea pig', label: '🐹 Cochon d\'inde' },
+          { value: 'ferret', label: '🦔 Furet' },
+          { value: 'reptile', label: '🦎 Reptile' },
+          { value: 'fish', label: '🐠 Poisson' },
+          { value: 'other', label: '🐾 Autre' },
+        ])
+      }
+    }
+    loadSpecies()
+  }, [])
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

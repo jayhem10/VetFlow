@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 import Button from '@/components/atoms/Button';
 import { EditButton } from '@/components/atoms/EditButton';
 import Card from '@/components/atoms/Card';
@@ -9,6 +9,7 @@ import { Tooltip } from '@/components/atoms/Tooltip';
 import { useOwnerStore } from '@/stores/useOwnerStore';
 import { useClinic } from '@/modules/clinic/hooks/use-clinic';
 import { OwnerForm } from './OwnerForm';
+import { Trash2, Phone, Smartphone, Mail, Search } from 'lucide-react';
 import type { Owner } from '@/types/owner.types';
 
 interface OwnersListTableProps {
@@ -103,10 +104,16 @@ export function OwnersListTable({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 dark:text-white">
                     {owner.phone && (
-                      <div>📞 {owner.phone}</div>
+                      <div className="flex items-center gap-1">
+                        <Phone className="w-3 h-3" />
+                        {owner.phone}
+                      </div>
                     )}
                     {owner.mobile && (
-                      <div>📱 {owner.mobile}</div>
+                      <div className="flex items-center gap-1">
+                        <Smartphone className="w-3 h-3" />
+                        {owner.mobile}
+                      </div>
                     )}
                     {!owner.phone && !owner.mobile && (
                       <div className="text-gray-500 dark:text-gray-400">-</div>
@@ -133,7 +140,19 @@ export function OwnersListTable({
                   <div className="flex items-center gap-2">
                     {owner.preferred_contact && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                        {owner.preferred_contact === 'email' ? '📧 Email' : '📞 Téléphone'}
+                        <div className="flex items-center gap-1">
+                          {owner.preferred_contact === 'email' ? (
+                            <>
+                              <Mail className="w-3 h-3" />
+                              Email
+                            </>
+                          ) : (
+                            <>
+                              <Phone className="w-3 h-3" />
+                              Téléphone
+                            </>
+                          )}
+                        </div>
                       </span>
                     )}
                     {owner.marketing_consent && (
@@ -160,7 +179,9 @@ export function OwnersListTable({
                   <div className="flex items-center justify-end gap-2">
                     <Tooltip content="Voir fiche">
                       <a href={`/owners/${owner.id}`}>
-                        <Button variant="outline" size="sm">🔎</Button>
+                        <Button variant="outline" size="sm">
+                          <Search className="w-4 h-4" />
+                        </Button>
                       </a>
                     </Tooltip>
                     
@@ -174,9 +195,7 @@ export function OwnersListTable({
                         size="sm"
                         onClick={() => onDelete(owner)}
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </Tooltip>
                   </div>

@@ -9,10 +9,12 @@ import { ViewToggle } from '@/components/atoms/ViewToggle';
 import SearchInput from '@/components/atoms/SearchInput';
 import ListLoader from '@/components/atoms/ListLoader';
 import { Tooltip } from '@/components/atoms/Tooltip';
+import { AnimalFilesModal } from '@/components/molecules/AnimalFilesModal';
 import { useAnimalStore } from '@/stores/useAnimalStore';
 import { useOwnerStore } from '@/stores/useOwnerStore';
 import { useClinic } from '@/modules/clinic/hooks/use-clinic';
 import { useConfirm } from '@/hooks/useConfirm';
+import { Paperclip, X, Search, Stethoscope } from 'lucide-react';
 import { AnimalForm } from './AnimalForm';
 import { AnimalsListTable } from './AnimalsListTable';
 import type { Animal } from '@/types/animal.types';
@@ -24,6 +26,8 @@ export function AnimalsList() {
   const { confirm, ConfirmDialog } = useConfirm();
   const [showForm, setShowForm] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
+  const [showFilesModal, setShowFilesModal] = useState(false);
+  const [selectedAnimalForFiles, setSelectedAnimalForFiles] = useState<Animal | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [query, setQuery] = useState('');
   const typingTimer = useRef<NodeJS.Timeout | null>(null);
@@ -69,6 +73,11 @@ export function AnimalsList() {
   const handleEdit = (animal: Animal) => {
     setSelectedAnimal(animal);
     setShowForm(true);
+  };
+
+  const handleShowFiles = (animal: Animal) => {
+    setSelectedAnimalForFiles(animal);
+    setShowFilesModal(true);
   };
 
   const handleAdd = () => {
@@ -222,7 +231,7 @@ export function AnimalsList() {
         <Card className="p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-red-600 dark:text-red-400">❌</span>
+              <X className="w-4 h-4 text-red-600 dark:text-red-400" />
               <span className="text-red-800 dark:text-red-200">{error}</span>
             </div>
             <Button variant="ghost" onClick={clearError}>
@@ -246,6 +255,7 @@ export function AnimalsList() {
             selectedAnimal={selectedAnimal}
             onCloseForm={handleCloseForm}
             onFormSuccess={handleFormSuccess}
+            onShowFiles={handleShowFiles}
           />
         )
       ) : (
@@ -323,7 +333,7 @@ export function AnimalsList() {
                    )}
                    {animal.microchip && (
                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                       🔍 Puce: {animal.microchip}
+                      🔑 Puce: {animal.microchip}
                      </p>
                    )}
                    {animal.tattoo && (
@@ -337,18 +347,28 @@ export function AnimalsList() {
                  <div className="flex flex-wrap gap-2 mb-4">
                    {animal.sterilized && (
                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                       🏥 Stérilisé(e)
+                       <Stethoscope className="w-3 h-3" /> Stérilisé(e)
                      </span>
                    )}
                    {animal.microchip && (
                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                       🔍 Pucé(e)
+                       <Search className="w-3 h-3" /> Pucé(e)
                      </span>
                    )}
                  </div>
  
                  {/* Actions */}
                 <div className="mt-auto flex justify-end gap-2">
+                  <Tooltip content="Documents">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleShowFiles(animal)}
+                    >
+                      <Paperclip className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+                  
                   <Tooltip content="Modifier">
                     <EditButton onClick={() => handleEdit(animal)} />
                   </Tooltip>
@@ -429,6 +449,18 @@ export function AnimalsList() {
           animal={selectedAnimal}
           onClose={handleCloseForm}
           onSuccess={handleFormSuccess}
+        />
+      )}
+
+      {/* Modal fichiers */}
+      {showFilesModal && selectedAnimalForFiles && (
+        <AnimalFilesModal
+          isOpen={showFilesModal}
+          onClose={() => {
+            setShowFilesModal(false)
+            setSelectedAnimalForFiles(null)
+          }}
+          animal={selectedAnimalForFiles}
         />
       )}
 

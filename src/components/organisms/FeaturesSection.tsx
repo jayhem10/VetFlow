@@ -1,35 +1,36 @@
 import FeatureCard from '@/components/molecules/FeatureCard';
 import { Heading2, BodyText } from '@/components/atoms/Typography';
+import { Stethoscope, Calendar, Pill, DollarSign, BarChart3, Shield } from 'lucide-react';
 
 export default function FeaturesSection() {
   const features = [
     {
-      icon: '🏥',
+      icon: <Stethoscope className="w-6 h-6" />,
       title: 'Gestion des patients',
       description: 'Dossiers médicaux complets, historique des soins, allergies, et suivi personnalisé pour chaque animal.'
     },
     {
-      icon: '📅',
+      icon: <Calendar className="w-6 h-6" />,
       title: 'Planning intelligent',
       description: 'Calendrier optimisé, rappels automatiques, gestion des urgences et synchronisation multi-praticiens.'
     },
     {
-      icon: '💊',
+      icon: <Pill className="w-6 h-6" />,
       title: 'Inventaire médicaments',
       description: 'Suivi des stocks, dates de péremption, commandes automatiques et gestion des traitements.'
     },
     {
-      icon: '💰',
+      icon: <DollarSign className="w-6 h-6" />,
       title: 'Facturation simplifiée',
       description: 'Devis automatiques, facturation électronique, suivi des paiements et rapports financiers.'
     },
     {
-      icon: '📊',
+      icon: <BarChart3 className="w-6 h-6" />,
       title: 'Rapports et analyses',
       description: 'Tableaux de bord en temps réel, statistiques de performance et aide à la prise de décision.'
     },
     {
-      icon: '🔒',
+      icon: <Shield className="w-6 h-6" />,
       title: 'Sécurité maximale',
       description: 'Conformité RGPD, chiffrement des données, sauvegardes automatiques et accès sécurisé.'
     }

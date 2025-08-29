@@ -28,11 +28,11 @@ export function useClinic() {
 
   // Charger la clinique automatiquement quand l'utilisateur est connecté
   useEffect(() => {
-    if (user?.id && hasClinicFromAuth) {
-      // Passer l'ID utilisateur pour optimiser le cache
+    if (user?.id) {
+      // Toujours tenter de charger la clinique quand l'utilisateur change
       fetchClinic(user.id).catch(console.error)
     }
-  }, [user?.id, hasClinicFromAuth, fetchClinic])
+  }, [user?.id, fetchClinic])
 
   return {
     clinic,

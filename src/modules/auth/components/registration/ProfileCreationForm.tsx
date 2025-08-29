@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'react-hot-toast'
+import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import Input from '@/components/atoms/Input'
 import Button from '@/components/atoms/Button'

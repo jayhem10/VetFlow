@@ -5,7 +5,7 @@ import Button from '@/components/atoms/Button'
 import Input from '@/components/atoms/Input'
 import Select from '@/components/atoms/Select'
 import { useCompleteProfileStore, type ClinicData } from '@/stores/completeProfileStore'
-import { toast } from 'react-hot-toast'
+import { toast } from '@/lib/toast'
 
 interface ClinicCreationFormProps {
   onSubmit?: () => Promise<void>

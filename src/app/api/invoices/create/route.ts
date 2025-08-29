@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { z } from 'zod'
 import { hasPermission } from '@/lib/permissions'
+import { generateInvoiceNumber } from '@/lib/invoice-utils'
 
 const invoiceItemSchema = z.object({
   item_type: z.enum(['product', 'service']),
@@ -36,9 +37,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Aucune clinique associée' }, { status: 404 })
     }
 
-    // Vérifier les permissions
-    const userRole = (profile.role as any) || 'assistant'
-    if (!hasPermission(userRole, 'invoices', 'create')) {
+    // Vérifier les permissions (gestion multi-roles)
+    const userRoles = (profile.role as string)?.split(',').map(r => r.trim()) || ['assistant']
+    const hasInvoicePermission = userRoles.some(role => 
+      hasPermission(role as any, 'invoices', 'create')
+    )
+    
+    if (!hasInvoicePermission) {
       return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 })
     }
 
@@ -68,8 +73,8 @@ export async function POST(request: NextRequest) {
     const taxAmount = subtotal * (taxRate / 100)
     const totalAmount = subtotal + taxAmount
 
-    // Générer un numéro de facture unique
-    const invoiceNumber = `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    // Générer un numéro de facture séquentiel avec la date du jour
+    const invoiceNumber = await generateInvoiceNumber(profile.clinicId)
 
     // Créer la facture et les articles dans une transaction
     const result = await prisma.$transaction(async (tx) => {

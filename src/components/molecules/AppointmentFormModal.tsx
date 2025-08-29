@@ -121,6 +121,21 @@ export function AppointmentFormModal({
           clinic_id: clinic.id
         })
         toast.success('Rendez-vous créé avec succès')
+        // Reset immédiat pour éviter de retrouver des valeurs lors d'une prochaine ouverture
+        form.reset({
+          animal_id: '',
+          veterinarian_id: defaultVetId || '',
+          title: '',
+          description: '',
+          appointment_date: defaultDate || new Date().toISOString().slice(0, 16),
+          duration_minutes: 30,
+          appointment_type: 'consultation',
+          priority: 'normal',
+          notes: '',
+          internal_notes: ''
+        })
+        setSelectedOwner(null)
+        setOwnerAnimals([])
       } else if (appointment) {
         await updateAppointment(appointment.id, data)
         toast.success('Rendez-vous modifié avec succès')

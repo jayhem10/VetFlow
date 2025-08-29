@@ -3,9 +3,17 @@
 import { useState, useEffect } from 'react'
 import Card from '@/components/atoms/Card'
 import Button from '@/components/atoms/Button'
-import Input from '@/components/atoms/Input'
 import { toast } from '@/lib/toast'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useStatusFilter } from '@/hooks/useStatusFilter'
+import { useSearch } from '@/hooks/useSearch'
+import { usePagination } from '@/hooks/usePagination'
+import { StatusFilterButtons } from '@/components/molecules/StatusFilterButtons'
+import SearchInput from '@/components/atoms/SearchInput'
+import { Pagination } from '@/components/molecules/Pagination'
+import { EmptyState } from '@/components/molecules/EmptyState'
+import Input from '@/components/atoms/Input'
+import { Edit, Play, Pause } from 'lucide-react'
 
 interface Service {
   id: string
@@ -22,9 +30,19 @@ export default function ServicesPage() {
   const { can } = usePermissions()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active')
-  const [currentPage, setCurrentPage] = useState(1)
+  // Hooks réutilisables
+  const { filteredItems: statusFilteredServices, statusFilter, setStatusFilter, counts } = useStatusFilter({
+    items: services,
+    getActiveStatus: (service) => service.active,
+    initialFilter: 'active'
+  })
+
+  const { searchTerm, setSearchTerm, filteredItems: searchResults } = useSearch({
+    items: statusFilteredServices,
+    searchFields: ['name', 'code', 'description']
+  })
+
+  const { paginatedItems, currentPage, setCurrentPage, totalPages } = usePagination(searchResults)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingService, setEditingService] = useState<any>(null)
@@ -35,8 +53,6 @@ export default function ServicesPage() {
     default_price: '',
     tax_rate: '20'
   })
-
-  const itemsPerPage = 25
 
   useEffect(() => {
     fetchServices()
@@ -88,25 +104,6 @@ export default function ServicesPage() {
     }
   }
 
-  // Filtrage et pagination
-  const filteredServices = services.filter(service => {
-    // Filtre par recherche
-    const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase()))
-    
-    // Filtre par statut
-    const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'active' && service.active) ||
-      (statusFilter === 'inactive' && !service.active)
-    
-    return matchesSearch && matchesStatus
-  })
-
-  const totalPages = Math.ceil(filteredServices.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedServices = filteredServices.slice(startIndex, startIndex + itemsPerPage)
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
   }
@@ -157,11 +154,13 @@ export default function ServicesPage() {
   const handleToggleServiceStatus = async (service: any) => {
     try {
       const response = await fetch(`/api/services/${service.id}`, {
-        method: 'DELETE'
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: !service.active })
       })
 
       if (response.ok) {
-        toast.success(service.active ? 'Prestation désactivée' : 'Prestation activée')
+        toast.success(!service.active ? 'Prestation activée' : 'Prestation désactivée')
         fetchServices()
       } else {
         const error = await response.json()
@@ -202,94 +201,55 @@ export default function ServicesPage() {
 
       {/* Barre de recherche et filtres */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-        <Input
-          type="text"
-          placeholder="Rechercher par nom, code ou description..."
+        <SearchInput
           value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value)
-            setCurrentPage(1) // Reset to first page when searching
+          onChange={(value) => {
+            setSearchTerm(value)
+            setCurrentPage(1)
           }}
+          placeholder="Rechercher par nom, code ou description..."
           className="min-w-80 max-w-lg"
         />
         
-        {/* Filtres de statut */}
-        <div className="flex gap-2">
-          <Button
-            variant={statusFilter === 'active' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setStatusFilter('active')
-              setCurrentPage(1)
-            }}
-          >
-            ✅ Actifs ({services.filter(s => s.active).length})
-          </Button>
-          <Button
-            variant={statusFilter === 'inactive' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setStatusFilter('inactive')
-              setCurrentPage(1)
-            }}
-          >
-            ⏸️ Inactifs ({services.filter(s => !s.active).length})
-          </Button>
-          <Button
-            variant={statusFilter === 'all' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => {
-              setStatusFilter('all')
-              setCurrentPage(1)
-            }}
-          >
-            📋 Tous ({services.length})
-          </Button>
-        </div>
+        <StatusFilterButtons
+          currentFilter={statusFilter}
+          onFilterChange={(filter) => {
+            setStatusFilter(filter)
+            setCurrentPage(1)
+          }}
+          counts={counts}
+        />
       </div>
 
       {/* Statistiques */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4">
-          <div className="text-2xl font-bold text-green-600">{services.length}</div>
+          <div className="text-2xl font-bold text-green-600">{counts.all}</div>
           <div className="text-sm text-gray-600">Total prestations</div>
         </Card>
         <Card className="p-4">
-          <div className="text-2xl font-bold text-blue-600">
-            {services.filter(s => s.active).length}
-          </div>
+          <div className="text-2xl font-bold text-blue-600">{counts.active}</div>
           <div className="text-sm text-gray-600">Prestations actives</div>
         </Card>
         <Card className="p-4">
-          <div className="text-2xl font-bold text-orange-600">
-            {services.filter(s => !s.active).length}
-          </div>
+          <div className="text-2xl font-bold text-orange-600">{counts.inactive}</div>
           <div className="text-sm text-gray-600">Prestations inactives</div>
         </Card>
       </div>
 
       {/* Liste des prestations */}
-      {filteredServices.length === 0 ? (
-        <Card className="p-8 text-center">
-          <div className="text-6xl mb-4">💼</div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            {searchTerm ? 'Aucune prestation trouvée' : 'Aucune prestation'}
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            {searchTerm 
-              ? `Aucune prestation ne correspond à "${searchTerm}"`
-              : 'Commencez par créer votre première prestation'
-            }
-          </p>
-          {!searchTerm && can('services', 'create') && (
+      {paginatedItems.length === 0 ? (
+        <EmptyState
+          type={searchTerm ? 'search' : 'services'}
+          action={!searchTerm && can('services', 'create') ? (
             <Button onClick={() => setShowCreateModal(true)}>
               ➕ Créer la première prestation
             </Button>
-          )}
-        </Card>
+          ) : undefined}
+        />
       ) : (
         <div className="space-y-4">
-          {paginatedServices.map((service) => (
+          {paginatedItems.map((service) => (
             <Card key={service.id} className="p-4">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -327,16 +287,20 @@ export default function ServicesPage() {
                         variant="outline"
                         onClick={() => handleEditService(service)}
                       >
-                        ✏️ Modifier
+                        <Edit className="w-4 h-4" />
                       </Button>
                     )}
-                    {can('services', 'delete') && (
+                    {can('services', 'update') && (
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={() => handleToggleServiceStatus(service)}
                       >
-                        {service.active ? '⏸️ Désactiver' : '▶️ Activer'}
+                        {service.active ? (
+                          <><Pause className="w-4 h-4 mr-1" /> Désactiver</>
+                        ) : (
+                          <><Play className="w-4 h-4 mr-1" /> Activer</>
+                        )}
                       </Button>
                     )}
                   </div>
@@ -348,53 +312,12 @@ export default function ServicesPage() {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-8 flex justify-center">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              ← Précédent
-            </Button>
-            
-            {[...Array(totalPages)].map((_, index) => {
-              const page = index + 1
-              const isCurrentPage = page === currentPage
-              const isNearCurrent = Math.abs(page - currentPage) <= 2
-              const isFirstOrLast = page === 1 || page === totalPages
-              
-              if (isCurrentPage || isNearCurrent || isFirstOrLast) {
-                return (
-                  <Button
-                    key={page}
-                    variant={isCurrentPage ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handlePageChange(page)}
-                    className="min-w-[40px]"
-                  >
-                    {page}
-                  </Button>
-                )
-              } else if (page === currentPage - 3 || page === currentPage + 3) {
-                return <span key={page} className="px-2">...</span>
-              }
-              return null
-            })}
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Suivant →
-            </Button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        className="mt-8"
+      />
 
       {/* Modal de création */}
       {showCreateModal && (

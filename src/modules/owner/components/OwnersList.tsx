@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 import Button from '@/components/atoms/Button';
 import { EditButton } from '@/components/atoms/EditButton';
 import Card from '@/components/atoms/Card';
@@ -14,6 +14,7 @@ import { useClinic } from '@/modules/clinic/hooks/use-clinic';
 import { OwnerForm } from './OwnerForm';
 import { OwnersListTable } from './OwnersListTable';
 import { useConfirm } from '@/hooks/useConfirm';
+import { X, Search, Mail, Phone, Smartphone } from 'lucide-react';
 import type { Owner } from '@/types/owner.types';
 
 export function OwnersList() {
@@ -140,7 +141,7 @@ export function OwnersList() {
         <Card className="p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-red-600 dark:text-red-400">❌</span>
+              <X className="w-4 h-4 text-red-600 dark:text-red-400" />
               <span className="text-red-800 dark:text-red-200">{error}</span>
             </div>
             <Button variant="ghost" onClick={clearError}>
@@ -194,18 +195,21 @@ export function OwnersList() {
                       {owner.first_name} {owner.last_name}
                     </h3>
                     {owner.email && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                        📧 {owner.email}
+                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate flex items-center gap-1">
+                        <Mail className="w-3 h-3" />
+                        {owner.email}
                       </p>
                     )}
                     {owner.phone && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        📞 {owner.phone}
+                      <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                        <Phone className="w-3 h-3" />
+                        {owner.phone}
                       </p>
                     )}
                     {owner.mobile && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        📱 {owner.mobile}
+                      <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                        <Smartphone className="w-3 h-3" />
+                        {owner.mobile}
                       </p>
                     )}
                   </div>
@@ -226,7 +230,19 @@ export function OwnersList() {
                 {owner.preferred_contact && (
                   <div className="mb-4">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {owner.preferred_contact === 'email' ? '📧' : '📞'} Contact préféré: {owner.preferred_contact === 'email' ? 'Email' : 'Téléphone'}
+                      <div className="flex items-center gap-1">
+                        {owner.preferred_contact === 'email' ? (
+                          <>
+                            <Mail className="w-3 h-3" />
+                            Contact préféré: Email
+                          </>
+                        ) : (
+                          <>
+                            <Phone className="w-3 h-3" />
+                            Contact préféré: Téléphone
+                          </>
+                        )}
+                      </div>
                     </p>
                   </div>
                 )}
@@ -253,7 +269,9 @@ export function OwnersList() {
                 <div className="mt-auto flex justify-end gap-2">
                   <Tooltip content="Voir fiche">
                     <a href={`/owners/${owner.id}`}>
-                      <Button variant="outline" size="sm">🔎</Button>
+                      <Button variant="outline" size="sm">
+                  <Search className="w-4 h-4" />
+                </Button>
                     </a>
                   </Tooltip>
                   

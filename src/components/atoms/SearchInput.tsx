@@ -2,6 +2,7 @@
 
 import { forwardRef, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { Search, X } from 'lucide-react'
 
 interface SearchInputProps {
   value: string
@@ -63,19 +64,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(({
       <div className="relative">
         {/* Icône de recherche */}
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <svg 
-            className="h-5 w-5 text-gray-400 dark:text-gray-500" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
-            />
-          </svg>
+          <Search className="h-5 w-5 text-gray-400 dark:text-gray-500" />
         </div>
 
         {/* Input */}
@@ -115,9 +104,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(({
                 onClick={handleClear}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="h-4 w-4" />
               </button>
             )
           )}

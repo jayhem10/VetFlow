@@ -1,3 +1,8 @@
+interface EmailAttachment {
+  name: string
+  content: string // base64
+}
+
 interface EmailData {
   to: string
   subject: string
@@ -6,38 +11,62 @@ interface EmailData {
     name: string
     email: string
   }
+  attachments?: EmailAttachment[]
 }
 
-interface InvitationEmailData {
-  email: string
-  firstName: string
-  lastName: string
-  tempPassword: string
+interface InvoiceEmailData {
+  invoice: any
+  recipientEmail: string
+  recipientName: string
   clinicName: string
-  inviterName: string
-  loginUrl: string
+  attachments?: EmailAttachment[]
 }
 
-interface PasswordResetEmailData {
-  email: string
-  firstName: string
-  lastName: string
-  tempPassword: string
-  clinicName: string
-  loginUrl: string
+interface InvoiceData {
+  id: string
+  invoice_number: string
+  invoice_date: string
+  total_amount: number
+  payment_status: string
+  appointment?: {
+    title: string
+    animal?: {
+      name: string
+      owner?: {
+        first_name: string
+        last_name: string
+        email: string
+      }
+    }
+  }
+  owner?: {
+    first_name: string
+    last_name: string
+    email: string
+  }
+  clinic?: {
+    name: string
+    email?: string
+  }
+  items: Array<{
+    description: string
+    quantity: number
+    unit_price: number
+    total_price: number
+  }>
 }
 
 export class EmailService {
   private static readonly BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email'
   private static readonly API_KEY = process.env.BREVO_API_KEY
 
-  private static async sendEmail(data: EmailData): Promise<void> {
+  static async sendEmail(data: EmailData): Promise<void> {
     if (!this.API_KEY) {
       console.error('BREVO_API_KEY non configurée dans les variables d\'environnement')
       throw new Error('Configuration email manquante. Veuillez configurer BREVO_API_KEY dans .env.local')
     }
 
-    const payload = {
+    const payload: any = {
       sender: data.sender || {
         name: 'VetFlow',
         email: 'noreply@vetflow.cloud'
@@ -45,6 +74,13 @@ export class EmailService {
       to: [{ email: data.to }],
       subject: data.subject,
       htmlContent: data.htmlContent
+    }
+
+    if (data.attachments && data.attachments.length > 0) {
+      payload.attachment = data.attachments.map(att => ({
+        name: att.name,
+        content: att.content,
+      }))
     }
 
     const response = await fetch(this.BREVO_API_URL, {
@@ -63,60 +99,76 @@ export class EmailService {
     }
   }
 
-  static async sendCollaboratorInvitation(data: InvitationEmailData): Promise<void> {
-    const htmlContent = `
+  static async sendInvoiceEmail(data: InvoiceEmailData): Promise<void> {
+    const emailContent = `
       <!DOCTYPE html>
       <html lang="fr">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Invitation VetFlow</title>
+        <title>Facture ${data.invoice.invoice_number}</title>
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
           .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
           .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
-          .button { display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0; }
-          .password-box { background: #e5e7eb; padding: 15px; border-radius: 6px; margin: 20px 0; font-family: monospace; font-size: 16px; text-align: center; }
+          .invoice-details { background: #e5e7eb; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          .items-table th, .items-table td { border: 1px solid #d1d5db; padding: 12px; text-align: left; }
+          .items-table th { background-color: #f3f4f6; }
+          .total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 20px; }
           .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1>🐾 VetFlow</h1>
-            <p>Invitation à rejoindre votre équipe vétérinaire</p>
+            <h1>🐾 ${data.clinicName}</h1>
+            <p>Facture ${data.invoice.invoice_number}</p>
           </div>
           
           <div class="content">
-            <h2>Bonjour ${data.firstName} ${data.lastName},</h2>
+            <h2>Bonjour ${data.recipientName},</h2>
             
-            <p>Vous avez été invité(e) par <strong>${data.inviterName}</strong> à rejoindre l'équipe de la clinique <strong>${data.clinicName}</strong> sur VetFlow.</p>
+            <p>Veuillez trouver ci-joint la facture pour la consultation de ${data.invoice.appointment?.animal?.name || 'votre animal'}.</p>
             
-            <p>VetFlow est une plateforme moderne de gestion vétérinaire qui vous permettra de :</p>
-            <ul>
-              <li>📅 Gérer les rendez-vous et le planning</li>
-              <li>🐕 Suivre les dossiers patients</li>
-              <li>👥 Collaborer avec votre équipe</li>
-              <li>📊 Analyser les données de votre clinique</li>
-            </ul>
-            
-            <h3>🔐 Vos identifiants temporaires :</h3>
-            <div class="password-box">
-              <strong>Email :</strong> ${data.email}<br>
-              <strong>Mot de passe temporaire :</strong> ${data.tempPassword}
+            <div class="invoice-details">
+              <h3>Détails de la facture :</h3>
+              <p><strong>Numéro :</strong> ${data.invoice.invoice_number}</p>
+              <p><strong>Date :</strong> ${new Date(data.invoice.invoice_date).toLocaleDateString('fr-FR')}</p>
+              <p><strong>Montant total :</strong> ${data.invoice.total_amount.toFixed(2)}€</p>
+              <p><strong>Statut :</strong> ${data.invoice.payment_status}</p>
             </div>
             
-            <p><strong>⚠️ Important :</strong> Vous devrez changer votre mot de passe lors de votre première connexion.</p>
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Quantité</th>
+                  <th>Prix unitaire</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.invoice.items.map((item: any) => `
+                  <tr>
+                    <td>${item.description}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.unit_price.toFixed(2)}€</td>
+                    <td>${item.total_price.toFixed(2)}€</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
             
-            <div style="text-align: center;">
-              <a href="${data.loginUrl}" class="button">🚀 Se connecter à VetFlow</a>
+            <div class="total">
+              <p>Total : ${data.invoice.total_amount.toFixed(2)}€</p>
             </div>
             
-            <p>Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :</p>
-            <p style="word-break: break-all; color: #6b7280;">${data.loginUrl}</p>
+            <p>Pour toute question concernant cette facture, n'hésitez pas à nous contacter.</p>
             
-            <p>Bienvenue dans l'équipe VetFlow ! 🎉</p>
+            <p>Cordialement,<br>
+            L'équipe ${data.clinicName}</p>
           </div>
           
           <div class="footer">
@@ -129,72 +181,44 @@ export class EmailService {
     `
 
     await this.sendEmail({
-      to: data.email,
-      subject: `Invitation VetFlow - Rejoignez ${data.clinicName}`,
-      htmlContent
+      to: data.recipientEmail,
+      subject: `Facture ${data.invoice.invoice_number} - ${data.clinicName}`,
+      htmlContent: emailContent,
+      attachments: data.attachments
     })
   }
+}
 
-  static async sendPasswordReset(data: PasswordResetEmailData): Promise<void> {
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Réinitialisation VetFlow</title>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-          .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
-          .button { display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0; }
-          .password-box { background: #e5e7eb; padding: 15px; border-radius: 6px; margin: 20px 0; font-family: monospace; font-size: 16px; text-align: center; }
-          .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🐾 VetFlow</h1>
-            <p>Réinitialisation de votre mot de passe</p>
-          </div>
-          
-          <div class="content">
-            <h2>Bonjour ${data.firstName} ${data.lastName},</h2>
-            
-            <p>Vous avez demandé la réinitialisation de votre mot de passe pour votre compte VetFlow.</p>
-            
-            <h3>🔐 Votre nouveau mot de passe temporaire :</h3>
-            <div class="password-box">
-              <strong>Email :</strong> ${data.email}<br>
-              <strong>Mot de passe temporaire :</strong> ${data.tempPassword}
-            </div>
-            
-            <p><strong>⚠️ Important :</strong> Vous devrez changer votre mot de passe lors de votre prochaine connexion.</p>
-            
-            <div style="text-align: center;">
-              <a href="${data.loginUrl}" class="button">🚀 Se connecter à VetFlow</a>
-            </div>
-            
-            <p>Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :</p>
-            <p style="word-break: break-all; color: #6b7280;">${data.loginUrl}</p>
-            
-            <p>Si vous n'avez pas demandé cette réinitialisation, veuillez ignorer cet email.</p>
-          </div>
-          
-          <div class="footer">
-            <p>Cet email a été envoyé automatiquement par VetFlow</p>
-            <p>© 2025 VetFlow - Tous droits réservés</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `
-    await this.sendEmail({
-      to: data.email,
-      subject: `Réinitialisation VetFlow - Nouveau mot de passe`,
-      htmlContent
+export async function sendInvoiceEmail(invoice: InvoiceData) {
+  const recipientEmail = invoice.owner?.email || invoice.appointment?.animal?.owner?.email
+  
+  if (!recipientEmail) {
+    throw new Error('Aucune adresse email trouvée pour le destinataire')
+  }
+
+  const recipientName = invoice.owner 
+    ? `${invoice.owner.first_name} ${invoice.owner.last_name}`
+    : invoice.appointment?.animal?.owner 
+      ? `${invoice.appointment.animal.owner.first_name} ${invoice.appointment.animal.owner.last_name}`
+      : 'Client'
+
+  await EmailService.sendInvoiceEmail({
+    invoice,
+    recipientEmail,
+    recipientName,
+    clinicName: invoice.clinic?.name || 'Clinique vétérinaire'
+  })
+}
+
+export async function sendTestEmail() {
+  try {
+    await EmailService.sendEmail({
+      to: 'test@example.com',
+      subject: 'Test email VetFlow',
+      htmlContent: '<p>Ceci est un test d\'envoi d\'email depuis VetFlow.</p>',
     })
+  } catch (error) {
+    console.error('Erreur envoi email de test:', error)
+    throw error
   }
 }

@@ -17,6 +17,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     { resource: 'stock', actions: ['read', 'create', 'update', 'delete'] },
     { resource: 'invoices', actions: ['read', 'create', 'update', 'delete'] },
     { resource: 'medical_records', actions: ['read', 'create', 'update', 'delete'] },
+    { resource: 'files', actions: ['read', 'create', 'update', 'delete'] },
     { resource: 'profile', actions: ['read', 'update'] },
     { resource: 'clinic_settings', actions: ['read', 'update'] },
   ],
@@ -30,6 +31,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     { resource: 'stock', actions: ['read'] },
     { resource: 'invoices', actions: ['read', 'create'] },
     { resource: 'medical_records', actions: ['read', 'create', 'update'] },
+    { resource: 'files', actions: ['read', 'create', 'update', 'delete'] },
     { resource: 'profile', actions: ['read', 'update'] },
   ],
   assistant: [
@@ -41,6 +43,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     { resource: 'products', actions: ['read'] },
     { resource: 'stock', actions: ['read'] },
     { resource: 'invoices', actions: ['read'] },
+    { resource: 'files', actions: ['read', 'create', 'update', 'delete'] },
     { resource: 'profile', actions: ['read', 'update'] },
   ],
   stock_manager: [
@@ -52,6 +55,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     { resource: 'products', actions: ['read', 'create', 'update', 'delete'] },
     { resource: 'stock', actions: ['read', 'create', 'update', 'delete'] },
     { resource: 'invoices', actions: ['read', 'create'] },
+    { resource: 'files', actions: ['read', 'create', 'update', 'delete'] },
     { resource: 'profile', actions: ['read', 'update'] },
   ],
 }
@@ -67,40 +71,44 @@ export function getMenuItems(userRole: UserRole) {
     {
       label: 'Dashboard',
       href: '/dashboard',
-      icon: '📊',
+      icon: 'dashboard',
       alwaysVisible: true
     }
   ]
 
   const roleItems = {
     admin: [
-      { label: 'Animaux', href: '/animals', icon: '🐾' },
-      { label: 'Propriétaires', href: '/owners', icon: '👥' },
-      { label: 'Rendez-vous', href: '/appointments', icon: '📅' },
-      { label: 'Équipe', href: '/collaborators', icon: '🤝' },
-      { label: 'Prestations', href: '/services', icon: '💼' },
-      { label: 'Stock', href: '/inventory', icon: '📦' },
+      { label: 'Animaux', href: '/animals', icon: 'animals' },
+      { label: 'Propriétaires', href: '/owners', icon: 'owners' },
+      { label: 'Rendez-vous', href: '/appointments', icon: 'appointments' },
+      { label: 'Factures', href: '/invoices', icon: 'invoices' },
+      { label: 'Équipe', href: '/collaborators', icon: 'collaborators' },
+      { label: 'Prestations', href: '/services', icon: 'services' },
+      { label: 'Stock', href: '/inventory', icon: 'stock' },
     ],
     vet: [
-      { label: 'Animaux', href: '/animals', icon: '🐾' },
-      { label: 'Propriétaires', href: '/owners', icon: '👥' },
-      { label: 'Rendez-vous', href: '/appointments', icon: '📅' },
-      { label: 'Prestations', href: '/services', icon: '💼' },
-      { label: 'Stock', href: '/inventory', icon: '📦' },
+      { label: 'Animaux', href: '/animals', icon: 'animals' },
+      { label: 'Propriétaires', href: '/owners', icon: 'owners' },
+      { label: 'Rendez-vous', href: '/appointments', icon: 'appointments' },
+      { label: 'Factures', href: '/invoices', icon: 'invoices' },
+      { label: 'Prestations', href: '/services', icon: 'services' },
+      { label: 'Stock', href: '/inventory', icon: 'stock' },
     ],
     assistant: [
-      { label: 'Animaux', href: '/animals', icon: '🐾' },
-      { label: 'Propriétaires', href: '/owners', icon: '👥' },
-      { label: 'Rendez-vous', href: '/appointments', icon: '📅' },
-      { label: 'Prestations', href: '/services', icon: '💼' },
-      { label: 'Stock', href: '/inventory', icon: '📦' },
+      { label: 'Animaux', href: '/animals', icon: 'animals' },
+      { label: 'Propriétaires', href: '/owners', icon: 'owners' },
+      { label: 'Rendez-vous', href: '/appointments', icon: 'appointments' },
+      { label: 'Factures', href: '/invoices', icon: 'invoices' },
+      { label: 'Prestations', href: '/services', icon: 'services' },
+      { label: 'Stock', href: '/inventory', icon: 'stock' },
     ],
     stock_manager: [
-      { label: 'Animaux', href: '/animals', icon: '🐾' },
-      { label: 'Propriétaires', href: '/owners', icon: '👥' },
-      { label: 'Rendez-vous', href: '/appointments', icon: '📅' },
-      { label: 'Prestations', href: '/services', icon: '💼' },
-      { label: 'Stock', href: '/inventory', icon: '📦' },
+      { label: 'Animaux', href: '/animals', icon: 'animals' },
+      { label: 'Propriétaires', href: '/owners', icon: 'owners' },
+      { label: 'Rendez-vous', href: '/appointments', icon: 'appointments' },
+      { label: 'Factures', href: '/invoices', icon: 'invoices' },
+      { label: 'Prestations', href: '/services', icon: 'services' },
+      { label: 'Stock', href: '/inventory', icon: 'stock' },
     ]
   }
 
@@ -111,19 +119,19 @@ export function getShortcutItems(userRole: UserRole) {
   const baseShortcuts = [
     {
       label: 'Ajouter un animal',
-      icon: '➕',
+      icon: 'add',
       href: '/animals',
       description: 'Créer un nouveau dossier animal'
     },
     {
       label: 'Nouveau propriétaire',
-      icon: '👤',
+      icon: 'owner',
       href: '/owners',
       description: 'Enregistrer un nouveau propriétaire'
     },
     {
       label: 'Nouveau rendez-vous',
-      icon: '📅',
+      icon: 'appointment',
       href: '/appointments',
       description: 'Planifier une consultation'
     }
@@ -133,19 +141,19 @@ export function getShortcutItems(userRole: UserRole) {
     admin: [
       {
         label: 'Inviter collaborateur',
-        icon: '🤝',
+        icon: 'collaborators',
         href: '/collaborators',
         description: 'Ajouter un membre à l\'équipe'
       },
       {
         label: 'Nouvelle prestation',
-        icon: '💼',
+        icon: 'services',
         href: '/services',
         description: 'Créer un nouveau service'
       },
       {
         label: 'Ajouter produit',
-        icon: '📦',
+        icon: 'stock',
         href: '/inventory',
         description: 'Ajouter un produit au stock'
       }
@@ -153,13 +161,13 @@ export function getShortcutItems(userRole: UserRole) {
     vet: [
       {
         label: 'Nouvelle prestation',
-        icon: '💼',
+        icon: 'services',
         href: '/services',
         description: 'Consulter les prestations'
       },
       {
         label: 'Consulter stock',
-        icon: '📦',
+        icon: 'stock',
         href: '/inventory',
         description: 'Vérifier les stocks'
       }
@@ -167,13 +175,13 @@ export function getShortcutItems(userRole: UserRole) {
     assistant: [
       {
         label: 'Consulter prestations',
-        icon: '💼',
+        icon: 'services',
         href: '/services',
         description: 'Voir les prestations disponibles'
       },
       {
         label: 'Consulter stock',
-        icon: '📦',
+        icon: 'stock',
         href: '/inventory',
         description: 'Vérifier les stocks'
       }
@@ -181,13 +189,13 @@ export function getShortcutItems(userRole: UserRole) {
     stock_manager: [
       {
         label: 'Nouvelle prestation',
-        icon: '💼',
+        icon: 'services',
         href: '/services',
         description: 'Créer un nouveau service'
       },
       {
         label: 'Ajouter produit',
-        icon: '📦',
+        icon: 'stock',
         href: '/inventory',
         description: 'Ajouter un produit au stock'
       }

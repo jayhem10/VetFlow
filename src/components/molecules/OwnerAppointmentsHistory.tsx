@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { Stethoscope } from 'lucide-react'
 import type { AppointmentWithDetails } from '@/types/appointment.types'
 
 interface OwnerAppointmentsHistoryProps {
@@ -189,13 +190,16 @@ export function OwnerAppointmentsHistory({ ownerId, className }: OwnerAppointmen
                           : 'Non assigné'}
                     </div>
                     <div>
-                      <span className="font-medium">🏥 Type:</span> {getTypeLabel(appointment.appointment_type || 'consultation')}
+                      <span className="font-medium flex items-center gap-1">
+                        <Stethoscope className="w-3 h-3" />
+                        Type:
+                      </span> {getTypeLabel(appointment.appointment_type || 'consultation')}
                     </div>
                   </div>
 
                   {appointment.description && (
                     <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                      <span className="font-medium">📝 Description:</span> {appointment.description}
+                      <span className="font-medium">Description:</span> {appointment.description}
                     </div>
                   )}
 

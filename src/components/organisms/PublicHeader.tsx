@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import ThemeToggle from '@/components/atoms/ThemeToggle'
 import Button from '@/components/atoms/Button'
+import LogoIcon from '@/components/atoms/LogoIcon'
 
 export default function PublicHeader() {
   const { data: session } = useSession()
@@ -18,8 +19,8 @@ export default function PublicHeader() {
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-green-700 to-green-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-lg font-bold">V</span>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center text-emerald-600">
+                <LogoIcon size={32} />
               </div>
               <span className="text-xl font-bold text-gray-900 dark:text-white">
                 Vet<span className="text-green-700 dark:text-green-400">Flow</span>

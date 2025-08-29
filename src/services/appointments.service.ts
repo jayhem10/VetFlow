@@ -1,8 +1,11 @@
-import type { Appointment, CreateAppointment, UpdateAppointment, AppointmentSearchFilters } from '@/types/appointment.types'
+import type { Appointment, CreateAppointment, UpdateAppointment, AppointmentSearchFilters, AppointmentWithDetails } from '@/types/appointment.types'
 
 export class AppointmentsService {
-  static async getAll(_clinicId?: string): Promise<Appointment[]> {
-    const response = await fetch(`/api/appointments`)
+  static async getAll(_clinicId?: string): Promise<AppointmentWithDetails[]> {
+    const timestamp = Date.now()
+    const response = await fetch(`/api/appointments?t=${timestamp}`, {
+      cache: 'no-store'
+    })
     if (!response.ok) {
       throw new Error('Erreur lors de la récupération des rendez-vous')
     }

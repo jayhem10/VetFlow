@@ -12,6 +12,22 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "VetFlow - Gestion vétérinaire moderne",
   description: "Solution de gestion pour cabinets vétérinaires",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.svg", type: "image/svg+xml" }
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png" }
+    ]
+  },
+  openGraph: {
+    title: "VetFlow - Gestion vétérinaire moderne",
+    description: "Solution de gestion pour cabinets vétérinaires",
+    images: [
+      { url: "/opengraph-image.png", width: 1200, height: 630, alt: "VetFlow" }
+    ]
+  }
 };
 
 export default function RootLayout({

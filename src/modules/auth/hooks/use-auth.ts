@@ -29,12 +29,12 @@ export function useAuth() {
 
   // Effet pour forcer le rechargement du profil quand l'utilisateur change
   useEffect(() => {
-    if (session?.user?.id && !hasProfileInSession) {
-      // Si on n'a pas les infos dans la session, essayer de recharger le profil
+    if (session?.user?.id && (!hasProfileInSession || !hasClinicInSession)) {
+      // Si on n'a pas les infos dans la session, essayer de recharger le profil (profil ou clinique manquants)
       refreshProfile().then((profile) => {
         if (profile) {
           setLocalHasProfile(true)
-          setLocalHasClinic(!!profile.clinicId)
+          setLocalHasClinic(!!profile.clinic_id)
           
           // Mettre à jour la session si nécessaire
           if (!hasProfileInSession || !hasClinicInSession) {
@@ -43,7 +43,7 @@ export function useAuth() {
               user: {
                 ...session.user,
                 hasProfile: true,
-                hasClinic: !!profile.clinicId,
+                hasClinic: !!profile.clinic_id,
               },
             }).catch(console.error)
           }

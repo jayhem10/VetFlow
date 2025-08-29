@@ -2,20 +2,16 @@
 
 import { useState } from 'react';
 import { useProfile } from '@/modules/profile/hooks/use-profile';
-import { useClinic } from '@/modules/clinic/hooks/use-clinic';
 import Button from '@/components/atoms/Button';
 import { EditButton } from '@/components/atoms/EditButton';
 import Card from '@/components/atoms/Card';
 import { ProfileEditForm } from '@/modules/profile/components/ProfileEditForm';
-import { ClinicEditForm } from '@/modules/clinic/components/ClinicEditForm';
 
 export default function ProfilePage() {
   const { profile, loading: profileLoading, hasProfile } = useProfile();
-  const { clinic, loading: clinicLoading, hasClinic } = useClinic();
   const [editingProfile, setEditingProfile] = useState(false);
-  const [editingClinic, setEditingClinic] = useState(false);
 
-  if (profileLoading || clinicLoading) {
+  if (profileLoading) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center h-64">
@@ -35,7 +31,7 @@ export default function ProfilePage() {
               Mon profil
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Gérez vos informations personnelles et de clinique
+              Gérez vos informations personnelles
             </p>
           </div>
         </div>
@@ -157,102 +153,6 @@ export default function ProfilePage() {
               )}
             </div>
           )}
-        </Card>
-
-        {/* Informations de la clinique */}
-        {hasClinic && (
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Ma clinique
-              </h2>
-              <div className="flex justify-end">
-                <EditButton
-                  showText={true}
-                  text={editingClinic ? 'Annuler' : 'Modifier'}
-                  onClick={() => setEditingClinic(!editingClinic)}
-                />
-              </div>
-            </div>
-
-            {editingClinic ? (
-              <ClinicEditForm 
-                clinic={clinic}
-                onSuccess={() => setEditingClinic(false)}
-                onCancel={() => setEditingClinic(false)}
-              />
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Nom de la clinique
-                  </label>
-                  <p className="text-gray-900 dark:text-white">
-                    {clinic?.name || 'Non renseigné'}
-                  </p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Email
-                  </label>
-                  <p className="text-gray-900 dark:text-white">
-                    {clinic?.email || 'Non renseigné'}
-                  </p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Téléphone
-                  </label>
-                  <p className="text-gray-900 dark:text-white">
-                    {clinic?.phone || 'Non renseigné'}
-                  </p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Ville
-                  </label>
-                  <p className="text-gray-900 dark:text-white">
-                    {clinic?.city || 'Non renseigné'}
-                  </p>
-                </div>
-                
-                {clinic?.address && (
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Adresse
-                    </label>
-                    <p className="text-gray-900 dark:text-white">
-                      {clinic.address}
-                      {clinic.postal_code && `, ${clinic.postal_code}`}
-                      {clinic.city && ` ${clinic.city}`}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </Card>
-        )}
-
-        {/* Actions */}
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            Actions rapides
-          </h2>
-          <div className="flex flex-wrap gap-4">
-            <a href="/collaborators">
-              <Button variant="outline">
-                👥 Gérer les collaborateurs
-              </Button>
-            </a>
-            <a href="/dashboard">
-              <Button variant="outline">
-                📊 Retour au dashboard
-              </Button>
-            </a>
-          </div>
         </Card>
       </div>
   );

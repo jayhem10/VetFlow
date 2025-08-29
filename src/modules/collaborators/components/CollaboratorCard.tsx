@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from '@/lib/toast';
 import Button from '@/components/atoms/Button';
 import { EditButton } from '@/components/atoms/EditButton';
 import Card from '@/components/atoms/Card';
@@ -11,6 +11,7 @@ import { ConfirmDialog } from '@/components/molecules/ConfirmDialog';
 import { useCollaboratorsStore } from '@/stores/useCollaboratorsStore';
 import { EditCollaboratorModal } from './EditCollaboratorModal';
 import { DebugErrorModal } from './DebugErrorModal';
+import { Phone } from 'lucide-react';
 import type { TProfile } from '@/types/database.types';
 
 interface CollaboratorCardProps {
@@ -68,6 +69,8 @@ export function CollaboratorCard({ collaborator }: CollaboratorCardProps) {
           return 'Vétérinaire';
         case 'assistant':
           return 'Assistant(e)';
+        case 'stock_manager':
+          return 'Gestionnaire de stock';
         case 'admin':
           return 'Admin';
         default:
@@ -181,8 +184,9 @@ export function CollaboratorCard({ collaborator }: CollaboratorCardProps) {
             {collaborator.email}
           </p>
           {collaborator.phone && (
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              📞 {collaborator.phone}
+            <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+              <Phone className="w-3 h-3" />
+              {collaborator.phone}
             </p>
           )}
         </div>

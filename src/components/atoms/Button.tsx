@@ -2,10 +2,10 @@ import { cn } from "@/lib/utils"
 
 export interface ButtonProps {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
+  variant?: 'default' | 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
-  onClick?: () => void;
+  onClick?: (event?: React.MouseEvent) => void;
   disabled?: boolean;
   loading?: boolean;
   type?: 'button' | 'submit' | 'reset';
@@ -26,6 +26,7 @@ export default function Button({
   const baseClasses = 'font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center';
   
   const variants = {
+    default: 'bg-green-700 hover:bg-green-800 text-white focus:ring-green-500 shadow-lg hover:shadow-xl',
     primary: 'bg-green-700 hover:bg-green-800 text-white focus:ring-green-500 shadow-lg hover:shadow-xl',
     secondary: 'bg-green-700 hover:bg-green-800 text-white focus:ring-green-500 shadow-lg hover:shadow-xl',
     outline: 'border-2 border-green-700 text-green-700 hover:bg-green-800 hover:text-white focus:ring-green-500',
