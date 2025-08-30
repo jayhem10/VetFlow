@@ -5,9 +5,9 @@ import { authOptions } from '@/lib/auth'
 import { hasPermission } from '@/lib/permissions'
 import { R2StorageService } from '@/lib/r2-storage'
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, context: any) {
   try {
-    const { id: fileId } = await params
+    const fileId = context?.params?.id as string
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -25,7 +25,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     // Vérifier les permissions
     const userRoles = profile.role ? profile.role.split(',').map(r => r.trim().toLowerCase()) : ['assistant']
-    const hasFilePermission = userRoles.some(role => hasPermission(role, 'files', 'delete'))
+    const hasFilePermission = userRoles.some(role => hasPermission(role as any, 'files', 'delete'))
 
     if (!hasFilePermission) {
       return NextResponse.json({ error: 'Permissions insuffisantes' }, { status: 403 })

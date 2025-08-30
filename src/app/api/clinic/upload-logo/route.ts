@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     // Vérifier les permissions
     const userRoles = profile.role ? profile.role.split(',').map(r => r.trim().toLowerCase()) : ['assistant']
-    const hasClinicPermission = userRoles.some(role => hasPermission(role, 'clinic_settings', 'update'))
+    const hasClinicPermission = userRoles.some(role => hasPermission(role as any, 'clinic_settings', 'update'))
 
     if (!hasClinicPermission) {
       return NextResponse.json({ error: 'Permissions insuffisantes' }, { status: 403 })

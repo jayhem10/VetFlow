@@ -1,4 +1,5 @@
 import Button from '@/components/atoms/Button';
+import Link from 'next/link';
 import { Heading1, BodyText, SmallText } from '@/components/atoms/Typography';
 
 export default function HeroSection() {
@@ -18,12 +19,11 @@ export default function HeroSection() {
             </BodyText>
             
             <div className="flex flex-col sm:flex-row gap-4 mb-4">
-              <Button variant="primary" size="lg">
-                🚀 Commencer gratuitement
-              </Button>
-              <Button variant="outline" size="lg">
-                📹 Voir la démo
-              </Button>
+              <Link href="/register">
+                <Button variant="primary" size="lg">
+                  🚀 Commencer gratuitement
+                </Button>
+              </Link>
             </div>
             
             <SmallText className="text-gray-700 dark:text-gray-300">
@@ -46,45 +46,32 @@ export default function HeroSection() {
 
               {/* Contenu de la card */}
               <div className="space-y-5">
-                {/* Patient en cours */}
-                <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4 border-l-4 border-green-700">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-yellow-300 to-yellow-400 rounded-full flex items-center justify-center text-2xl shadow-sm">
-                      🐕
+                {/* Aujourd'hui: mêmes cartes que le dashboard */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Aujourd'hui</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-3">
+                      <div className="text-sm text-emerald-700 dark:text-emerald-300">RDV du jour</div>
+                      <div className="text-xl font-bold text-emerald-800 dark:text-emerald-200">8</div>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 dark:text-white text-lg">Max</h3>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">Golden Retriever • 5 ans • 32kg</p>
-                      <p className="text-xs text-green-700 dark:text-green-300 font-medium">Mme. Dubois - 06 12 34 56 78</p>
+                    <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-3">
+                      <div className="text-sm text-blue-700 dark:text-blue-300">CA du jour</div>
+                      <div className="text-xl font-bold text-blue-800 dark:text-blue-200">1 240€</div>
                     </div>
-                    <div className="text-right">
-                      <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-900 dark:text-green-300 rounded-full text-xs font-medium">
-                        ✓ Consultation terminée
-                      </span>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">14:30 - Vaccination annuelle</p>
+                    <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-3">
+                      <div className="text-sm text-green-700 dark:text-green-300">Factures payées</div>
+                      <div className="text-xl font-bold text-green-800 dark:text-green-200">5</div>
+                    </div>
+                    <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3">
+                      <div className="text-sm text-amber-700 dark:text-amber-300">En attente</div>
+                      <div className="text-xl font-bold text-amber-800 dark:text-amber-200">3</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Statistiques du jour */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="text-center bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                    <p className="text-2xl font-bold text-green-700 dark:text-green-400">127</p>
-                    <p className="text-xs text-gray-700 dark:text-gray-300">Patients actifs</p>
-                  </div>
-                  <div className="text-center bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                    <p className="text-2xl font-bold text-green-700 dark:text-green-400">8/12</p>
-                    <p className="text-xs text-gray-700 dark:text-gray-300">RDV aujourd'hui</p>
-                  </div>
-                  <div className="text-center bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                    <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">1,240€</p>
-                    <p className="text-xs text-gray-700 dark:text-gray-300">CA du jour</p>
-                  </div>
-                </div>
-
-                {/* Prochains rendez-vous */}
+                {/* Liste de RDV à venir */}
                 <div className="bg-stone-50 dark:bg-amber-900/20 rounded-lg p-3">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">🕒 Prochains RDV</h4>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Prochains RDV</h4>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700 dark:text-gray-300">15:00 - Luna (Chat) • Contrôle</span>
@@ -93,6 +80,29 @@ export default function HeroSection() {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700 dark:text-gray-300">15:30 - Rex (Chien) • Urgence</span>
                       <span className="text-red-700 dark:text-red-300 font-medium">Mme. Petit</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Aperçu de la clinique (mêmes cartes que le dashboard) */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Aperçu de la clinique</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                      <div className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-1">254</div>
+                      <div className="text-xs font-medium text-blue-700 dark:text-blue-300">Propriétaires</div>
+                    </div>
+                    <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-700">
+                      <div className="text-xl font-bold text-green-600 dark:text-green-400 mb-1">412</div>
+                      <div className="text-xs font-medium text-green-700 dark:text-green-300">Animaux</div>
+                    </div>
+                    <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg border border-purple-200 dark:border-purple-700">
+                      <div className="text-xl font-bold text-purple-600 dark:text-purple-400 mb-1">39</div>
+                      <div className="text-xs font-medium text-purple-700 dark:text-purple-300">RDV ce mois</div>
+                    </div>
+                    <div className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg border border-orange-200 dark:border-orange-700">
+                      <div className="text-xl font-bold text-orange-600 dark:text-orange-400 mb-1">7</div>
+                      <div className="text-xs font-medium text-orange-700 dark:text-orange-300">Collaborateurs</div>
                     </div>
                   </div>
                 </div>

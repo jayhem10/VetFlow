@@ -2,8 +2,8 @@ import PublicHeader from '@/components/organisms/PublicHeader';
 import HeroSection from '@/components/organisms/HeroSection';
 import FeaturesSection from '@/components/organisms/FeaturesSection';
 import PricingSection from '@/components/organisms/PricingSection';
-import TestimonialsSection from '@/components/organisms/TestimonialsSection';
-import CTASection from '@/components/organisms/CTASection';
+// import TestimonialsSection from '@/components/organisms/TestimonialsSection';
+// import CTASection from '@/components/organisms/CTASection';
 import Footer from '@/components/organisms/Footer';
 
 export default function Home() {
@@ -13,8 +13,6 @@ export default function Home() {
       <HeroSection />
       <FeaturesSection />
       <PricingSection />
-      <TestimonialsSection />
-      <CTASection />
       <Footer />
     </div>
   );

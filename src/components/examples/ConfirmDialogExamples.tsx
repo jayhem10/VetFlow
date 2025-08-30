@@ -14,9 +14,9 @@ export function ConfirmDialogExamples() {
   const handleDeleteOwner = async () => {
     const confirmed = await confirm({
       title: 'Supprimer le propriétaire',
-      description: 'Êtes-vous sûr de vouloir supprimer Marie Dubois ? Cette action est irréversible et supprimera également tous les animaux associés.',
-      confirmLabel: 'Supprimer',
-      cancelLabel: 'Annuler',
+      message: 'Êtes-vous sûr de vouloir supprimer Marie Dubois ? Cette action est irréversible et supprimera également tous les animaux associés.',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
       variant: 'danger'
     })
 
@@ -28,9 +28,9 @@ export function ConfirmDialogExamples() {
   const handleWarningAction = async () => {
     const confirmed = await confirm({
       title: 'Action importante',
-      description: 'Cette action modifiera les données de manière importante. Voulez-vous continuer ?',
-      confirmLabel: 'Continuer',
-      cancelLabel: 'Annuler',
+      message: 'Cette action modifiera les données de manière importante. Voulez-vous continuer ?',
+      confirmText: 'Continuer',
+      cancelText: 'Annuler',
       variant: 'warning'
     })
 
@@ -42,9 +42,9 @@ export function ConfirmDialogExamples() {
   const handleInfoAction = async () => {
     const confirmed = await confirm({
       title: 'Confirmer l\'action',
-      description: 'Cette action va synchroniser les données avec le serveur. Cela peut prendre quelques minutes.',
-      confirmLabel: 'Synchroniser',
-      cancelLabel: 'Plus tard',
+      message: 'Cette action va synchroniser les données avec le serveur. Cela peut prendre quelques minutes.',
+      confirmText: 'Synchroniser',
+      cancelText: 'Plus tard',
       variant: 'info'
     })
 
@@ -56,17 +56,10 @@ export function ConfirmDialogExamples() {
   const handleCustomIcon = async () => {
     const confirmed = await confirm({
       title: 'Archiver le dossier',
-      description: 'Le dossier sera déplacé vers les archives et ne sera plus visible dans la liste principale.',
-      confirmLabel: 'Archiver',
-      cancelLabel: 'Annuler',
-      variant: 'info',
-      icon: (
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/20">
-          <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-          </svg>
-        </div>
-      )
+      message: 'Le dossier sera déplacé vers les archives et ne sera plus visible dans la liste principale.',
+      confirmText: 'Archiver',
+      cancelText: 'Annuler',
+      variant: 'info'
     })
 
     if (confirmed) {

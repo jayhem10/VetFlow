@@ -86,7 +86,7 @@ export default function AppointmentDashboardActions({
               onClick={() => {
                 // Ouvrir la modal de modification de facture
                 // TODO: Implémenter la modal de modification
-                toast.info('Modal de modification de facture à implémenter')
+                toast.warning('Modal de modification de facture à implémenter')
               }}
               variant="outline"
               size="sm"
@@ -112,7 +112,7 @@ export default function AppointmentDashboardActions({
             onClick={() => {
               // Ouvrir la modal de création de facture
               // TODO: Implémenter la modal de création
-              toast.info('Modal de création de facture à implémenter')
+              toast.warning('Modal de création de facture à implémenter')
             }}
             size="sm"
             className="flex items-center gap-1"

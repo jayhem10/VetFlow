@@ -62,12 +62,12 @@ export default function LogoUpload({ currentLogoUrl, onLogoUploaded, clinicId }:
       } else {
         const error = await response.json()
         toast.error(error.error || 'Erreur lors de l\'upload')
-        setPreviewUrl(currentLogoUrl)
+        setPreviewUrl(currentLogoUrl ?? null)
       }
     } catch (error) {
       console.error('Erreur upload logo:', error)
       toast.error('Erreur lors de l\'upload')
-      setPreviewUrl(currentLogoUrl)
+      setPreviewUrl(currentLogoUrl ?? null)
     } finally {
       setUploading(false)
     }

@@ -15,9 +15,9 @@ const updateClinicSchema = z.object({
   country: z.string().optional().or(z.literal(''))
 })
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(request: NextRequest, context: any) {
   try {
-    const { id: clinicId } = await params
+    const clinicId = context?.params?.id as string
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -35,7 +35,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     // Vérifier les permissions
     const userRoles = profile.role ? profile.role.split(',').map(r => r.trim().toLowerCase()) : ['assistant']
-    const hasClinicPermission = userRoles.some(role => hasPermission(role, 'clinic_settings', 'update'))
+    const hasClinicPermission = userRoles.some(role => hasPermission(role as any, 'clinic_settings', 'update'))
 
     if (!hasClinicPermission) {
       return NextResponse.json({ error: 'Permissions insuffisantes' }, { status: 403 })

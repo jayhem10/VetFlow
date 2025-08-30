@@ -2,7 +2,7 @@ import Card from '@/components/atoms/Card';
 import { Heading3 } from '@/components/atoms/Typography';
 
 interface FeatureCardProps {
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   description: string;
 }

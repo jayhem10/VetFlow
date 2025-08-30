@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       // Créer la facture
       const invoice = await tx.invoice.create({
         data: {
-          clinic_id: profile.clinicId,
+          clinic_id: profile.clinicId!,
           owner_id: appointment.animal.owner_id,
           appointment_id: validatedData.appointment_id,
           invoice_number: invoiceNumber,
@@ -119,10 +119,10 @@ export async function POST(request: NextRequest) {
       for (const item of validatedData.items) {
         if (item.item_type === 'product' && item.product_id) {
           // Vérifier le stock disponible
-          const product = await tx.Product.findFirst({
+          const product = await tx.product.findFirst({
             where: { 
               id: item.product_id,
-              clinic_id: profile.clinicId 
+              clinic_id: profile.clinicId! 
             }
           })
 
@@ -135,9 +135,9 @@ export async function POST(request: NextRequest) {
           }
 
           // Créer le mouvement de stock
-          const movement = await tx.StockMovement.create({
+          const movement = await tx.stockMovement.create({
             data: {
-              clinic_id: profile.clinicId,
+              clinic_id: profile.clinicId!,
               product_id: item.product_id,
               type: 'out',
               quantity: item.quantity,
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
           })
 
           // Mettre à jour le stock
-          await tx.Product.update({
+          await tx.product.update({
             where: { id: item.product_id },
             data: { stock_qty: product.stock_qty - item.quantity }
           })

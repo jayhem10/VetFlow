@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/atoms/Card'
-import { Button } from '@/components/atoms/Button'
-import { Typography } from '@/components/atoms/Typography'
+import Card from '@/components/atoms/Card'
+import Button from '@/components/atoms/Button'
+import { BodyText as Typography, SmallText } from '@/components/atoms/Typography'
 import { CollaboratorsService } from '@/services/collaborators.service'
 import { toast } from '@/lib/toast'
 
@@ -46,15 +46,15 @@ export function DeactivatedCollaboratorsList({
 
   return (
     <Card className="mt-6">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+      <div className="px-6 pt-6">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
           <span className="text-orange-600">Collaborateurs désactivés</span>
           <span className="text-sm text-muted-foreground">
             ({collaborators.length})
           </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h3>
+      </div>
+      <div className="p-6">
         <div className="space-y-3">
           {collaborators.map((collaborator) => (
             <div
@@ -62,15 +62,15 @@ export function DeactivatedCollaboratorsList({
               className="flex items-center justify-between p-3 border rounded-lg bg-muted/30"
             >
               <div className="flex-1">
-                <Typography variant="body" className="font-medium">
+                <Typography className="font-medium">
                   {collaborator.first_name} {collaborator.last_name}
                 </Typography>
-                <Typography variant="small" className="text-muted-foreground">
+                <SmallText className="text-muted-foreground">
                   {collaborator.email} • {collaborator.role}
-                </Typography>
-                <Typography variant="small" className="text-muted-foreground">
+                </SmallText>
+                <SmallText className="text-muted-foreground">
                   Désactivé le {new Date(collaborator.deactivated_at).toLocaleDateString('fr-FR')}
-                </Typography>
+                </SmallText>
               </div>
               <Button
                 variant="outline"
@@ -84,7 +84,7 @@ export function DeactivatedCollaboratorsList({
             </div>
           ))}
         </div>
-      </CardContent>
+      </div>
     </Card>
   )
 }

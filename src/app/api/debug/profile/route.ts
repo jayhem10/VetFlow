@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     )
 
     // Vérifier les factures dans la base
-    const invoices = await prisma.invoice.findMany({
+    const invoices = profile.clinicId ? await prisma.invoice.findMany({
       where: { clinic_id: profile.clinicId },
       include: {
         appointment: {
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         owner: true,
         items: true
       }
-    })
+    }) : []
 
     return NextResponse.json({
       debug: {

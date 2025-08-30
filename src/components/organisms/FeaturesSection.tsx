@@ -1,38 +1,39 @@
 import FeatureCard from '@/components/molecules/FeatureCard';
 import { Heading2, BodyText } from '@/components/atoms/Typography';
+import LogoIcon from '@/components/atoms/LogoIcon';
 import { Stethoscope, Calendar, Pill, DollarSign, BarChart3, Shield } from 'lucide-react';
 
 export default function FeaturesSection() {
   const features = [
     {
       icon: <Stethoscope className="w-6 h-6" />,
-      title: 'Gestion des patients',
-      description: 'Dossiers médicaux complets, historique des soins, allergies, et suivi personnalisé pour chaque animal.'
+      title: 'Dossiers patients',
+      description: 'Fiche animal, propriétaire, historique des RDV, notes et documents liés.'
     },
     {
       icon: <Calendar className="w-6 h-6" />,
-      title: 'Planning intelligent',
-      description: 'Calendrier optimisé, rappels automatiques, gestion des urgences et synchronisation multi-praticiens.'
+      title: 'Planification',
+      description: 'Créneaux par vétérinaire, vue jour/semaine, recherche et filtres rapides.'
     },
     {
       icon: <Pill className="w-6 h-6" />,
-      title: 'Inventaire médicaments',
-      description: 'Suivi des stocks, dates de péremption, commandes automatiques et gestion des traitements.'
+      title: 'Inventaire',
+      description: 'Produits et prestations, prix par défaut, suivi des stocks et ajustements.'
     },
     {
       icon: <DollarSign className="w-6 h-6" />,
-      title: 'Facturation simplifiée',
-      description: 'Devis automatiques, facturation électronique, suivi des paiements et rapports financiers.'
+      title: 'Facturation',
+      description: 'Factures depuis un RDV, PDF, envoi email, statut payé/en attente, CA du jour.'
     },
     {
       icon: <BarChart3 className="w-6 h-6" />,
-      title: 'Rapports et analyses',
-      description: 'Tableaux de bord en temps réel, statistiques de performance et aide à la prise de décision.'
+      title: 'Indicateurs',
+      description: 'Aujourd’hui et ce mois: RDV, CA, payées/en attente, RDV restants.'
     },
     {
       icon: <Shield className="w-6 h-6" />,
-      title: 'Sécurité maximale',
-      description: 'Conformité RGPD, chiffrement des données, sauvegardes automatiques et accès sécurisé.'
+      title: 'Rôles & droits',
+      description: 'Collaborateurs, rôles multiples et permissions fines par module.'
     }
   ];
 
@@ -40,12 +41,15 @@ export default function FeaturesSection() {
     <section id="features" className="py-20 bg-stone-25 dark:bg-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
+          <div className="flex items-center justify-center gap-3 text-emerald-600 mb-3">
+            <LogoIcon size={20} />
+            <span className="text-xs font-semibold">Pourquoi VetFlow</span>
+          </div>
           <Heading2 className="mb-4 text-gray-900 dark:text-white">
-            Tout ce dont vous avez besoin pour votre clinique
+            Gérez votre clinique, simplement
           </Heading2>
           <BodyText className="max-w-3xl mx-auto text-gray-800 dark:text-gray-200">
-            VetFlow centralise toutes les fonctions essentielles de votre cabinet vétérinaire 
-            dans une interface moderne et intuitive.
+            Planning, dossiers, factures, inventaire et indicateurs clés — rapides, fiables et agréables à utiliser.
           </BodyText>
         </div>
         

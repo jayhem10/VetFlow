@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     // Vérifier les permissions
     const userRoles = profile.role ? profile.role.split(',').map(r => r.trim().toLowerCase()) : ['assistant']
-    const hasFilePermission = userRoles.some(role => hasPermission(role, 'files', 'create'))
+    const hasFilePermission = userRoles.some(role => hasPermission(role as any, 'files', 'create'))
 
     if (!hasFilePermission) {
       return NextResponse.json({ error: 'Permissions insuffisantes' }, { status: 403 })

@@ -192,14 +192,14 @@ export function AnimalForm({ animal, onClose, onSuccess, presetOwner, lockOwner 
           const idx = PRIORITY.indexOf(normalize(label))
           return idx === -1 ? 999 : idx
         }
-        opts.sort((a, b) => {
+        opts.sort((a: { label: string }, b: { label: string }) => {
           const ra = rank(a.label)
           const rb = rank(b.label)
           if (ra !== rb) return ra - rb
           return a.label.localeCompare(b.label, 'fr')
         })
         // Insérer un séparateur visuel entre les prioritaires et les autres
-        const firstNonPriority = opts.findIndex(o => rank(o.label) === 999)
+        const firstNonPriority = opts.findIndex((o: { label: string }) => rank(o.label) === 999)
         const withSeparator = [...opts]
         if (firstNonPriority > 0 && firstNonPriority < opts.length) {
           withSeparator.splice(firstNonPriority, 0, { value: '__sep__', label: '──────────' } as any)

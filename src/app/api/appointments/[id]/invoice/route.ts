@@ -4,9 +4,9 @@ import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { hasPermission } from '@/lib/permissions'
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, context: any) {
   try {
-    const { id: appointmentId } = await params
+    const appointmentId = context?.params?.id as string
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Vérifier les permissions
     const userRoles = profile.role ? profile.role.split(',').map(r => r.trim().toLowerCase()) : ['assistant']
-    const hasInvoicePermission = userRoles.some(role => hasPermission(role, 'invoices', 'read'))
+    const hasInvoicePermission = userRoles.some(role => hasPermission(role as any, 'invoices', 'read'))
 
     if (!hasInvoicePermission) {
       return NextResponse.json({ error: 'Permissions insuffisantes' }, { status: 403 })

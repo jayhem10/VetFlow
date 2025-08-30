@@ -3,14 +3,14 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, context: any) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     const profile = await prisma.profile.findFirst({ where: { userId: session.user.id } })
     if (!profile?.clinicId) return NextResponse.json({ error: 'Aucune clinique associée' }, { status: 404 })
 
-    const id = params.id
+    const id = context?.params?.id as string
     const body = await request.json()
 
     const apt = await prisma.appointment.findFirst({ where: { id, clinic_id: profile.clinicId } })
@@ -56,14 +56,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, context: any) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     const profile = await prisma.profile.findFirst({ where: { userId: session.user.id } })
     if (!profile?.clinicId) return NextResponse.json({ error: 'Aucune clinique associée' }, { status: 404 })
 
-    const id = params.id
+    const id = context?.params?.id as string
     const apt = await prisma.appointment.findFirst({ where: { id, clinic_id: profile.clinicId } })
     if (!apt) return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 })
 

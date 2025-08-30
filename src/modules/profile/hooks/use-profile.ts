@@ -69,7 +69,7 @@ export function useProfile() {
             user: {
               ...session.user,
               hasProfile: true,
-              hasClinic: !!profile.clinicId,
+              hasClinic: !!(profile as any).clinic_id,
             },
           })
         }

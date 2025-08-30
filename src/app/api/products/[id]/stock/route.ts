@@ -15,7 +15,7 @@ const stockMovementSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -39,7 +39,7 @@ export async function POST(
       return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 })
     }
 
-    const productId = params.id
+    const productId = context?.params?.id as string
     const body = await request.json()
     const validatedData = stockMovementSchema.parse(body)
 
@@ -69,7 +69,7 @@ export async function POST(
       // Créer le mouvement de stock
       const movement = await tx.stockMovement.create({
         data: {
-          clinic_id: profile.clinicId,
+          clinic_id: profile.clinicId!,
           product_id: productId,
           type: validatedData.type,
           quantity: validatedData.quantity,

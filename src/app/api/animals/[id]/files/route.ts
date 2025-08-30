@@ -6,18 +6,21 @@ import { hasPermission } from '@/lib/permissions'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
+  const animalId = context?.params?.id as string | undefined
+  let clinicId: string | null = null
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
 
-    const profile = await prisma.profile.findFirst({ 
+    const profile = await prisma.profile.findFirst({
       where: { userId: session.user.id },
       include: { user: true }
     })
+    clinicId = profile?.clinicId ?? null
     
     if (!profile?.clinicId) {
       return NextResponse.json({ error: 'Aucune clinique associée' }, { status: 404 })
@@ -36,7 +39,7 @@ export async function GET(
     // Vérifier que l'animal existe et appartient à la clinique
     const animal = await prisma.animal.findFirst({
       where: { 
-        id: params.id,
+        id: animalId,
         clinic_id: profile.clinicId 
       }
     })
@@ -49,10 +52,10 @@ export async function GET(
     const files = await prisma.file.findMany({
       where: {
         OR: [
-          { animal_id: params.id },
+          { animal_id: animalId },
           {
             appointment: {
-              animal_id: params.id
+              animal_id: animalId
             }
           }
         ],
@@ -75,11 +78,11 @@ export async function GET(
 
     return NextResponse.json({ files })
   } catch (error) {
-    console.error('Erreur GET /api/animals/[id]/files:', error)
-    console.error('Détails de l\'erreur:', {
-      animalId: params.id,
-      clinicId: profile.clinicId,
-      error: error instanceof Error ? error.message : 'Erreur inconnue'
+    console.error('Erreur GET /api/animals/[id]/files:', {
+      error,
+      animalId,
+      clinicId,
+      message: error instanceof Error ? error.message : 'Erreur inconnue'
     })
     return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 })
   }

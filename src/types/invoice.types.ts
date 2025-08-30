@@ -66,6 +66,29 @@ export interface UpdateInvoiceData {
   items?: InvoiceItem[]
 }
 
+// Types d'insertion/mise à jour pour les lignes de facture
+export interface CreateInvoiceItem {
+  description: string
+  quantity: number
+  unit_price: number
+  total_price: number
+  tax_rate?: number
+  item_type?: 'product' | 'service'
+  product_id?: string
+  service_id?: string
+}
+
+export interface UpdateInvoiceItem {
+  description?: string
+  quantity?: number
+  unit_price?: number
+  total_price?: number
+  tax_rate?: number
+  item_type?: 'product' | 'service'
+  product_id?: string | null
+  service_id?: string | null
+}
+
 export interface InvoiceSearchFilters {
   owner_id?: string
   status?: 'pending' | 'paid' | 'partially_paid' | 'overdue' | 'cancelled'

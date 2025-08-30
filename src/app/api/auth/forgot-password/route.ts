@@ -72,13 +72,21 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      await EmailService.sendPasswordReset({
-        email: user.email,
-        firstName: user.profile.firstName || user.name || 'Utilisateur',
-        lastName: user.profile.lastName || '',
-        tempPassword,
-        clinicName: user.profile.clinic?.name || 'VetFlow',
-        loginUrl: `${process.env.NEXTAUTH_URL}/login`
+      // Utilise la méthode générique sendEmail tant que sendPasswordReset n'existe pas
+      await EmailService.sendEmail({
+        to: user.email,
+        subject: 'Réinitialisation de mot de passe',
+        htmlContent: `
+          <div style="font-family: Arial, sans-serif; line-height:1.6;">
+            <h2>Réinitialisation de votre mot de passe</h2>
+            <p>Bonjour ${user.profile.firstName || user.name || 'Utilisateur'} ${user.profile.lastName || ''},</p>
+            <p>Un mot de passe temporaire a été généré pour votre compte.</p>
+            <p><strong>Mot de passe temporaire:</strong> ${tempPassword}</p>
+            <p>Veuillez vous connecter puis changer votre mot de passe immédiatement.</p>
+            <p><a href="${process.env.NEXTAUTH_URL}/login">Se connecter</a></p>
+            <p>Cordialement,<br>${user.profile.clinic?.name || 'VetFlow'}</p>
+          </div>
+        `
       })
     } catch (emailError) {
       console.error('Erreur envoi email mot de passe oublié:', emailError)

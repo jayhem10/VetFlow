@@ -96,14 +96,20 @@ export async function POST(request: NextRequest) {
       const loginUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/login`
       const inviterName = `${currentProfile.firstName} ${currentProfile.lastName}`
 
-      await EmailService.sendCollaboratorInvitation({
-        email: validatedData.email,
-        firstName: validatedData.first_name,
-        lastName: validatedData.last_name,
-        tempPassword,
-        clinicName: clinic.name,
-        inviterName,
-        loginUrl
+      await EmailService.sendEmail({
+        to: validatedData.email,
+        subject: `Invitation à rejoindre ${clinic.name}`,
+        htmlContent: `
+          <div style="font-family: Arial, sans-serif; line-height:1.6;">
+            <h2>Invitation à rejoindre ${clinic.name}</h2>
+            <p>Bonjour ${validatedData.first_name} ${validatedData.last_name},</p>
+            <p>${inviterName} vous a invité(e) à rejoindre l'équipe de ${clinic.name} sur VetFlow.</p>
+            <p><strong>Mot de passe temporaire:</strong> ${tempPassword}</p>
+            <p>Connectez-vous via le lien suivant puis changez votre mot de passe:</p>
+            <p><a href="${loginUrl}">${loginUrl}</a></p>
+            <p>Cordialement,<br>L'équipe ${clinic.name}</p>
+          </div>
+        `
       })
 
       console.log(`Email d'invitation envoyé à ${validatedData.email}`)

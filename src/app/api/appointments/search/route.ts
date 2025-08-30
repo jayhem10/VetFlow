@@ -138,8 +138,8 @@ export async function GET(request: NextRequest) {
       } : null,
       veterinarian: a.veterinarian ? {
         id: a.veterinarian.id,
-        first_name: a.veterinarian.first_name,
-        last_name: a.veterinarian.last_name,
+        first_name: a.veterinarian.firstName,
+        last_name: a.veterinarian.lastName,
         role: a.veterinarian.role
       } : null
     }))

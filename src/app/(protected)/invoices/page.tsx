@@ -25,6 +25,7 @@ export default function InvoicesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
+  const [sendingEmailId, setSendingEmailId] = useState<string | null>(null)
 
   // Recherche côté client pour tous les champs
   const filteredInvoices = useMemo(() => {
@@ -139,9 +140,23 @@ export default function InvoicesPage() {
     ))
   }
 
-  const handleSendEmail = (invoice: Invoice) => {
-    // TODO: Implémenter l'envoi par email
-    toast.success(`Envoi de la facture ${invoice.invoice_number} par email`)
+  const handleSendEmail = async (invoice: Invoice) => {
+    try {
+      setSendingEmailId(invoice.id)
+      const res = await fetch(`/api/invoices/${invoice.id}/send-email`, {
+        method: 'POST',
+      })
+      if (res.ok) {
+        toast.success(`Facture ${formatInvoiceNumberForDisplay(invoice.invoice_number)} envoyée par email`)
+      } else {
+        const err = await res.json().catch(() => ({} as any))
+        toast.error(err?.error || 'Erreur lors de l\'envoi de l\'email')
+      }
+    } catch (e) {
+      toast.error('Erreur réseau lors de l\'envoi de l\'email')
+    } finally {
+      setSendingEmailId(null)
+    }
   }
 
   const handleDownload = async (invoice: Invoice) => {
@@ -282,6 +297,8 @@ export default function InvoicesPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleSendEmail(invoice)}
+                        disabled={sendingEmailId === invoice.id}
+                        loading={sendingEmailId === invoice.id}
                       >
                         <Mail className="w-4 h-4" />
                       </Button>

@@ -5,14 +5,14 @@ import { prisma } from '@/lib/prisma'
 import { hasPermission } from '@/lib/permissions'
 import { R2StorageService } from '@/lib/r2-storage'
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, context: any) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     }
 
-    const { id: fileId } = await params
+    const fileId = context?.params?.id as string
 
     // Récupérer le profil pour avoir la clinicId et les rôles
     const profile = await prisma.profile.findUnique({

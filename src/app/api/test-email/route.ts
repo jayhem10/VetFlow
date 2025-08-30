@@ -14,14 +14,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Test d'envoi d'email
-    await EmailService.sendCollaboratorInvitation({
-      email,
-      firstName: 'Test',
-      lastName: 'User',
-      tempPassword: 'TestPassword123',
-      clinicName: 'Clinique Test',
-      inviterName: 'Admin Test',
-      loginUrl: 'http://localhost:3000/login'
+    await EmailService.sendEmail({
+      to: email,
+      subject: 'Test email VetFlow',
+      htmlContent: '<p>Ceci est un test d\'envoi d\'email depuis VetFlow.</p>'
     })
 
     return NextResponse.json({

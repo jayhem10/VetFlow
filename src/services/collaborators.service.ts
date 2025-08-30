@@ -60,7 +60,6 @@ export class CollaboratorsService {
         first_name: inviteData.firstName,
         last_name: inviteData.lastName,
         role: inviteData.role,
-        is_admin: inviteData.is_admin,
         calendar_color: inviteData.calendarColor,
       }),
     })

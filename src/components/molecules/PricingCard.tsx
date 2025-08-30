@@ -1,5 +1,6 @@
 import Card from '@/components/atoms/Card';
 import Button from '@/components/atoms/Button';
+import Link from 'next/link';
 import { Heading3 } from '@/components/atoms/Typography';
 
 interface PricingCardProps {
@@ -61,12 +62,14 @@ export default function PricingCard({
         ))}
       </ul>
       
-      <Button
-        variant={popular ? 'primary' : 'outline'}
-        className="w-full"
-      >
-        Commencer maintenant
-      </Button>
+      <Link href="/register" className="block">
+        <Button
+          variant={popular ? 'primary' : 'outline'}
+          className="w-full"
+        >
+          Commencer maintenant
+        </Button>
+      </Link>
     </Card>
   );
 } 

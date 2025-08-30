@@ -16,7 +16,7 @@ const updateServiceSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -40,7 +40,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 })
     }
 
-    const serviceId = params.id
+    const serviceId = context?.params?.id as string
     const body = await request.json()
     const validatedData = updateServiceSchema.parse(body)
 
@@ -93,7 +93,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -117,7 +117,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 })
     }
 
-    const serviceId = params.id
+    const serviceId = context?.params?.id as string
 
     // Vérifier que le service existe et appartient à la clinique
     const existingService = await prisma.service.findFirst({

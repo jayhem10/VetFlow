@@ -7,9 +7,9 @@ import { R2StorageService } from '@/lib/r2-storage'
 import { formatInvoiceNumberForDisplay } from '@/lib/invoice-utils'
 import puppeteer from 'puppeteer'
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, context: any) {
   try {
-    const { id } = await params
+    const id = context?.params?.id as string
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {

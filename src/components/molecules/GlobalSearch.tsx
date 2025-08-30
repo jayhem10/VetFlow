@@ -87,7 +87,11 @@ export function GlobalSearch() {
       return
     }
     typingRef.current = setTimeout(() => runSearch(query), 300)
-    return () => typingRef.current && clearTimeout(typingRef.current)
+    return () => {
+      if (typingRef.current) {
+        clearTimeout(typingRef.current)
+      }
+    }
   }, [query])
 
   useEffect(() => {
@@ -269,7 +273,6 @@ export function GlobalSearch() {
               <SearchInput
                 value={query}
                 onChange={setQuery}
-                autoFocus
                 placeholder="Rechercher..."
                 onFocus={() => setIsOpen(true)}
               />
