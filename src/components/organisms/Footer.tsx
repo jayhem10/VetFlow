@@ -26,6 +26,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li><a href="#features" className="text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-400">Fonctionnalités</a></li>
               <li><a href="#pricing" className="text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-400">Tarifs</a></li>
+              <li><a href="/contact" className="text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-400">Contact</a></li>
             </ul>
           </div>
           
@@ -50,6 +51,7 @@ export default function Footer() {
               <a href="/privacy" className="hover:text-green-700 dark:hover:text-green-400">Confidentialité</a>
               <a href="/terms" className="hover:text-green-700 dark:hover:text-green-400">Conditions</a>
               <a href="/legal" className="hover:text-green-700 dark:hover:text-green-400">Mentions légales</a>
+              <a href="/contact" className="hover:text-green-700 dark:hover:text-green-400">Contact</a>
             </div>
           </div>
         </div>

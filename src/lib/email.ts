@@ -100,6 +100,17 @@ export class EmailService {
   }
 
   static async sendInvoiceEmail(data: InvoiceEmailData): Promise<void> {
+    const LOGO_SVG = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="36" height="36" role="img" aria-label="VetFlow">
+        <g fill="#10b981">
+          <ellipse transform="rotate(15 60 75)" cx="60" cy="75" rx="22" ry="18" />
+          <ellipse transform="rotate(15 40 50)" cx="40" cy="50" rx="9" ry="12" />
+          <ellipse transform="rotate(15 80 50)" cx="80" cy="50" rx="9" ry="12" />
+          <ellipse transform="rotate(15 50 30)" cx="50" cy="30" rx="7" ry="10" />
+          <ellipse transform="rotate(15 70 30)" cx="70" cy="30" rx="7" ry="10" />
+        </g>
+      </svg>`
+
     const emailContent = `
       <!DOCTYPE html>
       <html lang="fr">
@@ -110,7 +121,9 @@ export class EmailService {
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 24px 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .brand { display:inline-flex; align-items:center; gap:10px; justify-content:center; }
+          .brand-name { font-weight: 800; letter-spacing: .5px; }
           .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
           .invoice-details { background: #e5e7eb; padding: 20px; border-radius: 8px; margin: 20px 0; }
           .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
@@ -123,8 +136,14 @@ export class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>🐾 ${data.clinicName}</h1>
-            <p>Facture ${data.invoice.invoice_number}</p>
+            <div class="brand">
+              ${LOGO_SVG}
+              <div>
+                <div class="brand-name">VetFlow</div>
+                <div style="font-size:12px;opacity:.9;">${data.clinicName}</div>
+              </div>
+            </div>
+            <p style="margin-top:8px">Facture ${data.invoice.invoice_number}</p>
           </div>
           
           <div class="content">

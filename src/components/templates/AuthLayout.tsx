@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react'
 import ThemeToggle from '@/components/atoms/ThemeToggle'
+import LogoIcon from '@/components/atoms/LogoIcon'
 
 interface AuthLayoutProps {
   children: ReactNode
@@ -15,26 +16,9 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
-              {/* Logo VetFlow */}
-              <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-700 to-green-700 rounded-lg flex items-center justify-center shadow-lg">
-                  <svg 
-                    viewBox="0 0 24 24" 
-                    className="w-6 h-6 text-white"
-                    fill="currentColor"
-                  >
-                    <path d="M11 2v20h2V2h-2zm-9 9v2h20v-2H2z" opacity="0.8"/>
-                    <circle cx="6" cy="6" r="1.5" opacity="0.9"/>
-                    <circle cx="8" cy="4" r="1" opacity="0.7"/>
-                    <circle cx="4" cy="4" r="1" opacity="0.7"/>
-                    <ellipse cx="6" cy="8.5" rx="1" ry="1.5" opacity="0.6"/>
-                    <path d="M18 7c0-1.1-.9-2-2-2s-2 .9-2 2v3c0 .55.45 1 1 1h2c.55 0 1-.45 1-1V7z" opacity="0.8"/>
-                    <path d="M18 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" opacity="0.9"/>
-                  </svg>
-                </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></div>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center text-emerald-600">
+                <LogoIcon size={28} />
               </div>
-              
               <div className="flex flex-col">
                 <a href="/" className="text-xl font-bold text-gray-900 dark:text-white hover:text-green-700 dark:hover:text-green-400 transition-colors">
                   Vet<span className="text-green-700 dark:text-green-400">Flow</span>
@@ -66,9 +50,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
               <a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-green-700 dark:hover:text-green-400">
                 Aide
               </a>
-              <a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-green-700 dark:hover:text-green-400">
-                Contact
-              </a>
+              <a href="/contact" className="text-sm text-gray-600 dark:text-gray-400 hover:text-green-700 dark:hover:text-green-400">Contact</a>
               <a href="#" className="text-sm text-gray-600 dark:text-gray-400 hover:text-green-700 dark:hover:text-green-400">
                 Confidentialité
               </a>

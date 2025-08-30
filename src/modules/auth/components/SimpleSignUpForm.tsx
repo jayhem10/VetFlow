@@ -38,9 +38,14 @@ export function SimpleSignUpForm() {
     setIsSubmitting(true)
     
     try {
-      await authService.signUpSimple(data.email, data.password)
-      setIsSuccess(true)
-      toast.success('🎉 Compte créé ! Vérifiez votre email pour confirmer votre compte.')
+      const result = await authService.signUpSimple(data.email, data.password)
+      
+      if (result.success) {
+        setIsSuccess(true)
+        toast.success('🎉 Compte créé ! Vérifiez votre email pour confirmer votre compte.')
+      } else {
+        toast.error(result.error || 'Une erreur s\'est produite lors de l\'inscription')
+      }
     } catch (error) {
       console.error('Erreur inscription:', error)
       toast.error('Une erreur s\'est produite lors de l\'inscription')

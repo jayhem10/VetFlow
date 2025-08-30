@@ -110,7 +110,7 @@ export default function AuthenticatedHeader() {
                 <NavLink href="#testimonials">
                   Témoignages
                 </NavLink>
-                <NavLink href="#contact">
+                <NavLink href="/contact">
                   Contact
                 </NavLink>
               </div>
