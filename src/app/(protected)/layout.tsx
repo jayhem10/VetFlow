@@ -133,7 +133,7 @@ export default function ProtectedLayout({
 
     // Process souhaité : si profileCompleted = false → redirection directe vers complete-profile
     // MAIS seulement si on n'est pas déjà en train de charger la session
-    if (!profileCompleted && !mustChangePassword && !redirecting && status !== 'loading') {
+    if (!profileCompleted && !mustChangePassword && !redirecting && !loading) {
       console.log('📋 profileCompleted=false, redirection directe vers complete-profile')
       setRedirecting(true)
       setTimeout(() => {
