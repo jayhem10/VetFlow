@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const publicRoutes = ['/', '/login', '/register', '/change-password', '/test-email', '/contact', '/api/contact']
+const publicRoutes = ['/', '/login', '/register', '/change-password', '/forgot-password', '/test-email', '/contact', '/api/contact']
 const authRoutes = ['/api/auth']
+const paymentRoutes = ['/payment', '/subscription', '/billing']
+const allowedRoutesAfterExpiry = [...publicRoutes, ...authRoutes, ...paymentRoutes, '/api/payment', '/api/stripe']
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -23,6 +25,13 @@ export function middleware(req: NextRequest) {
   
   if (!sessionToken) {
     return NextResponse.redirect(new URL('/login', req.url))
+  }
+
+  // Vérifier le statut de la période d'essai
+  const trialExpired = req.cookies.get('trial-expired')?.value === 'true'
+  
+  if (trialExpired && !allowedRoutesAfterExpiry.some(route => pathname.startsWith(route))) {
+    return NextResponse.redirect(new URL('/payment', req.url))
   }
 
   return NextResponse.next()

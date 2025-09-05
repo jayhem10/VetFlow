@@ -2,8 +2,8 @@
 
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import Button from '@/components/atoms/Button'
 import Input from '@/components/atoms/Input'
 import { Heading2, BodyText } from '@/components/atoms/Typography'
@@ -24,9 +24,11 @@ interface AuthFormProps {
 
 export default function AuthForm({ type }: AuthFormProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { signIn, signUp, loading } = useAuth()
   const [submitLoading, setSubmitLoading] = useState(false)
   const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [autoReconnecting, setAutoReconnecting] = useState(false)
   console.log('loading', loading, 'submitLoading', submitLoading)
   const isLogin = type === 'login'
   const title = isLogin ? 'Connexion à VetFlow' : 'Créer votre compte VetFlow'
@@ -57,6 +59,26 @@ export default function AuthForm({ type }: AuthFormProps) {
       acceptTerms: false,
     },
   })
+
+  // Effet pour la reconnexion automatique après création de profil/clinique
+  useEffect(() => {
+    const autoReconnect = searchParams.get('auto-reconnect')
+    const storedEmail = typeof window !== 'undefined' ? sessionStorage.getItem('auto-reconnect-email') : null
+    
+    if (autoReconnect === 'true' && storedEmail && isLogin) {
+      console.log('🔄 Reconnexion automatique pour:', storedEmail)
+      setAutoReconnecting(true)
+      
+      // Remplir automatiquement l'email
+      signInForm.setValue('email', storedEmail)
+      
+      // Afficher un message à l'utilisateur
+      toast.success('Profil créé ! Reconnectez-vous pour voir vos données à jour.')
+      
+      // Nettoyer le storage
+      sessionStorage.removeItem('auto-reconnect-email')
+    }
+  }, [searchParams, isLogin, signInForm])
 
   const handleSignIn = async (data: SignInFormData) => {
     setSubmitLoading(true)
@@ -121,6 +143,14 @@ export default function AuthForm({ type }: AuthFormProps) {
           {subtitle}
         </BodyText>
       </div>
+
+      {autoReconnecting && (
+        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+          <p className="text-sm text-green-700 dark:text-green-300">
+            ✅ Profil et clinique créés avec succès ! Connectez-vous pour accéder à votre espace.
+          </p>
+        </div>
+      )}
 
       {isLogin ? (
         <form onSubmit={signInForm.handleSubmit(handleSignIn)} className="space-y-4">

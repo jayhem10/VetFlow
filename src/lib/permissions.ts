@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'vet' | 'assistant' | 'stock_manager'
+export type UserRole = 'admin' | 'vet' | 'assistant' | 'stock_manager' | 'owner'
 
 export interface Permission {
   resource: string
@@ -6,6 +6,21 @@ export interface Permission {
 }
 
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  owner: [
+    { resource: 'dashboard', actions: ['read'] },
+    { resource: 'animals', actions: ['read', 'create', 'update', 'delete'] },
+    { resource: 'owners', actions: ['read', 'create', 'update', 'delete'] },
+    { resource: 'appointments', actions: ['read', 'create', 'update', 'delete'] },
+    { resource: 'collaborators', actions: ['read', 'create', 'update', 'delete'] },
+    { resource: 'services', actions: ['read', 'create', 'update', 'delete'] },
+    { resource: 'products', actions: ['read', 'create', 'update', 'delete'] },
+    { resource: 'stock', actions: ['read', 'create', 'update', 'delete'] },
+    { resource: 'invoices', actions: ['read', 'create', 'update', 'delete'] },
+    { resource: 'medical_records', actions: ['read', 'create', 'update', 'delete'] },
+    { resource: 'files', actions: ['read', 'create', 'update', 'delete'] },
+    { resource: 'profile', actions: ['read', 'update'] },
+    { resource: 'clinic_settings', actions: ['read', 'update'] },
+  ],
   admin: [
     { resource: 'dashboard', actions: ['read'] },
     { resource: 'animals', actions: ['read', 'create', 'update', 'delete'] },
@@ -77,6 +92,15 @@ export function getMenuItems(userRole: UserRole) {
   ]
 
   const roleItems = {
+    owner: [
+      { label: 'Animaux', href: '/animals', icon: 'animals' },
+      { label: 'Propriétaires', href: '/owners', icon: 'owners' },
+      { label: 'Rendez-vous', href: '/appointments', icon: 'appointments' },
+      { label: 'Factures', href: '/invoices', icon: 'invoices' },
+      { label: 'Équipe', href: '/collaborators', icon: 'collaborators' },
+      { label: 'Prestations', href: '/services', icon: 'services' },
+      { label: 'Stock', href: '/inventory', icon: 'stock' },
+    ],
     admin: [
       { label: 'Animaux', href: '/animals', icon: 'animals' },
       { label: 'Propriétaires', href: '/owners', icon: 'owners' },
@@ -115,92 +139,3 @@ export function getMenuItems(userRole: UserRole) {
   return [...baseItems, ...(roleItems[userRole] || [])]
 }
 
-export function getShortcutItems(userRole: UserRole) {
-  const baseShortcuts = [
-    {
-      label: 'Ajouter un animal',
-      icon: 'add',
-      href: '/animals',
-      description: 'Créer un nouveau dossier animal'
-    },
-    {
-      label: 'Nouveau propriétaire',
-      icon: 'owner',
-      href: '/owners',
-      description: 'Enregistrer un nouveau propriétaire'
-    },
-    {
-      label: 'Nouveau rendez-vous',
-      icon: 'appointment',
-      href: '/appointments',
-      description: 'Planifier une consultation'
-    }
-  ]
-
-  const roleShortcuts = {
-    admin: [
-      {
-        label: 'Inviter collaborateur',
-        icon: 'collaborators',
-        href: '/collaborators',
-        description: 'Ajouter un membre à l\'équipe'
-      },
-      {
-        label: 'Nouvelle prestation',
-        icon: 'services',
-        href: '/services',
-        description: 'Créer un nouveau service'
-      },
-      {
-        label: 'Ajouter produit',
-        icon: 'stock',
-        href: '/inventory',
-        description: 'Ajouter un produit au stock'
-      }
-    ],
-    vet: [
-      {
-        label: 'Nouvelle prestation',
-        icon: 'services',
-        href: '/services',
-        description: 'Consulter les prestations'
-      },
-      {
-        label: 'Consulter stock',
-        icon: 'stock',
-        href: '/inventory',
-        description: 'Vérifier les stocks'
-      }
-    ],
-    assistant: [
-      {
-        label: 'Consulter prestations',
-        icon: 'services',
-        href: '/services',
-        description: 'Voir les prestations disponibles'
-      },
-      {
-        label: 'Consulter stock',
-        icon: 'stock',
-        href: '/inventory',
-        description: 'Vérifier les stocks'
-      }
-    ],
-    stock_manager: [
-      {
-        label: 'Nouvelle prestation',
-        icon: 'services',
-        href: '/services',
-        description: 'Créer un nouveau service'
-      },
-      {
-        label: 'Ajouter produit',
-        icon: 'stock',
-        href: '/inventory',
-        description: 'Ajouter un produit au stock'
-      }
-    ]
-  }
-
-  return [...baseShortcuts, ...(roleShortcuts[userRole] || [])]
-}

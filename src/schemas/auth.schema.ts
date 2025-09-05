@@ -204,7 +204,7 @@ export const clinicCreationSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
-  postal_code: z.string().optional(),
+  postalCode: z.string().optional(),
   country: z.string().default('France'),
   subscription_plan: z.enum(['starter', 'professional', 'clinic']).default('starter'),
 })

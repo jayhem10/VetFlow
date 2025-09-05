@@ -66,11 +66,23 @@ export function MultiRoleSelect({
   // Parser les rôles actuels
   useEffect(() => {
     if (value) {
-      setSelectedRoles(value.split(',').map(r => r.trim()).filter(Boolean))
+      // Supprimer les doublons avec Set et filtrer les valeurs vides
+      const roles = value.split(',').map(r => r.trim()).filter(Boolean)
+      const uniqueRoles = Array.from(new Set(roles))
+      
+      // Si des doublons sont détectés, corriger automatiquement
+      if (roles.length !== uniqueRoles.length) {
+        console.warn('MultiRoleSelect: Doublons détectés dans les rôles:', { original: roles, unique: uniqueRoles })
+        // Appeler onChange avec la version nettoyée
+        const cleanedValue = uniqueRoles.join(', ')
+        onChange(cleanedValue)
+      }
+      
+      setSelectedRoles(uniqueRoles)
     } else {
       setSelectedRoles([])
     }
-  }, [value])
+  }, [value, onChange])
 
   const handleRoleToggle = (roleValue: string) => {
     const role = AVAILABLE_ROLES.find(r => r.value === roleValue)
@@ -89,8 +101,11 @@ export function MultiRoleSelect({
       ? selectedRoles.filter(r => r !== roleValue)
       : [...selectedRoles, roleValue]
 
-    setSelectedRoles(newRoles)
-    onChange(newRoles.join(', '))
+    // Supprimer les doublons au cas où
+    const uniqueNewRoles = Array.from(new Set(newRoles))
+    
+    setSelectedRoles(uniqueNewRoles)
+    onChange(uniqueNewRoles.join(', '))
   }
 
   const getRoleDisplay = (roleValue: string) => {
@@ -168,9 +183,9 @@ export function MultiRoleSelect({
             Rôles sélectionnés :
           </p>
           <div className="flex flex-wrap gap-2">
-            {selectedRoles.map((roleValue) => (
+            {selectedRoles.map((roleValue, index) => (
               <span
-                key={roleValue}
+                key={`selected-${roleValue}-${index}`}
                 className={cn(
                   "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
                   "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"

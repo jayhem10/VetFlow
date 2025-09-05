@@ -33,23 +33,11 @@ export default function CompleteProfilePage() {
   const handleClinicComplete = async () => {
     // Toutes les données sont maintenant dans le store
     // On appelle la fonction qui envoie tout d'un coup
-    const success = await completeRegistration()
+    const success = await completeRegistration(update)
     
     if (success) {
-      // Mettre à jour la session avec les informations de profil et clinique
-      await update({
-        ...session,
-        user: {
-          ...session?.user,
-          hasProfile: true,
-          hasClinic: true,
-        },
-      })
-      
-      // Rediriger vers le dashboard après un délai pour voir le message de succès
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 2000)
+      console.log('✅ Profil et clinique créés, redirection gérée par le store')
+      // La redirection est gérée par le store après mise à jour de la session
     }
   }
 

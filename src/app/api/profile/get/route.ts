@@ -24,13 +24,8 @@ export async function GET(request: NextRequest) {
     })
 
     if (!profile) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Aucun profil trouvé' 
-        },
-        { status: 404 }
-      )
+      // Retourner 200 avec profile null pour éviter les boucles côté client
+      return NextResponse.json({ success: true, profile: null })
     }
 
     return NextResponse.json({

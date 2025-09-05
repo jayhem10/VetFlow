@@ -27,13 +27,18 @@ export function useProfile() {
     updateProfile 
   } = useProfileStore()
 
-  // Charger le profil automatiquement quand l'utilisateur est connecté
-  useEffect(() => {
-    if (session?.user?.id) {
-      // Passer l'ID utilisateur pour optimiser le cache
-      fetchProfile(session.user.id).catch(console.error)
-    }
-  }, [session?.user?.id, fetchProfile])
+  // DÉSACTIVÉ : Le chargement automatique est maintenant géré par ProtectedLayout
+  // pour éviter les appels redondants
+  // useEffect(() => {
+  //   if (session?.user?.id && !loading && !profile) {
+  //     // Ne refetch que si on n'a vraiment aucune donnée
+  //     const hasProfileInSession = (session?.user as any)?.profileCompleted || (session?.user as any)?.hasProfile
+  //     if (!hasProfileInSession) {
+  //       console.log('🎯 useProfile: Tentative de chargement pour', session.user.id)
+  //       fetchProfile(session.user.id).catch(console.error)
+  //     }
+  //   }
+  // }, [session?.user?.id, fetchProfile])
 
   const createInitialProfile = async (data: TCreateProfileData) => {
     try {

@@ -22,7 +22,7 @@ export function ClinicCreationForm({ onSubmit }: ClinicCreationFormProps) {
       phone: clinicData?.phone || '',
       address: clinicData?.address || '',
       city: clinicData?.city || '',
-      postal_code: clinicData?.postal_code || '',
+      postalCode: clinicData?.postalCode || '',
       country: clinicData?.country || 'France',
       subscription_plan: clinicData?.subscription_plan || 'starter',
     }
@@ -37,7 +37,7 @@ export function ClinicCreationForm({ onSubmit }: ClinicCreationFormProps) {
         phone: data.phone,
         address: data.address,
         city: data.city,
-        postal_code: data.postal_code,
+        postalCode: data.postalCode,
         country: data.country,
         subscription_plan: data.subscription_plan,
       }
@@ -92,12 +92,22 @@ export function ClinicCreationForm({ onSubmit }: ClinicCreationFormProps) {
           />
           <Input
             label="Code postal"
-            {...form.register('postal_code')}
-            error={form.formState.errors.postal_code?.message}
+            placeholder="75001"
+            {...form.register('postalCode')}
+            error={form.formState.errors.postalCode?.message}
           />
-          <Input
+          <Select
             label="Pays"
-            {...form.register('country')}
+            value={form.watch('country')}
+            onChange={(value) => form.setValue('country', value)}
+            options={[
+              { value: 'France', label: 'France' },
+              { value: 'Belgique', label: 'Belgique' },
+              { value: 'Suisse', label: 'Suisse' },
+              { value: 'Canada', label: 'Canada' },
+              { value: 'Luxembourg', label: 'Luxembourg' },
+              { value: 'Autre', label: 'Autre' },
+            ]}
             error={form.formState.errors.country?.message}
           />
         </div>
@@ -107,9 +117,8 @@ export function ClinicCreationForm({ onSubmit }: ClinicCreationFormProps) {
           value={form.watch('subscription_plan')}
           onChange={(value) => form.setValue('subscription_plan', value as any)}
           options={[
-            { value: 'starter', label: 'Starter - 49€/mois' },
-            { value: 'professional', label: 'Professional - 199€/mois' },
-            { value: 'clinic', label: 'Clinic - 199€/mois' }
+            { value: 'starter', label: 'Starter - 64.90€/mois' },
+            { value: 'professional', label: 'Professional - 99€/mois' },
           ]}
           error={form.formState.errors.subscription_plan?.message}
         />

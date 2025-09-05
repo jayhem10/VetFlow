@@ -12,7 +12,8 @@ const createClinicSchema = z.object({
   address: z.string().optional(),
   city: z.string().optional(),
   postalCode: z.string().optional(),
-  subscriptionPlan: z.enum(['starter', 'professional', 'clinic']).default('starter'),
+  country: z.string().optional(),
+  subscription_plan: z.enum(['starter', 'professional', 'clinic']).default('starter'),
 })
 
 export async function POST(request: NextRequest) {
@@ -59,7 +60,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Créer la clinique
+    // Créer la clinique avec période d'essai de 14 jours
+    const trialEndDate = new Date()
+    trialEndDate.setDate(trialEndDate.getDate() + 14) // Ajouter 14 jours
+    
+    console.log('🏥 Création clinique avec période d\'essai jusqu\'au:', trialEndDate.toISOString())
+
     const clinic = await prisma.clinic.create({
       data: {
         name: clinicData.name,
@@ -68,8 +74,10 @@ export async function POST(request: NextRequest) {
         address: clinicData.address,
         city: clinicData.city,
         postalCode: clinicData.postalCode,
-        subscriptionPlan: clinicData.subscriptionPlan,
+        country: clinicData.country,
+        subscriptionPlan: clinicData.subscription_plan,
         subscriptionStatus: 'trial',
+        trialEndDate: trialEndDate, // Initialiser la fin d'essai à 14 jours
       },
     })
 
@@ -80,6 +88,12 @@ export async function POST(request: NextRequest) {
         clinicId: clinic.id,
         role: profile.role ? `${profile.role},admin` : 'admin',
       },
+    })
+
+    // Marquer le user comme profil complété (profil + clinique OK)
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { profileCompleted: true },
     })
 
     return NextResponse.json({
@@ -93,6 +107,7 @@ export async function POST(request: NextRequest) {
         address: clinic.address,
         city: clinic.city,
         postalCode: clinic.postalCode,
+        country: clinic.country,
         subscriptionPlan: clinic.subscriptionPlan,
         subscriptionStatus: clinic.subscriptionStatus,
       },

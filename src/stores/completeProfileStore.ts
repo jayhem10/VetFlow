@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { toast } from 'react-hot-toast'
+import { useProfileStore } from './useProfileStore'
+import { getSession, signOut, signIn } from 'next-auth/react'
 
 // Types pour les données de profil et de clinique
 export interface ProfileData {
@@ -17,7 +19,7 @@ export interface ClinicData {
   phone?: string
   address?: string
   city?: string
-  postal_code?: string
+  postalCode?: string  // Aligné avec le schéma Prisma
   country?: string
   subscription_plan?: 'starter' | 'professional' | 'clinic'
 }
@@ -40,7 +42,7 @@ interface CompleteProfileStore {
   setClinicData: (data: ClinicData) => void
 
   // Action pour finaliser et envoyer tout
-  completeRegistration: () => Promise<boolean>
+  completeRegistration: (updateSession?: () => Promise<any>) => Promise<boolean>
 
   // Utilitaires
   reset: () => void
@@ -72,7 +74,7 @@ export const useCompleteProfileStore = create<CompleteProfileStore>((set, get) =
   setClinicData: (data) => set({ clinicData: data }),
 
   // Finalisation : envoie tout d'un coup
-  completeRegistration: async () => {
+  completeRegistration: async (updateSession?: () => Promise<any>) => {
     const { profileData, clinicData } = get()
     
     if (!profileData) {
@@ -86,6 +88,9 @@ export const useCompleteProfileStore = create<CompleteProfileStore>((set, get) =
     }
 
     set({ loading: true, error: null })
+    
+    // Bloquer les fetch de profil pendant la création
+    useProfileStore.getState().setCreatingProfile(true)
 
     try {
       // 1. Créer le profil
@@ -116,20 +121,60 @@ export const useCompleteProfileStore = create<CompleteProfileStore>((set, get) =
 
       const clinicResult = await clinicResponse.json()
 
-      // 3. Forcer le rechargement des données de profil
-      try {
-        // Appeler l'API pour recharger le profil
-        await fetch('/api/profile/get', { 
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
+      // 3. Succès : mettre à jour la session pour refléter profileCompleted = true
+      
+      // Vider le store de profil pour éviter des conflits de cache + forcer refresh NextAuth
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('vetflow-profile-store')
+        
+        // Forcer NextAuth à recréer la session en vidant le token JWT
+        const nextAuthKeys = Object.keys(localStorage).filter(key => 
+          key.startsWith('next-auth') || key.includes('nextauth')
+        )
+        nextAuthKeys.forEach(key => {
+          localStorage.removeItem(key)
+          console.log('🧹 Vidage cache NextAuth:', key)
         })
-      } catch (error) {
-        console.warn('Erreur lors du rechargement du profil:', error)
       }
-
-      // 4. Succès : passer à l'étape finale
+      
+      // SOLUTION ROBUSTE : Forcer une nouvelle authentification
+      console.log('🔄 Forcer une nouvelle authentification pour récupérer profileCompleted=true')
+      
+      // Obtenir l'email de l'utilisateur pour la reconnexion
+      const currentUserEmail = await fetch('/api/debug/profile-status')
+        .then(res => res.json())
+        .then(data => data.email)
+        .catch(() => null)
+      
+      if (currentUserEmail) {
+        console.log('📧 Email récupéré pour reconnexion:', currentUserEmail)
+        
+        // Stocker temporairement l'email pour la reconnexion automatique
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('auto-reconnect-email', currentUserEmail)
+        }
+      }
+      
       toast.success('Profil et clinique créés avec succès !')
-      set({ currentStep: 2 })
+      
+      // Forcer une déconnexion puis redirection vers login avec reconnexion auto
+      setTimeout(async () => {
+        try {
+          console.log('🚪 Déconnexion forcée pour refresh session...')
+          await signOut({ redirect: false })
+          
+          // Redirection vers login avec paramètre pour reconnexion automatique
+          if (typeof window !== 'undefined') {
+            window.location.replace('/login?auto-reconnect=true')
+          }
+        } catch (error) {
+          console.error('Erreur lors de la déconnexion:', error)
+          // Fallback : reload complet
+          if (typeof window !== 'undefined') {
+            window.location.replace('/dashboard')
+          }
+        }
+      }, 1000)
       
       return true
 
@@ -140,6 +185,8 @@ export const useCompleteProfileStore = create<CompleteProfileStore>((set, get) =
       return false
     } finally {
       set({ loading: false })
+      // Débloquer les fetch de profil
+      useProfileStore.getState().setCreatingProfile(false)
     }
   },
 

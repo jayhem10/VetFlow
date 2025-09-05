@@ -10,6 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: "VetFlow - Gestion vétérinaire moderne",
   description: "Solution de gestion pour cabinets vétérinaires",
   icons: {
@@ -55,7 +56,7 @@ export default function RootLayout({
                     document.documentElement.classList.remove('dark');
                   }
                   
-                  console.log('🎨 Script init - Thème:', shouldBeDark ? 'dark' : 'light');
+                  // console.log('🎨 Script init - Thème:', shouldBeDark ? 'dark' : 'light');
                 } catch (e) {
                   console.warn('Erreur initialisation thème:', e);
                 }

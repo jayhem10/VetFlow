@@ -13,11 +13,11 @@ export default function ThemeToggle() {
     if (dark) {
       root.classList.add('dark');
       localStorage.setItem('theme', 'dark');
-      console.log('🌙 Mode sombre appliqué, classes:', root.className);
+      // console.log('🌙 Mode sombre appliqué, classes:', root.className);
     } else {
       root.classList.remove('dark');
       localStorage.setItem('theme', 'light');
-      console.log('☀️ Mode clair appliqué, classes:', root.className || '(aucune classe - normal en mode light)');
+      // console.log('☀️ Mode clair appliqué, classes:', root.className || '(aucune classe - normal en mode light)');
     }
     
     // Forcer un reflow pour s'assurer que les changements sont appliqués
@@ -34,7 +34,7 @@ export default function ThemeToggle() {
     
     // Vérifier la cohérence avec l'état actuel du DOM
     if (savedTheme && ((savedTheme === 'dark') !== currentlyDark)) {
-      console.log('🔧 Synchronisation nécessaire - localStorage:', savedTheme, 'DOM:', currentlyDark ? 'dark' : 'light');
+      // console.log('🔧 Synchronisation nécessaire - localStorage:', savedTheme, 'DOM:', currentlyDark ? 'dark' : 'light');
       shouldBeDark = savedTheme === 'dark';
     }
     
@@ -42,7 +42,7 @@ export default function ThemeToggle() {
     applyTheme(shouldBeDark);
     setMounted(true);
     
-    console.log('🎨 ThemeToggle initialisé:', shouldBeDark ? 'dark' : 'light', 'localStorage:', savedTheme, 'prefersDark:', prefersDark);
+    // console.log('🎨 ThemeToggle initialisé:', shouldBeDark ? 'dark' : 'light', 'localStorage:', savedTheme, 'prefersDark:', prefersDark);
   }, []);
 
   // Écouter les changements de thème externes (autres onglets, autres composants)

@@ -56,7 +56,7 @@ export const useClinicStore = create<ClinicStore>()(
         
         // Si on a déjà des données récentes et que ce n'est pas forcé, les retourner
         if (!force && state.clinic && !state.isStale()) {
-          console.log('✅ fetchClinic: Utilisation du cache')
+          // console.log('✅ fetchClinic: Utilisation du cache')
           return state.clinic
         }
 
@@ -137,14 +137,15 @@ export const useClinicStore = create<ClinicStore>()(
             throw new Error(result.error || 'Erreur lors de la mise à jour')
           }
 
-          const result = await response.json()
+          const updatedClinic = await response.json()
+          console.log('✅ updateClinic: Clinique mise à jour:', updatedClinic)
           set({ 
-            clinic: result.clinic, 
+            clinic: updatedClinic, 
             lastFetched: Date.now(),
             error: null 
           })
           
-          return result.clinic
+          return updatedClinic
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
           set({ error: errorMessage })

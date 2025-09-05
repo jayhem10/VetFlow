@@ -15,6 +15,7 @@ model User {
   password              String
   image                 String?   @db.VarChar(255)
   mustChangePassword    Boolean   @default(false)
+  profileCompleted      Boolean   @default(false)
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   profile               Profile?
@@ -63,6 +64,9 @@ model Clinic {
   logo_url           String?         @db.VarChar(500)
   subscriptionPlan   String          @default("starter")
   subscriptionStatus String          @default("trial")
+  trialEndDate       DateTime?
+  stripeCustomerId   String?         @db.VarChar(100)
+  stripeSubscriptionId String?      @db.VarChar(100)
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   animals            Animal[]

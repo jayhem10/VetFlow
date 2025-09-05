@@ -8,8 +8,7 @@ export class CollaboratorsService {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     })
-
-    if (!response.ok) {
+if (!response.ok) {
       const error = await response.json()
       throw new Error(error.message || 'Erreur lors de la récupération des collaborateurs')
     }

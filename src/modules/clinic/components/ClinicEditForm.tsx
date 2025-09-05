@@ -15,7 +15,7 @@ const clinicSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
-  postal_code: z.string().optional(),
+  postalCode: z.string().optional(),
   country: z.string().default('France'),
 });
 
@@ -38,7 +38,7 @@ export function ClinicEditForm({ clinic, onSuccess, onCancel }: ClinicEditFormPr
       phone: clinic?.phone || '',
       address: clinic?.address || '',
       city: clinic?.city || '',
-      postal_code: clinic?.postal_code || '',
+      postalCode: clinic?.postalCode || '',
       country: clinic?.country || 'France',
     },
   });
@@ -56,7 +56,7 @@ export function ClinicEditForm({ clinic, onSuccess, onCancel }: ClinicEditFormPr
         phone: data.phone || undefined,
         address: data.address || undefined,
         city: data.city || undefined,
-        postalCode: data.postal_code || undefined,
+        postalCode: data.postalCode || undefined,
       });
 
       toast.success('Clinique mise à jour avec succès !');
@@ -139,9 +139,9 @@ export function ClinicEditForm({ clinic, onSuccess, onCancel }: ClinicEditFormPr
             Code postal
           </label>
           <Input
-            {...form.register('postal_code')}
+            {...form.register('postalCode')}
             placeholder="75001"
-            error={form.formState.errors.postal_code?.message}
+            error={form.formState.errors.postalCode?.message}
           />
         </div>
 

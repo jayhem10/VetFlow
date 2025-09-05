@@ -87,6 +87,12 @@ export function SimpleSignUpForm() {
           <p className="text-gray-600 mt-2">
             Commencez votre essai gratuit de 15 jours
           </p>
+          <p className="text-sm mt-3 text-gray-700 dark:text-gray-300">
+            Déjà un compte ?{' '}
+            <a href="/login" className="text-green-700 dark:text-green-400 hover:underline">
+              Se connecter
+            </a>
+          </p>
         </div>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <Input

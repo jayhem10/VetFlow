@@ -27,7 +27,7 @@ export function ProfileCreationForm({ onSuccess }: ProfileCreationFormProps = {}
       first_name: profileData?.first_name || '',
       last_name: profileData?.last_name || '',
       phone: profileData?.phone || '',
-      role: profileData?.role || 'vet',
+      role: profileData?.role || 'admin',
       license_number: profileData?.license_number || '',
       specialties: profileData?.specialties || [],
     }
@@ -95,7 +95,7 @@ export function ProfileCreationForm({ onSuccess }: ProfileCreationFormProps = {}
             render={({ field, fieldState: { error } }) => (
               <Input
                 {...field}
-                label="Prénom *"
+                label="Prénom"
                 placeholder="Votre prénom"
                 error={error?.message}
                 className={cn(error && "border-red-500")}
@@ -110,7 +110,7 @@ export function ProfileCreationForm({ onSuccess }: ProfileCreationFormProps = {}
             render={({ field, fieldState: { error } }) => (
               <Input
                 {...field}
-                label="Nom de famille *"
+                label="Nom de famille"
                 placeholder="Votre nom"
                 error={error?.message}
                 className={cn(error && "border-red-500")}
@@ -137,9 +137,12 @@ export function ProfileCreationForm({ onSuccess }: ProfileCreationFormProps = {}
 
         {/* Informations professionnelles */}
         <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
             Informations professionnelles
           </h3>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">
+            En tant que créateur de la clinique, vous êtes automatiquement <strong>Administrateur</strong>. Ce rôle est protégé et ne peut pas être retiré.
+          </p>
         </div>
 
         <Controller
@@ -147,10 +150,11 @@ export function ProfileCreationForm({ onSuccess }: ProfileCreationFormProps = {}
           control={form.control}
           render={({ field, fieldState: { error } }) => (
             <MultiRoleSelect
-              value={field.value || ''}
+              value={field.value}
               onChange={field.onChange}
-              label="Rôles professionnels *"
+              label="Rôle professionnel"
               error={error?.message}
+              isClinicCreator
             />
           )}
         />

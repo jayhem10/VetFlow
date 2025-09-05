@@ -6,22 +6,17 @@ import Button from '@/components/atoms/Button'
 import Input from '@/components/atoms/Input'
 import { toast } from '@/lib/toast'
 import LogoUpload from '@/components/molecules/LogoUpload'
+import { useClinic } from '@/modules/clinic/hooks/use-clinic'
 
-interface ClinicData {
-  id: string
-  name: string
-  email: string | null
-  phone: string | null
-  address: string | null
-  city: string | null
-  postalCode: string | null
-  country: string | null
-  logo_url: string | null
-}
+
 
 export default function ClinicSettingsPage() {
-  const [clinicData, setClinicData] = useState<ClinicData | null>(null)
-  const [loading, setLoading] = useState(true)
+  // Utiliser le hook useClinic au lieu de l'état local
+  const { clinic, loading: clinicLoading, updateClinic } = useClinic()
+  
+  console.log('🏥 ClinicSettingsPage - clinic:', clinic)
+  console.log('🏥 ClinicSettingsPage - loading:', clinicLoading)
+  
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -33,75 +28,64 @@ export default function ClinicSettingsPage() {
     country: ''
   })
 
+  // Mettre à jour le formulaire quand les données de clinique sont chargées
   useEffect(() => {
-    fetchClinicData()
-  }, [])
-
-  const fetchClinicData = async () => {
-    try {
-      const response = await fetch('/api/clinic/get')
-      if (response.ok) {
-        const data = await response.json()
-        setClinicData(data)
-        setFormData({
-          name: data.name || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          address: data.address || '',
-          city: data.city || '',
-          postalCode: data.postalCode || '',
-          country: data.country || ''
-        })
-      } else {
-        toast.error('Erreur lors du chargement des données de la clinique')
-      }
-    } catch (error) {
-      console.error('Erreur fetch clinic:', error)
-      toast.error('Erreur lors du chargement des données')
-    } finally {
-      setLoading(false)
+    if (clinic) {
+      console.log('🏥 Clinic data loaded:', clinic)
+      setFormData({
+        name: clinic.name || '',
+        email: clinic.email || '',
+        phone: clinic.phone || '',
+        address: clinic.address || '',
+        city: clinic.city || '',
+        postalCode: clinic.postalCode || '',
+        country: clinic.country || ''
+      })
     }
-  }
+  }, [clinic])
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
 
-    try {
-      const response = await fetch(`/api/clinic/${clinicData?.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
+    if (!clinic?.id) {
+      toast.error('Aucune clinique trouvée')
+      return
+    }
 
-      if (response.ok) {
-        const updatedClinic = await response.json()
-        setClinicData(updatedClinic)
-        toast.success('Paramètres mis à jour avec succès')
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Erreur lors de la mise à jour')
-      }
+    try {
+      console.log('🔄 Début mise à jour clinique avec ID:', clinic.id)
+      console.log('🔄 Données à envoyer:', formData)
+      
+      // Utiliser updateClinic du store au lieu d'un fetch direct
+      const updatedClinic = await updateClinic(clinic.id, {
+        name: formData.name,
+        email: formData.email || undefined,
+        phone: formData.phone || undefined,
+        address: formData.address || undefined,
+        city: formData.city || undefined,
+        postalCode: formData.postalCode || undefined,
+        country: formData.country || undefined
+      })
+      
+      console.log('✅ Clinique mise à jour avec succès:', updatedClinic)
+      toast.success('Clinique mise à jour avec succès')
     } catch (error) {
-      console.error('Erreur update clinic:', error)
-      toast.error('Erreur lors de la mise à jour')
+      console.error('❌ Erreur update clinic:', error)
+      toast.error('Erreur lors de la sauvegarde')
     } finally {
       setSaving(false)
     }
   }
 
   const handleLogoUploaded = (logoUrl: string) => {
-    if (clinicData) {
-      setClinicData({
-        ...clinicData,
-        logo_url: logoUrl
-      })
-    }
+    // Le logo sera automatiquement mis à jour via le store
+    console.log('🖼️ Logo uploaded:', logoUrl)
   }
 
-  if (loading) {
+  if (clinicLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="animate-pulse">
@@ -123,12 +107,17 @@ export default function ClinicSettingsPage() {
     )
   }
 
-  if (!clinicData) {
+  if (!clinic) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card className="p-6">
           <div className="text-center">
             <p className="text-gray-600">Aucune clinique trouvée</p>
+            <div className="mt-4 text-xs text-gray-500">
+              <p>Debug info:</p>
+              <p>Clinic: {JSON.stringify(clinic)}</p>
+              <p>Loading: {JSON.stringify(clinicLoading)}</p>
+            </div>
           </div>
         </Card>
       </div>
@@ -261,9 +250,9 @@ export default function ClinicSettingsPage() {
           </div>
 
           <LogoUpload
-            currentLogoUrl={clinicData.logo_url}
+            currentLogoUrl={clinic.logo}
             onLogoUploaded={handleLogoUploaded}
-            clinicId={clinicData.id}
+            clinicId={clinic.id}
           />
         </Card>
       </div>

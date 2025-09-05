@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react';
-import Button from '@/components/atoms/Button';
 import ThemeToggle from '@/components/atoms/ThemeToggle';
 import { GlobalSearch } from '@/components/molecules/GlobalSearch';
 import { Dropdown } from '@/components/atoms/Dropdown';
@@ -10,26 +9,21 @@ import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useRouter } from 'next/navigation';
 import { TemporaryPasswordBanner } from '@/components/molecules/TemporaryPasswordBanner';
-import { X, User, Settings, LogOut, Zap, LayoutDashboard, PawPrint, Users, Calendar, FileText, Briefcase, Boxes, User as UserIcon, Plus } from 'lucide-react';
+import { User, Settings, LogOut, LayoutDashboard, PawPrint, Users, Calendar, FileText, Briefcase, Boxes, User as UserIcon, Plus } from 'lucide-react';
 import LogoIcon from '@/components/atoms/LogoIcon'
 
 // Header pour les utilisateurs authentifiés avec menus selon les permissions
 export default function AuthenticatedHeader() {
   const { user, isAuthenticated, signOut } = useAuth();
-  const { menuItems, shortcutItems } = usePermissions();
+  const { menuItems } = usePermissions();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     router.push('/');
   };
 
-  const handleShortcutClick = (path: string) => {
-    setShowShortcutsModal(false);
-    router.push(path);
-  };
 
   // Mapping icônes menu/shortcuts (depuis lib/permissions.ts)
   const iconMap: Record<string, React.ReactNode> = {
@@ -75,7 +69,7 @@ export default function AuthenticatedHeader() {
   return (
     <>
       <TemporaryPasswordBanner />
-      <header className="sticky top-0 z-10 bg-white/90 dark:bg-gray-900 shadow-sm border-b border-stone-200 dark:border-gray-700 backdrop-blur-sm">
+      <header className="sticky top-0 z-10 bg-white/90 dark:bg-gray-900/90 shadow-sm border-b border-stone-200 dark:border-gray-700 backdrop-blur-sm">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <a 
@@ -83,7 +77,7 @@ export default function AuthenticatedHeader() {
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity cursor-pointer"
             >
               <div className="relative">
-                <div className="w-14 h-14 rounded-lg flex items-center justify-center shadow-lg text-emerald-600">
+                <div className="w-14 h-14 rounded-lg flex items-center justify-center text-emerald-600">
                   <LogoIcon size={40} />
                 </div>
               </div>
@@ -151,12 +145,6 @@ export default function AuthenticatedHeader() {
                       icon: item.icon && iconMap[item.icon] ? iconMap[item.icon] : item.icon
                     })),
                     { separator: true },
-                    {
-                      label: 'Raccourcis',
-                      onClick: () => setShowShortcutsModal(true),
-                      icon: <Zap className="w-4 h-4" />
-                    },
-                    { separator: true },
                     ...userMenuItems
                   ]}
                   showActiveIndicator={true}
@@ -195,16 +183,6 @@ export default function AuthenticatedHeader() {
                   </a>
                 ))}
                 <hr className="my-2 border-gray-200 dark:border-gray-600" />
-                <button
-                  onClick={() => {
-                    setShowShortcutsModal(true);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <Zap className="w-4 h-4" /> Raccourcis
-                </button>
-                <hr className="my-2 border-gray-200 dark:border-gray-600" />
                 <a
                   href="/profile"
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -229,49 +207,6 @@ export default function AuthenticatedHeader() {
         </nav>
       </header>
 
-      {/* Modal Raccourcis */}
-      {showShortcutsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                <Zap className="w-5 h-5 mr-2" />
-                Raccourcis rapides
-              </h2>
-              <button
-                onClick={() => setShowShortcutsModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <div className="p-6">
-              <div className="space-y-3">
-                {shortcutItems.map((item, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleShortcutClick(item.href)}
-                    className="w-full group flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors border border-gray-200 dark:border-gray-600 hover:border-green-200 dark:hover:border-green-700"
-                  >
-                    <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center text-green-600 text-lg mr-4">
-                      {item.icon}
-                    </div>
-                    <div className="text-left">
-                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-green-600 dark:group-hover:text-green-400">
-                        {item.label}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {item.description}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 } 

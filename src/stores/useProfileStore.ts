@@ -9,11 +9,13 @@ interface ProfileStore {
   error: string | null
   lastFetched: number | null
   cachedUserId: string | null // Pour invalider le cache si l'utilisateur change
+  isCreatingProfile: boolean // Flag pour bloquer les fetch pendant la création
 
   // Actions
   setProfile: (profile: TProfile | null) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
+  setCreatingProfile: (creating: boolean) => void
   
   // Actions API
   fetchProfile: (userId?: string, force?: boolean) => Promise<TProfile | null>
@@ -36,6 +38,7 @@ export const useProfileStore = create<ProfileStore>()(
       error: null,
       lastFetched: null,
       cachedUserId: null,
+      isCreatingProfile: false,
 
       // Getters
       get hasProfile() {
@@ -53,6 +56,8 @@ export const useProfileStore = create<ProfileStore>()(
       
       setError: (error) => set({ error }),
 
+      setCreatingProfile: (creating) => set({ isCreatingProfile: creating }),
+
       // Actions API
       fetchProfile: async (userId?: string, force = false) => {
         const state = get()
@@ -60,6 +65,18 @@ export const useProfileStore = create<ProfileStore>()(
         // Si pas d'utilisateur fourni, pas de fetch
         if (!userId) {
           console.log('❌ fetchProfile: Pas d\'ID utilisateur fourni')
+          return state.profile
+        }
+
+        // Si on est en train de créer un profil, bloquer les fetch
+        if (state.isCreatingProfile && !force) {
+          console.log('🚧 fetchProfile: Création de profil en cours, ignore pour', userId)
+          return state.profile
+        }
+        
+        // Empêcher les appels concurrents inutiles
+        if (state.loading && state.cachedUserId === userId && !force) {
+          console.log('⏳ fetchProfile: Requête déjà en cours pour', userId)
           return state.profile
         }
         
@@ -80,8 +97,15 @@ export const useProfileStore = create<ProfileStore>()(
           })
         }
 
-        console.log('🔍 fetchProfile: Chargement depuis l\'API pour', userId)
-        set({ loading: true, error: null })
+        // Si on a déjà essayé récemment pour ce user, pas de nouvel appel
+        const recentAttempt = state.lastFetched && (Date.now() - state.lastFetched < 10000) // 10 secondes
+        if (!force && state.cachedUserId === userId && recentAttempt) {
+          console.log('🚫 fetchProfile: Tentative trop récente, ignore pour', userId)
+          return state.profile
+        }
+
+        // console.log('🔍 fetchProfile: Chargement depuis l\'API pour', userId)
+        set({ loading: true, error: null, cachedUserId: userId })
 
         try {
           const response = await fetch('/api/profile/get')
@@ -93,6 +117,11 @@ export const useProfileStore = create<ProfileStore>()(
                 lastFetched: Date.now(), 
                 cachedUserId: userId 
               })
+              return null
+            }
+            if (response.status === 401) {
+              // Non authentifié: ne pas boucler; marquer l'état comme non chargé
+              set({ loading: false })
               return null
             }
             throw new Error('Erreur lors de la récupération du profil')
@@ -197,11 +226,13 @@ export const useProfileStore = create<ProfileStore>()(
 
       isCacheValid: (userId: string) => {
         const state = get()
-        return !!(
-          state.profile && 
-          state.cachedUserId === userId && 
-          !state.isStale()
-        )
+        // Considérer le cache valide si:
+        // 1. C'est le même utilisateur
+        // 2. On a tenté récemment (même si profile est null)
+        // 3. Ou si on a un profil et qu'il n'est pas périmé
+        const recentAttempt = state.lastFetched && (Date.now() - state.lastFetched < 30 * 1000) // 30 secondes
+        const hasValidProfile = state.profile && !state.isStale()
+        return state.cachedUserId === userId && (hasValidProfile || !!recentAttempt)
       },
     }),
     {

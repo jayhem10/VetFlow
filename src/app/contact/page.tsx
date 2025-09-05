@@ -8,6 +8,7 @@ import Button from '@/components/atoms/Button'
 import PublicHeader from '@/components/organisms/PublicHeader'
 import AuthenticatedHeader from '@/components/organisms/Header'
 import Footer from '@/components/organisms/Footer'
+import { toast } from '@/lib/toast'
 
 export default function ContactPage() {
   const { data: session } = useSession()
@@ -54,11 +55,14 @@ export default function ContactPage() {
         setName('')
         setEmail('')
         setMessage('')
-        alert('Message envoyé. Nous vous répondrons rapidement.')
+        toast.success('Message envoyé avec succès ! Nous vous répondrons rapidement.')
       } else {
         const err = await res.json().catch(() => ({} as any))
-        alert(err?.error || "Erreur lors de l'envoi")
+        toast.error(err?.error || "Erreur lors de l'envoi du message")
       }
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi:', error)
+      toast.error('Erreur de connexion. Veuillez réessayer.')
     } finally {
       setLoading(false)
     }

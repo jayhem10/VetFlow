@@ -13,10 +13,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { email } = forgotPasswordSchema.parse(body)
+    const normalizedEmail = email.trim().toLowerCase()
 
     // Vérifier si l'utilisateur existe
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
       include: {
         profile: {
           include: {
@@ -72,21 +73,21 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Utilise la méthode générique sendEmail tant que sendPasswordReset n'existe pas
-      await EmailService.sendEmail({
+      const content = `
+        <p>Bonjour ${user.profile.firstName || user.name || 'Utilisateur'} ${user.profile.lastName || ''},</p>
+        <p>Un mot de passe temporaire a été généré pour votre compte.</p>
+        <p><strong>Mot de passe temporaire:&nbsp;</strong> ${tempPassword}</p>
+        <p>Veuillez vous connecter puis changer votre mot de passe immédiatement.</p>
+        <p><a href="${process.env.NEXTAUTH_URL}/login">Se connecter</a></p>
+      `
+
+      await EmailService.sendTemplatedEmail({
         to: user.email,
         subject: 'Réinitialisation de mot de passe',
-        htmlContent: `
-          <div style="font-family: Arial, sans-serif; line-height:1.6;">
-            <h2>Réinitialisation de votre mot de passe</h2>
-            <p>Bonjour ${user.profile.firstName || user.name || 'Utilisateur'} ${user.profile.lastName || ''},</p>
-            <p>Un mot de passe temporaire a été généré pour votre compte.</p>
-            <p><strong>Mot de passe temporaire:</strong> ${tempPassword}</p>
-            <p>Veuillez vous connecter puis changer votre mot de passe immédiatement.</p>
-            <p><a href="${process.env.NEXTAUTH_URL}/login">Se connecter</a></p>
-            <p>Cordialement,<br>${user.profile.clinic?.name || 'VetFlow'}</p>
-          </div>
-        `
+        title: 'Réinitialisation de votre mot de passe',
+        preheader: 'Mot de passe temporaire pour accéder à votre compte',
+        htmlContent: content,
+        clinicName: user.profile?.clinic?.name || 'VetFlow',
       })
     } catch (emailError) {
       console.error('Erreur envoi email mot de passe oublié:', emailError)

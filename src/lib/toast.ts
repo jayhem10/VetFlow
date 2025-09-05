@@ -78,4 +78,10 @@ export const toast = {
   
   profileCompleted: () => toast.success('Profil complété avec succès'),
   passwordChanged: () => toast.success('Mot de passe modifié avec succès'),
+  
+  // Système de paiement
+  subscriptionActivated: () => toast.success('Abonnement activé avec succès !'),
+  paymentProcessing: () => toast.loading('Traitement du paiement en cours...'),
+  trialExpired: () => toast.warning('Votre période d\'essai a expiré'),
+  trialReminder: (days: number) => toast.warning(`Il vous reste ${days} jour${days > 1 ? 's' : ''} d'essai`),
 } 

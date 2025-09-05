@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { appointmentSchema, type AppointmentFormData } from '@/schemas/appointment.schema'
@@ -40,13 +40,13 @@ export function AppointmentFormModal({
 }: AppointmentFormModalProps) {
   const { clinic } = useClinic()
   const { createAppointment, updateAppointment, loading } = useAppointmentStore()
-  const { collaborators, fetchCollaborators } = useCollaboratorsStore()
   const { animals, fetchAnimals } = useAnimalStore()
   
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null)
   const [ownerAnimals, setOwnerAnimals] = useState<Animal[]>([])
   const [loadingAnimals, setLoadingAnimals] = useState(false)
+  const [veterinarians, setVeterinarians] = useState<any[]>([])
 
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
@@ -64,13 +64,28 @@ export function AppointmentFormModal({
     }
   })
 
-  // Charger les données nécessaires
+  // Fonction pour récupérer les vétérinaires
+  const fetchVeterinarians = useCallback(async () => {
+    try {
+      const response = await fetch('/api/collaborators/vets')
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des vétérinaires')
+      }
+      const data = await response.json()
+      setVeterinarians(data.veterinarians || [])
+    } catch (error) {
+      console.error('Erreur fetch vétérinaires:', error)
+      toast.error('Erreur lors du chargement des vétérinaires')
+    }
+  }, [])
+
+  // Charger les données nécessaires seulement quand le modal s'ouvre
   useEffect(() => {
-    if (clinic?.id) {
-      fetchCollaborators()
+    if (isOpen && clinic?.id && veterinarians.length === 0) {
+      fetchVeterinarians()
       fetchAnimals()
     }
-  }, [clinic?.id, fetchCollaborators, fetchAnimals])
+  }, [isOpen, clinic?.id, veterinarians.length, fetchVeterinarians, fetchAnimals])
 
   // Pré-remplir le formulaire pour l'édition
   useEffect(() => {
@@ -157,12 +172,7 @@ export function AppointmentFormModal({
     onClose()
   }
 
-  // Filtrer les vétérinaires (seulement les vétérinaires et admins)
-  const veterinarians = collaborators.filter(collab => {
-    const roles = collab.role ? collab.role.split(',').map(r => r.trim()) : []
-    return roles.some(role => role === 'vet' || role === 'admin')
-  })
-
+  // Les vétérinaires sont déjà filtrés par l'API
   return (
     <Dialog
       isOpen={isOpen}

@@ -19,10 +19,11 @@ export async function POST(request: NextRequest) {
     
     // Validation des données
     const data = signUpCompleteSchema.parse(body)
+    const normalizedEmail = data.email.trim().toLowerCase()
 
     // Vérifier si l'utilisateur existe déjà
-    const existingUser = await prisma.user.findUnique({
-      where: { email: data.email },
+    const existingUser = await prisma.user.findFirst({
+      where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
     })
 
     if (existingUser) {
@@ -43,18 +44,22 @@ export async function POST(request: NextRequest) {
       // 1. Créer l'utilisateur
       const user = await tx.user.create({
         data: {
-          email: data.email,
+          email: normalizedEmail,
           password: hashedPassword,
           name: `${data.first_name} ${data.last_name}`,
         },
       })
 
-      // 2. Créer la clinique
+      // 2. Créer la clinique avec période d'essai de 14 jours
+      const trialEndDate = new Date()
+      trialEndDate.setDate(trialEndDate.getDate() + 14)
+      
       const clinic = await tx.clinic.create({
         data: {
           name: data.clinicName,
           subscriptionPlan: 'starter',
           subscriptionStatus: 'trial',
+          trialEndDate,
         },
       })
 
@@ -66,6 +71,7 @@ export async function POST(request: NextRequest) {
           lastName: data.last_name,
           phone: data.phone,
           clinicId: clinic.id,
+          role: 'owner',
         },
       })
 

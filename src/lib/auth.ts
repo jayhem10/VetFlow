@@ -35,9 +35,15 @@ const authOptions: NextAuthOptions = {
         }
 
         try {
-          const user = await prisma.user.findUnique({
+          const normalizedEmail = credentials.email.trim().toLowerCase()
+
+          // Recherche insensible à la casse pour éviter les problèmes d'email
+          const user = await prisma.user.findFirst({
             where: {
-              email: credentials.email,
+              email: {
+                equals: normalizedEmail,
+                mode: 'insensitive',
+              },
             },
             include: {
               profile: {
@@ -52,6 +58,11 @@ const authOptions: NextAuthOptions = {
             return null
           }
 
+          // Bloquer l'accès si email non vérifié
+          if (!user.emailVerified) {
+            throw new Error('EMAIL_NOT_VERIFIED')
+          }
+
           const isValidPassword = await compare(credentials.password, user.password)
 
           if (!isValidPassword) {
@@ -63,6 +74,8 @@ const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             image: user.image,
+            emailVerified: !!user.emailVerified,
+            profileCompleted: !!user.profileCompleted,
             hasProfile: !!user.profile,
             hasClinic: !!(user.profile?.clinic),
             mustChangePassword: user.mustChangePassword,
@@ -80,6 +93,8 @@ const authOptions: NextAuthOptions = {
       if (user) {
         token.hasProfile = (user as any).hasProfile
         token.hasClinic = (user as any).hasClinic
+        token.emailVerified = (user as any).emailVerified
+        token.profileCompleted = (user as any).profileCompleted
         token.mustChangePassword = (user as any).mustChangePassword
         token.profile = (user as any).profile
       }
@@ -90,6 +105,8 @@ const authOptions: NextAuthOptions = {
         session.user.id = token.sub as string
         session.user.hasProfile = token.hasProfile as boolean
         session.user.hasClinic = token.hasClinic as boolean
+        // session.user.emailVerified = (token as any).emailVerified as boolean // Géré par NextAuth
+        ;(session.user as any).profileCompleted = (token as any).profileCompleted as boolean
         session.user.mustChangePassword = token.mustChangePassword as boolean
         session.user.profile = token.profile as any
       }

@@ -1246,7 +1246,6 @@ export function AppointmentScheduler({ defaultView = 'timeGridWeek' }: Appointme
               )}
             </div>
           )}
-
           {/* Vétérinaire */}
           <div>
             <label className="block text-sm font-medium mb-1">Vétérinaire</label>

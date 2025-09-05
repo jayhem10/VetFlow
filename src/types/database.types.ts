@@ -25,11 +25,14 @@ export interface TClinic {
   phone: string
   address: string
   city: string
-  postal_code: string
+  postalCode: string  // Aligné avec le schéma Prisma
   country: string
   subscription_plan: 'starter' | 'professional' | 'clinic'
   subscription_status: 'trial' | 'active' | 'suspended' | 'cancelled'
-  trial_ends_at?: string
+  trialEndDate?: string  // Aligné avec le schéma Prisma
+  stripeCustomerId?: string
+  logo?: string  // Aligné avec le schéma Prisma (logo_url)
+  ownerId?: string
   settings: {
     timezone: string
     language: string
@@ -38,8 +41,8 @@ export interface TClinic {
       sms: boolean
     }
   }
-  created_at?: string
-  updated_at?: string
+  createdAt?: string  // Aligné avec le schéma Prisma
+  updatedAt?: string  // Aligné avec le schéma Prisma
 }
 
 // Étape 1 : Création du profil initial (tous les champs de la table profiles)
@@ -63,7 +66,7 @@ export interface TCreateClinicData {
   phone: string
   address: string
   city: string
-  postal_code: string
+  postalCode: string  // Aligné avec le schéma Prisma
   country?: string
   subscription_plan: 'starter' | 'professional' | 'clinic'
   settings: {

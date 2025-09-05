@@ -5,6 +5,9 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import LogoIcon from '@/components/atoms/LogoIcon'
 import AuthenticatedHeader from '@/components/organisms/Header'
+import { TrialNotification } from '@/components/molecules/TrialNotification'
+import { useTrialStatus } from '@/hooks/useTrialStatus'
+import { useProfileStore } from '@/stores/useProfileStore'
 
 function ProtectedFooter() {
   return (
@@ -80,13 +83,29 @@ export default function ProtectedLayout({
   const router = useRouter()
   const pathname = usePathname()
   const [redirecting, setRedirecting] = useState(false)
-
+  
   const loading = status === 'loading'
+  const { profile, loading: profileLoading, fetchProfile } = useProfileStore()
+  
+  // Déclencher fetch SEULEMENT si profileCompleted = true
+  useEffect(() => {
+    if (session?.user?.id && !profile && !profileLoading) {
+      const profileCompleted = (session.user as any)?.profileCompleted
+      if (profileCompleted) {
+        // console.log('🎯 ProtectedLayout: profileCompleted=true, chargement des données pour', session.user.id)
+        fetchProfile(session.user.id).catch(console.error)
+      }
+    }
+  }, [session?.user?.id, profile, profileLoading, fetchProfile])
+  
+  // Appeler useTrialStatus seulement si on a une session avec clinique
+  const hasValidSession = session?.user?.profile?.clinicId
+  const { trialStatus, shouldShowNotification, isExpired, daysLeft } = useTrialStatus()
 
   useEffect(() => {
-    if (loading) return
+    if (loading || profileLoading) return
 
-    console.log('🔍 ProtectedLayout - session:', !!session, 'pathname:', pathname, 'loading:', loading)
+    // console.log('🔍 ProtectedLayout - session:', !!session, 'pathname:', pathname, 'loading:', loading)
 
     if (!session) {
       console.log('👤 Pas de session, redirection vers login')
@@ -101,12 +120,13 @@ export default function ProtectedLayout({
       return
     }
 
-    // Vérifier si l'utilisateur a un profil et une clinique
-    const hasProfile = session.user?.hasProfile || false
-    const hasClinic = session.user?.hasClinic || false
-
-    // Vérifier si l'utilisateur doit changer son mot de passe
+    // Process souhaité : utiliser UNIQUEMENT profileCompleted de la session (valeur de base)
+    const profileCompleted = (session.user as any)?.profileCompleted || false
     const mustChangePassword = session.user?.mustChangePassword || false
+    
+    // console.log('🔍 ProtectedLayout - session.user:', session?.user)
+    // console.log('🔍 ProtectedLayout - profileCompleted:', profileCompleted, 'mustChangePassword:', mustChangePassword)
+    // console.log('🔍 ProtectedLayout - session raw profileCompleted:', (session?.user as any)?.profileCompleted)
     
     // Si l'utilisateur doit changer son mot de passe, on ne force plus la redirection
     // Il peut naviguer librement et verra la bannière d'avertissement
@@ -114,15 +134,27 @@ export default function ProtectedLayout({
       console.log('🔐 Mot de passe temporaire détecté, bannière affichée')
     }
 
-    // Si l'utilisateur n'a pas de profil OU de clinique et qu'il n'a pas besoin de changer son mot de passe, rediriger vers complete-profile
-    if ((!hasProfile || !hasClinic) && !mustChangePassword && !redirecting && !loading) {
-      console.log('📋 Profil ou clinique manquant, redirection vers complete-profile')
+    // Process souhaité : si profileCompleted = false → redirection directe vers complete-profile
+    if (!profileCompleted && !mustChangePassword && !redirecting) {
+      console.log('📋 profileCompleted=false, redirection directe vers complete-profile')
       setRedirecting(true)
       setTimeout(() => {
         router.push('/complete-profile')
       }, 100)
     }
-  }, [loading, session, router, pathname, redirecting])
+    
+    // Process souhaité : si profileCompleted = true et pas de données → attendre le chargement
+    if (profileCompleted && !profile && profileLoading) {
+      console.log('⏳ profileCompleted=true, attente chargement des données...')
+    }
+  }, [loading, profileLoading, profile, session, router, pathname, redirecting])
+
+  // Rediriger vers paiement si la période d'essai a expiré (doit être avant tout return)
+  useEffect(() => {
+    if (hasValidSession && isExpired && pathname !== '/payment') {
+      router.push('/payment')
+    }
+  }, [hasValidSession, isExpired, pathname, router])
 
   if (loading) {
     return (
@@ -153,24 +185,39 @@ export default function ProtectedLayout({
 
 
 
-  // Si l'utilisateur n'a pas de profil ou de clinique et qu'il n'a pas besoin de changer son mot de passe, rediriger
-  const hasProfile = session.user?.hasProfile || false
-  const hasClinic = session.user?.hasClinic || false
+  // Si le profil/clinique ne sont pas prêts, forcer la redirection immédiate et ne rien afficher
   const mustChangePassword = session.user?.mustChangePassword || false
-  
-  if ((!hasProfile || !hasClinic) && !mustChangePassword) {
+  const combinedHasProfile = !!profile || session.user?.hasProfile || false
+  const combinedHasClinic = (!!profile && !!(profile as any).clinic_id) || session.user?.hasClinic || false
+  if (redirecting) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-400">Redirection vers la création du profil...</p>
-        </div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div>
       </div>
     )
   }
 
+  const handlePaymentClick = () => {
+    router.push('/payment')
+  }
+
+
   return (
     <div className="min-h-screen flex flex-col">
       <AuthenticatedHeader />
+      
+      {/* Notification période d'essai */}
+      {hasValidSession && shouldShowNotification && !isExpired && (
+        <div className="bg-white/90 dark:bg-gray-900/80 border-b border-stone-200 dark:border-gray-700 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <TrialNotification
+              daysLeft={daysLeft}
+              onPaymentClick={handlePaymentClick}
+            />
+          </div>
+        </div>
+      )}
+      
       <main className="flex-1">
         {children}
       </main>

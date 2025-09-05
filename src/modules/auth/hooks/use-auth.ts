@@ -3,13 +3,14 @@
 import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import { authService } from '../services/auth.service'
-import { useProfile } from '@/modules/profile/hooks/use-profile'
+import { useProfileStore } from '@/stores/useProfileStore'
 import type { TSignInData, TSignUpData, TAuthResult } from '@/types/auth.types'
 
 export function useAuth() {
   const { data: session, status, update } = useSession()
   const [loading, setLoading] = useState(false)
-  const { hasProfile, refreshProfile } = useProfile()
+  const { profile, fetchProfile } = useProfileStore()
+  const [triedRefresh, setTriedRefresh] = useState<string | null>(null)
   const [localHasProfile, setLocalHasProfile] = useState(false)
   const [localHasClinic, setLocalHasClinic] = useState(false)
 
@@ -27,30 +28,11 @@ export function useAuth() {
     setLocalHasClinic(hasClinicInSession)
   }, [hasProfileInSession, hasClinicInSession])
 
-  // Effet pour forcer le rechargement du profil quand l'utilisateur change
-  useEffect(() => {
-    if (session?.user?.id && (!hasProfileInSession || !hasClinicInSession)) {
-      // Si on n'a pas les infos dans la session, essayer de recharger le profil (profil ou clinique manquants)
-      refreshProfile().then((profile) => {
-        if (profile) {
-          setLocalHasProfile(true)
-          setLocalHasClinic(!!profile.clinic_id)
-          
-          // Mettre à jour la session si nécessaire
-          if (!hasProfileInSession || !hasClinicInSession) {
-            update({
-              ...session,
-              user: {
-                ...session.user,
-                hasProfile: true,
-                hasClinic: !!profile.clinic_id,
-              },
-            }).catch(console.error)
-          }
-        }
-      }).catch(console.error)
-    }
-  }, [session?.user?.id, hasProfileInSession, hasClinicInSession, refreshProfile, update])
+  // DÉSACTIVÉ : Le fetch est maintenant géré uniquement par ProtectedLayout
+  // selon le process : profileCompleted = true → fetch données
+  // useEffect(() => {
+  //   // Ancien code de fetch redondant désactivé
+  // }, [])
 
   const signIn = async (data: TSignInData): Promise<TAuthResult> => {
     setLoading(true)
@@ -89,7 +71,7 @@ export function useAuth() {
     user,
     session,
     isAuthenticated,
-    hasProfile: localHasProfile || hasProfileInSession || hasProfile, // Priorité à l'état local, puis session, puis store
+    hasProfile: localHasProfile || hasProfileInSession || !!profile, // Priorité à l'état local, puis session, puis store
     hasClinic: localHasClinic || hasClinicInSession,
     loading: isLoading,
     signIn,

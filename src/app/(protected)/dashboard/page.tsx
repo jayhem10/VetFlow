@@ -42,10 +42,10 @@ export default function Dashboard() {
 
   // Charger les données une fois que la clinique est disponible
   useEffect(() => {
-    console.log('🔍 Dashboard - Clinic ID:', clinic?.id, 'Loading states:', { profileLoading, clinicLoading })
-    
+    // console.log('🔍 Dashboard - Clinic ID:', clinic?.id, 'Loading states:', { profileLoading, clinicLoading })
+
     if (clinic?.id) {
-      console.log('🔍 Dashboard - Loading data for clinic:', clinic.id)
+      // console.log('🔍 Dashboard - Loading data for clinic:', clinic.id)
       fetchOwners()
       fetchAnimals()
       fetchAppointments(clinic.id)

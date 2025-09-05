@@ -3,7 +3,7 @@ import type { Animal, CreateAnimal, UpdateAnimal, AnimalSearchFilters } from '@/
 export class AnimalsService {
   
   static async getAll(page = 1, pageSize = 25): Promise<{ animals: Animal[]; total: number; page: number; pageSize: number }> {
-    console.log('🔍 AnimalsService.getAll() - Calling /api/animals')
+    // console.log('🔍 AnimalsService.getAll() - Calling /api/animals')
     const response = await fetch(`/api/animals?page=${page}&pageSize=${pageSize}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
@@ -15,7 +15,7 @@ export class AnimalsService {
     }
 
     const data = await response.json()
-    console.log('🔍 AnimalsService.getAll() - Received', data.animals?.length || 0, 'animals')
+    // console.log('🔍 AnimalsService.getAll() - Received', data.animals?.length || 0, 'animals')
     return { animals: data.animals, total: data.total, page: data.page, pageSize: data.pageSize }
   }
 

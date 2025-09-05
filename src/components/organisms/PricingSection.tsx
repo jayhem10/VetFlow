@@ -5,7 +5,7 @@ export default function PricingSection() {
   const plans = [
     {
       name: 'Starter',
-      price: '49€',
+      price: '64.90€',
       period: 'mois',
       description: 'Cabinets individuels',
       features: [

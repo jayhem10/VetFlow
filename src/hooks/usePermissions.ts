@@ -1,24 +1,34 @@
 import { useAuth } from '@/modules/auth/hooks/use-auth'
-import { hasPermission, getMenuItems, getShortcutItems, type UserRole } from '@/lib/permissions'
+import { hasPermission, getMenuItems, type UserRole } from '@/lib/permissions'
 
 // Mapping des rôles pour assurer la compatibilité
 function mapRole(role: string | null | undefined): UserRole {
   if (!role) return 'assistant'
   
+  // Parse les rôles multiples (ex: "admin,owner" ou "vet,assistant")
+  const roles = role.split(',').map(r => r.trim())
+  
   // Mapping des anciens rôles vers les nouveaux
   const roleMap: Record<string, UserRole> = {
     'veterinarian': 'vet',
-    'owner': 'admin', // Le propriétaire de clinique devient admin
+    'owner': 'owner',
     'vet': 'vet',
     'assistant': 'assistant',
     'stock_manager': 'stock_manager',
     'admin': 'admin'
   }
   
-  // Si le rôle contient 'admin', c'est un admin
-  if (role.includes('admin')) return 'admin'
+  // Priorité des rôles (du plus privilégié au moins privilégié)
+  const rolePriority: UserRole[] = ['owner', 'admin', 'vet', 'stock_manager', 'assistant']
   
-  return roleMap[role] || 'assistant'
+  // Trouver le rôle avec la plus haute priorité
+  for (const priorityRole of rolePriority) {
+    if (roles.some(r => roleMap[r] === priorityRole)) {
+      return priorityRole
+    }
+  }
+  
+  return 'assistant'
 }
 
 export function usePermissions() {
@@ -34,13 +44,12 @@ export function usePermissions() {
   
   // Récupérer les éléments de menu selon le rôle
   const menuItems = getMenuItems(userRole)
-  const shortcutItems = getShortcutItems(userRole)
   
   return {
     userRole,
     can,
     menuItems,
-    shortcutItems,
+    isOwner: userRole === 'owner',
     isAdmin: userRole === 'admin',
     isVeterinarian: userRole === 'vet',
     isAssistant: userRole === 'assistant',

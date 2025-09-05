@@ -85,6 +85,12 @@ class AuthService {
       })
 
       if (result?.error) {
+        if (result.error.includes('EMAIL_NOT_VERIFIED')) {
+          return {
+            success: false,
+            error: "Email non vérifié. Veuillez valider votre email avant de vous connecter.",
+          }
+        }
         return {
           success: false,
           error: 'Email ou mot de passe incorrect',
