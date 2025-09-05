@@ -5,7 +5,7 @@ import Stripe from 'stripe'
 import { activateSubscription } from '@/lib/trial-utils'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-10-28',
+  apiVersion: '2025-08-27.basil',
 })
 
 export async function POST(request: NextRequest) {
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       subscription: {
         id: subscription.id,
         status: subscription.status,
-        current_period_end: subscription.current_period_end,
+        current_period_end: (subscription as any).current_period_end,
       },
     })
 
