@@ -3,6 +3,7 @@ import { hash } from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { EmailService } from '@/lib/email'
+import { randomUUID } from 'crypto'
 
 // Schema de validation pour l'inscription
 const signUpSchema = z.object({
@@ -37,36 +38,59 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hash(password, 12)
 
     // Créer uniquement l'utilisateur (sans Profile ni Clinic)
-    const user = await prisma.user.create({
-      data: {
-        email: normalizedEmail,
-        password: hashedPassword,
-        name: normalizedEmail.split('@')[0], // Nom temporaire basé sur l'email
-      },
-    })
+    let user
+    try {
+      user = await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          password: hashedPassword,
+          name: normalizedEmail.split('@')[0], // Nom temporaire basé sur l'email
+        },
+      })
+    } catch (e: any) {
+      // Conflit unique (course condition)
+      if (e?.code === 'P2002') {
+        return NextResponse.json(
+          { success: false, error: 'Un compte avec cet email existe déjà' },
+          { status: 400 }
+        )
+      }
+      throw e
+    }
 
     // Créer un token de vérification valable 24h
-    const token = crypto.randomUUID()
+    const token = randomUUID()
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000)
-    await prisma.verificationToken.create({
-      data: { identifier: normalizedEmail, token, expires },
-    })
+    try {
+      await prisma.verificationToken.create({
+        data: { identifier: normalizedEmail, token, expires },
+      })
+    } catch (e) {
+      console.error('Échec création verificationToken:', e)
+      // Non bloquant
+    }
 
     // Envoyer l'email de vérification
-    const verifyUrl = `${process.env.NEXTAUTH_URL}/api/auth/verify-email?email=${encodeURIComponent(normalizedEmail)}&token=${encodeURIComponent(token)}`
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const verifyUrl = `${baseUrl}/api/auth/verify-email?email=${encodeURIComponent(normalizedEmail)}&token=${encodeURIComponent(token)}`
     const contentHtml = `
       <p>Bonjour,</p>
       <p>Merci de votre inscription sur VetFlow. Veuillez confirmer votre adresse email en cliquant sur le lien ci-dessous:</p>
       <p><a href="${verifyUrl}">Confirmer mon email</a></p>
       <p>Ce lien est valable 24 heures.</p>
     `
-    await EmailService.sendTemplatedEmail({
-      to: normalizedEmail,
-      subject: 'Confirmez votre email - VetFlow',
-      title: 'Confirmer votre adresse email',
-      preheader: 'Validez votre email pour activer votre compte VetFlow',
-      htmlContent: contentHtml,
-    })
+    try {
+      await EmailService.sendTemplatedEmail({
+        to: normalizedEmail,
+        subject: 'Confirmez votre email - VetFlow',
+        title: 'Confirmer votre adresse email',
+        preheader: 'Validez votre email pour activer votre compte VetFlow',
+        htmlContent: contentHtml,
+      })
+    } catch (e) {
+      console.error('Échec envoi email de vérification:', e)
+      // Ne pas bloquer la création de compte si l'email échoue
+    }
 
     return NextResponse.json({
       success: true,
@@ -80,7 +104,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur inscription:', error)
     
     if (error instanceof z.ZodError) {
@@ -97,7 +121,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Erreur lors de la création du compte' 
+        error: process.env.NODE_ENV === 'development' && error?.message ? `Erreur lors de la création du compte: ${error.message}` : 'Erreur lors de la création du compte' 
       },
       { status: 500 }
     )

@@ -12,11 +12,25 @@ import type { TClinic } from '@/types/database.types';
 const clinicSchema = z.object({
   name: z.string().min(1, 'Le nom de la clinique est requis'),
   email: z.string().email('Email invalide').optional().or(z.literal('')),
-  phone: z.string().optional(),
+  phone: z.string()
+    .regex(/^(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}$/,
+      'Format de téléphone français invalide (ex: 01 23 45 67 89)')
+    .optional()
+    .or(z.literal('')),
   address: z.string().optional(),
   city: z.string().optional(),
-  postalCode: z.string().optional(),
+  postalCode: z.string()
+    .regex(/^[0-9]{5}$/,'Code postal français invalide (5 chiffres)')
+    .optional()
+    .or(z.literal('')),
   country: z.string().default('France'),
+  legalForm: z.enum(['EI','EURL','SARL','SASU','SAS','SELARL','SCM','Association']).optional().or(z.literal('')),
+  siret: z.string().regex(/^\d{14}$/,'SIRET invalide (14 chiffres)').optional().or(z.literal('')),
+  tvaNumber: z.string().regex(/^FR[0-9A-Z]{2}\d{9}$/,'Numéro TVA FR invalide').optional().or(z.literal('')),
+  nafCode: z.string().regex(/^[A-Z]{1}\d{2}\.\d[A-Z]?$/,'Code NAF/APE invalide (ex: 75.00Z)').optional().or(z.literal('')),
+  iban: z.string().regex(/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/,'IBAN invalide').optional().or(z.literal('')),
+  bic: z.string().regex(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/,'BIC/SWIFT invalide').optional().or(z.literal('')),
+  website: z.string().url('URL invalide').optional().or(z.literal('')),
 });
 
 type ClinicFormData = z.infer<typeof clinicSchema>;
@@ -40,6 +54,13 @@ export function ClinicEditForm({ clinic, onSuccess, onCancel }: ClinicEditFormPr
       city: clinic?.city || '',
       postalCode: clinic?.postalCode || '',
       country: clinic?.country || 'France',
+      legalForm: (clinic as any)?.legalForm || '',
+      siret: (clinic as any)?.siret || '',
+      tvaNumber: (clinic as any)?.tvaNumber || '',
+      nafCode: (clinic as any)?.nafCode || '',
+      iban: (clinic as any)?.iban || '',
+      bic: (clinic as any)?.bic || '',
+      website: (clinic as any)?.website || '',
     },
   });
 
@@ -57,6 +78,13 @@ export function ClinicEditForm({ clinic, onSuccess, onCancel }: ClinicEditFormPr
         address: data.address || undefined,
         city: data.city || undefined,
         postalCode: data.postalCode || undefined,
+        legalForm: data.legalForm || undefined,
+        siret: data.siret || undefined,
+        tvaNumber: data.tvaNumber || undefined,
+        nafCode: data.nafCode || undefined,
+        iban: data.iban || undefined,
+        bic: data.bic || undefined,
+        website: data.website || undefined,
       });
 
       toast.success('Clinique mise à jour avec succès !');
@@ -155,6 +183,38 @@ export function ClinicEditForm({ clinic, onSuccess, onCancel }: ClinicEditFormPr
             placeholder="France"
             error={form.formState.errors.country?.message}
           />
+        </div>
+
+        {/* Champs légaux */}
+        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Forme juridique</label>
+            <Input {...form.register('legalForm')} placeholder="SASU, SELARL, ..." error={(form.formState.errors as any).legalForm?.message} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">SIRET</label>
+            <Input {...form.register('siret')} placeholder="14 chiffres" error={(form.formState.errors as any).siret?.message} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">N° TVA</label>
+            <Input {...form.register('tvaNumber')} placeholder="FRxx123456789" error={(form.formState.errors as any).tvaNumber?.message} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Code NAF/APE</label>
+            <Input {...form.register('nafCode')} placeholder="75.00Z" error={(form.formState.errors as any).nafCode?.message} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">IBAN</label>
+            <Input {...form.register('iban')} placeholder="FR76 ..." error={(form.formState.errors as any).iban?.message} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">BIC / SWIFT</label>
+            <Input {...form.register('bic')} placeholder="XXXXXXXXXXX" error={(form.formState.errors as any).bic?.message} />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Site web</label>
+            <Input {...form.register('website')} placeholder="https://..." error={(form.formState.errors as any).website?.message} />
+          </div>
         </div>
       </div>
 

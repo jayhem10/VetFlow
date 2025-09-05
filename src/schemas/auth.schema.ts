@@ -201,11 +201,35 @@ export type ProfileCreationData = z.infer<typeof profileCreationSchema>
 export const clinicCreationSchema = z.object({
   name: z.string().min(2, 'Le nom de la clinique doit contenir au moins 2 caractères'),
   email: z.string().email('Email invalide').optional(),
-  phone: z.string().optional(),
+  phone: z.string()
+    .regex(/^(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}$/,
+      'Format de téléphone français invalide (ex: 01 23 45 67 89)')
+    .optional()
+    .or(z.literal('')),
   address: z.string().optional(),
   city: z.string().optional(),
-  postalCode: z.string().optional(),
+  postalCode: z.string()
+    .regex(/^[0-9]{5}$/,'Code postal français invalide (5 chiffres)')
+    .optional()
+    .or(z.literal('')),
   country: z.string().default('France'),
+  // Champs légaux
+  legalForm: z.enum(['EI','EURL','SARL','SASU','SAS','SELARL','SCM','Association']).optional().or(z.literal('')),
+  siret: z.string().regex(/^\d{14}$/,'SIRET invalide (14 chiffres)').optional().or(z.literal('')),
+  tvaNumber: z.string()
+    .regex(/^FR[0-9A-Z]{2}\d{9}$/,'Numéro TVA FR invalide (ex: FRxx123456789)')
+    .optional()
+    .or(z.literal('')),
+  nafCode: z.string().regex(/^[A-Z]{1}\d{2}\.\d[A-Z]?$/,'Code NAF/APE invalide (ex: 75.00Z)').optional().or(z.literal('')),
+  iban: z.string()
+    .regex(/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/,'IBAN invalide')
+    .optional()
+    .or(z.literal('')),
+  bic: z.string()
+    .regex(/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/,'BIC/SWIFT invalide')
+    .optional()
+    .or(z.literal('')),
+  website: z.string().url('URL invalide').optional().or(z.literal('')),
   subscription_plan: z.enum(['starter', 'professional', 'clinic']).default('starter'),
 })
 

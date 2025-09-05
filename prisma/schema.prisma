@@ -61,6 +61,14 @@ model Clinic {
   city               String?         @db.VarChar(100)
   postalCode         String?         @db.VarChar(20)
   country            String?         @db.VarChar(100)
+  // Champs légaux et facturation
+  legalForm          String?         @db.VarChar(20)   // EI, EURL, SARL, SASU, SAS, SELARL, SCM, Association, etc.
+  siret              String?         @db.VarChar(14)
+  tvaNumber          String?         @db.VarChar(20)
+  nafCode            String?         @db.VarChar(10)
+  iban               String?         @db.VarChar(34)
+  bic                String?         @db.VarChar(11)
+  website            String?         @db.VarChar(255)
   logo_url           String?         @db.VarChar(500)
   subscriptionPlan   String          @default("starter")
   subscriptionStatus String          @default("trial")

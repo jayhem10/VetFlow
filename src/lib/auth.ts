@@ -89,7 +89,8 @@ const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      // Si c'est un nouveau login, utiliser les données de l'utilisateur
       if (user) {
         token.hasProfile = (user as any).hasProfile
         token.hasClinic = (user as any).hasClinic
@@ -98,6 +99,34 @@ const authOptions: NextAuthOptions = {
         token.mustChangePassword = (user as any).mustChangePassword
         token.profile = (user as any).profile
       }
+      
+      // Si c'est une mise à jour de session, recharger depuis la base
+      if (trigger === 'update' && token.sub) {
+        try {
+          const freshUser = await prisma.user.findUnique({
+            where: { id: token.sub },
+            include: {
+              profile: {
+                include: {
+                  clinic: true,
+                },
+              },
+            },
+          })
+          
+          if (freshUser) {
+            token.hasProfile = !!freshUser.profile
+            token.hasClinic = !!(freshUser.profile?.clinic)
+            token.emailVerified = !!freshUser.emailVerified
+            token.profileCompleted = !!freshUser.profileCompleted
+            token.mustChangePassword = freshUser.mustChangePassword
+            token.profile = freshUser.profile
+          }
+        } catch (error) {
+          console.error('Erreur rafraîchissement token:', error)
+        }
+      }
+      
       return token
     },
     async session({ session, token }) {
@@ -109,6 +138,7 @@ const authOptions: NextAuthOptions = {
         ;(session.user as any).profileCompleted = (token as any).profileCompleted as boolean
         session.user.mustChangePassword = token.mustChangePassword as boolean
         session.user.profile = token.profile as any
+        
       }
       return session
     },

@@ -35,10 +35,8 @@ export default function CompleteProfilePage() {
     // On appelle la fonction qui envoie tout d'un coup
     const success = await completeRegistration(update)
     
-    if (success) {
-      console.log('✅ Profil et clinique créés, redirection gérée par le store')
-      // La redirection est gérée par le store après mise à jour de la session
-    }
+    // Le refresh de page est géré dans le store
+    // Pas besoin de redirection manuelle ici
   }
 
   const handleStepClick = (stepIndex: number) => {
@@ -132,7 +130,7 @@ export default function CompleteProfilePage() {
               Configuration terminée !
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Votre profil et votre clinique ont été créés avec succès. Vous allez être redirigé vers votre tableau de bord.
+              Votre profil et votre clinique ont été créés avec succès. Redirection vers votre tableau de bord...
             </p>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700 mx-auto"></div>
           </div>

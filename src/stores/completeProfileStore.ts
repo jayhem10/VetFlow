@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { toast } from 'react-hot-toast'
 import { useProfileStore } from './useProfileStore'
-import { getSession, signOut, signIn } from 'next-auth/react'
+import { getSession } from 'next-auth/react'
 
 // Types pour les données de profil et de clinique
 export interface ProfileData {
@@ -121,61 +121,27 @@ export const useCompleteProfileStore = create<CompleteProfileStore>((set, get) =
 
       const clinicResult = await clinicResponse.json()
 
-      // 3. Succès : mettre à jour la session pour refléter profileCompleted = true
-      
-      // Vider le store de profil pour éviter des conflits de cache + forcer refresh NextAuth
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('vetflow-profile-store')
-        
-        // Forcer NextAuth à recréer la session en vidant le token JWT
-        const nextAuthKeys = Object.keys(localStorage).filter(key => 
-          key.startsWith('next-auth') || key.includes('nextauth')
-        )
-        nextAuthKeys.forEach(key => {
-          localStorage.removeItem(key)
-          console.log('🧹 Vidage cache NextAuth:', key)
-        })
-      }
-      
-      // SOLUTION ROBUSTE : Forcer une nouvelle authentification
-      console.log('🔄 Forcer une nouvelle authentification pour récupérer profileCompleted=true')
-      
-      // Obtenir l'email de l'utilisateur pour la reconnexion
-      const currentUserEmail = await fetch('/api/debug/profile-status')
-        .then(res => res.json())
-        .then(data => data.email)
-        .catch(() => null)
-      
-      if (currentUserEmail) {
-        console.log('📧 Email récupéré pour reconnexion:', currentUserEmail)
-        
-        // Stocker temporairement l'email pour la reconnexion automatique
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('auto-reconnect-email', currentUserEmail)
+      // 3. Succès : forcer la mise à jour de la session NextAuth
+      try {
+        // Déclencher un rafraîchissement des données depuis la base
+        if (updateSession) {
+          await updateSession()
         }
+        
+        // Rediriger directement vers le dashboard après mise à jour de session
+        // La session sera automatiquement rafraîchie par NextAuth
+        setTimeout(() => {
+          window.location.href = '/dashboard'
+        }, 1000)
+        
+      } catch (error) {
+        console.error('Erreur mise à jour session:', error)
       }
-      
+
+      // Passer à l'étape "Terminé" pour afficher l'écran de fin
+      set({ currentStep: 2 })
       toast.success('Profil et clinique créés avec succès !')
-      
-      // Forcer une déconnexion puis redirection vers login avec reconnexion auto
-      setTimeout(async () => {
-        try {
-          console.log('🚪 Déconnexion forcée pour refresh session...')
-          await signOut({ redirect: false })
-          
-          // Redirection vers login avec paramètre pour reconnexion automatique
-          if (typeof window !== 'undefined') {
-            window.location.replace('/login?auto-reconnect=true')
-          }
-        } catch (error) {
-          console.error('Erreur lors de la déconnexion:', error)
-          // Fallback : reload complet
-          if (typeof window !== 'undefined') {
-            window.location.replace('/dashboard')
-          }
-        }
-      }, 1000)
-      
+
       return true
 
     } catch (error) {

@@ -124,9 +124,6 @@ export default function ProtectedLayout({
     const profileCompleted = (session.user as any)?.profileCompleted || false
     const mustChangePassword = session.user?.mustChangePassword || false
     
-    // console.log('🔍 ProtectedLayout - session.user:', session?.user)
-    // console.log('🔍 ProtectedLayout - profileCompleted:', profileCompleted, 'mustChangePassword:', mustChangePassword)
-    // console.log('🔍 ProtectedLayout - session raw profileCompleted:', (session?.user as any)?.profileCompleted)
     
     // Si l'utilisateur doit changer son mot de passe, on ne force plus la redirection
     // Il peut naviguer librement et verra la bannière d'avertissement
@@ -135,7 +132,8 @@ export default function ProtectedLayout({
     }
 
     // Process souhaité : si profileCompleted = false → redirection directe vers complete-profile
-    if (!profileCompleted && !mustChangePassword && !redirecting) {
+    // MAIS seulement si on n'est pas déjà en train de charger la session
+    if (!profileCompleted && !mustChangePassword && !redirecting && status !== 'loading') {
       console.log('📋 profileCompleted=false, redirection directe vers complete-profile')
       setRedirecting(true)
       setTimeout(() => {

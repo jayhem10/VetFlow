@@ -24,6 +24,13 @@ export function ClinicCreationForm({ onSubmit }: ClinicCreationFormProps) {
       city: clinicData?.city || '',
       postalCode: clinicData?.postalCode || '',
       country: clinicData?.country || 'France',
+      legalForm: (clinicData as any)?.legalForm || '',
+      siret: (clinicData as any)?.siret || '',
+      tvaNumber: (clinicData as any)?.tvaNumber || '',
+      nafCode: (clinicData as any)?.nafCode || '',
+      iban: (clinicData as any)?.iban || '',
+      bic: (clinicData as any)?.bic || '',
+      website: (clinicData as any)?.website || '',
       subscription_plan: clinicData?.subscription_plan || 'starter',
     }
   })
@@ -39,6 +46,14 @@ export function ClinicCreationForm({ onSubmit }: ClinicCreationFormProps) {
         city: data.city,
         postalCode: data.postalCode,
         country: data.country,
+        // champs légaux (conservés dans le store puis envoyés à l'API)
+        ...(data.legalForm ? { legalForm: data.legalForm } : {}),
+        ...(data.siret ? { siret: data.siret } : {}),
+        ...(data.tvaNumber ? { tvaNumber: data.tvaNumber } : {}),
+        ...(data.nafCode ? { nafCode: data.nafCode } : {}),
+        ...(data.iban ? { iban: data.iban } : {}),
+        ...(data.bic ? { bic: data.bic } : {}),
+        ...(data.website ? { website: data.website } : {}),
         subscription_plan: data.subscription_plan,
       }
       
@@ -122,6 +137,63 @@ export function ClinicCreationForm({ onSubmit }: ClinicCreationFormProps) {
           ]}
           error={form.formState.errors.subscription_plan?.message}
         />
+
+        {/* Champs légaux */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Select
+            label="Forme juridique"
+            value={form.watch('legalForm')}
+            onChange={(v) => form.setValue('legalForm', v)}
+            options={[
+              { value: '', label: '—' },
+              { value: 'EI', label: 'EI' },
+              { value: 'EURL', label: 'EURL' },
+              { value: 'SARL', label: 'SARL' },
+              { value: 'SASU', label: 'SASU' },
+              { value: 'SAS', label: 'SAS' },
+              { value: 'SELARL', label: 'SELARL' },
+              { value: 'SCM', label: 'SCM' },
+              { value: 'Association', label: 'Association' },
+            ]}
+            error={(form.formState.errors as any).legalForm?.message}
+          />
+          <Input
+            label="SIRET"
+            placeholder="14 chiffres"
+            {...form.register('siret')}
+            error={(form.formState.errors as any).siret?.message}
+          />
+          <Input
+            label="N° TVA"
+            placeholder="FRxx123456789"
+            {...form.register('tvaNumber')}
+            error={(form.formState.errors as any).tvaNumber?.message}
+          />
+          <Input
+            label="Code NAF/APE"
+            placeholder="75.00Z"
+            {...form.register('nafCode')}
+            error={(form.formState.errors as any).nafCode?.message}
+          />
+          <Input
+            label="IBAN"
+            placeholder="FR76 ...."
+            {...form.register('iban')}
+            error={(form.formState.errors as any).iban?.message}
+          />
+          <Input
+            label="BIC / SWIFT"
+            placeholder="XXXXXXXXXXX"
+            {...form.register('bic')}
+            error={(form.formState.errors as any).bic?.message}
+          />
+          <Input
+            label="Site web"
+            placeholder="https://..."
+            {...form.register('website')}
+            error={(form.formState.errors as any).website?.message}
+          />
+        </div>
       </div>
 
       <Button
