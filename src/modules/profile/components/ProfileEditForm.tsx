@@ -40,8 +40,8 @@ export function ProfileEditForm({ profile, onSuccess, onCancel }: ProfileEditFor
   const { data: session } = useSession();
   
   // Déterminer si l'utilisateur actuel est le créateur de la clinique
-    const isClinicCreator: boolean = !!(clinic?.createdAt && profile?.createdAt &&
-    new Date(profile.createdAt) <= new Date(clinic.createdAt));
+    const isClinicCreator: boolean = !!(clinic?.createdAt && profile?.created_at &&
+    new Date(profile.created_at) <= new Date(clinic.createdAt));
   
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),

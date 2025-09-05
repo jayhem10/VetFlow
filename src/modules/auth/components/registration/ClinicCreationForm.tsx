@@ -143,7 +143,7 @@ export function ClinicCreationForm({ onSubmit }: ClinicCreationFormProps) {
           <Select
             label="Forme juridique"
             value={form.watch('legalForm')}
-            onChange={(v) => form.setValue('legalForm', v)}
+            onChange={(v) => form.setValue('legalForm', v as any)}
             options={[
               { value: '', label: '—' },
               { value: 'EI', label: 'EI' },
